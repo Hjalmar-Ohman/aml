@@ -1,0 +1,65 @@
+```{r}
+if (!requireNamespace("BiocManager", quietly = TRUE))
+install.packages("BiocManager")
+BiocManager::install("RBGL", force = TRUE)
+BiocManager::install("Rgraphviz", force = TRUE)
+BiocManager::install("gRain", force = TRUE)
+```
+
+## 1
+```{r}
+rm(list=ls())
+library(bnlearn)
+set.seed(1)
+data("asia")
+
+bn1 = hc(asia, start = NULL, score = NULL, restart = 0)
+arcs(bn1)
+vstructs(bn1)
+cpdag(bn1)
+plot(bn1)
+
+# iss: the imaginary sample size used by the Bayesian Dirichlet scores (bde, mbde, bds, bdj). It is also known as “equivalent sample size”. The default value is equal to 1.
+bn2 = hc(asia, start = NULL, score = "bde", restart = 5, iss = 10)
+arcs(bn2)
+vstructs(bn2)
+cpdag(bn2)
+plot(bn2)
+
+all.equal(bn1, bn2)
+```
+Local optima
+
+## 2
+```{r}
+rm(list=ls())
+library(bnlearn)
+library(gRain)
+set.seed(1)
+data("asia")
+
+n=dim(asia)[1]
+id=sample(1:n, floor(n*0.8))
+train_data=asia[id,]
+test_data=asia[-id,]
+
+bn = hc(train_data)
+dag = model2network("[A][S][T|A][L|S][B|S][D|B:E][E|T:L][X|E]")
+
+fit = bn.fit(x = bn, data = train_data)
+true_fit = bn.fit(x = dag, data = train_data)
+
+grain = as.grain(fit)
+true_grain = as.grain(true_fit)
+
+compile = compile(grain)
+true_compile = compile(true_grain)
+
+
+# setEvidence
+# querygrain
+# cpquery
+# prop.table
+# table
+
+```
