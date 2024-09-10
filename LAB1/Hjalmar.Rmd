@@ -20,7 +20,7 @@ cpdag(bn1)
 plot(bn1)
 
 # iss: the imaginary sample size used by the Bayesian Dirichlet scores (bde, mbde, bds, bdj). It is also known as “equivalent sample size”. The default value is equal to 1.
-bn2 = hc(asia, start = NULL, score = "bde", restart = 5, iss = 10)
+bn2 = hc(asia, start = NULL, score = "bde", restart = 5, iss = 1000)
 arcs(bn2)
 vstructs(bn2)
 cpdag(bn2)
@@ -55,11 +55,39 @@ true_grain = as.grain(true_fit)
 compile = compile(grain)
 true_compile = compile(true_grain)
 
+predict = function (network){
+  predictions = c()
+  for (i in 1:nrow(test_data)) {
+    evidence = setEvidence(network, colnames(test_data)[-2], as.vector(as.matrix(test_data[i, -2])))
+    query = querygrain(evidence, colnames(test_data)[2])$S
+    
+    predictions = c(predictions, ifelse(query["yes"]>query["no"], "yes", "no"))
+  }
+  return(predictions)
+}
 
-# setEvidence
-# querygrain
-# cpquery
-# prop.table
-# table
-
+table(predict(compile), test_data$S)
+table(predict(true_compile), test_data$S)
 ```
+
+## 3
+```{r}
+mb = mb(fit, c("S"))
+true_mb = mb(true_fit, c("S"))
+
+predict_mb = function (network, node){
+  predictions = c()
+  for (i in 1:nrow(test_data)) {
+    evidence = setEvidence(network, node, as.vector(as.matrix(subset(test_data, select = node)[i,]))) #????
+    query = querygrain(evidence, colnames(test_data)[2])$S
+    
+    predictions = c(predictions, ifelse(query["yes"]>query["no"], "yes", "no"))
+  }
+  return(predictions)
+}
+
+table(predict_mb(compile, mb), test_data$S)
+table(predict_mb(true_compile, true_mb), test_data$S)
+```
+
+## 4

@@ -1,0 +1,61 @@
+```{r}
+# Again, Load the data.
+data("asia")
+
+# Split into 80/20 train test.
+set.seed(1)
+n <- dim(asia)[1]
+id <- sample(1:n, floor(n * 0.8))
+train <- asia[id, ]
+test  <- asia[-id, ]
+```
+
+Using the training data, the BN structure was learned with the Hill Climb Algorithm. Furthermore the true asia BN structure was obtained by running the given code. Using the structures, the parameters could then be learned. Again, using the training data.
+
+```{r}
+# Learning BN structure using HC.
+bn_struct <- hc(x = train, restart = 10)
+true_struct <- model2network("[A][S][T|A][L|S][B|S][D|B:E][E|T:L][X|E]") # True Asia BN
+
+# Learn parameters
+bn_param <- bn.fit(x = bn_struct, data = train)
+true_param <- bn.fit(x = true_struct, data = train)
+```
+
+To make predictions and compute inference, the BN is transformed into a gRain object and compiled.
+
+```{r}
+# Transform into gRain object and compile.
+grain_obj <- as.grain(bn_param)
+bn_compiled <- compile(grain_obj)
+
+true_grain_obj <- as.grain(true_param) 
+true_bn_compiled <- compile(true_grain_obj) 
+```
+
+Next, predictions are made on the test dataset.
+
+```{r}
+# Custom predict function
+predict_bn <- function(obj) {
+  pred <- c()
+  for (i in 1:nrow(test)) {
+    evidence <- setEvidence(object = obj, 
+                            nodes = c("A", "T", "L", "B", "E", "X", "D"), 
+                            states = as.character(unlist(test[i,-2])))
+    query <- querygrain(evidence, nodes = c("S"))$S
+    pred[i] <- ifelse(query["yes"] > 0.5, "yes", "no")
+  }
+  return (pred)
+}
+```
+
+For each row in the test dataset, evidence is observed for all nodes except "S" (since this is the one we want to compute the conditional probability for). Then querygrain is used to compute the probability of "S" given the evidence in the step before. The ifelse statement then predicts "yes" if the probability is >0.5 and "no" otherwise. 
+
+The predict function is used to compute the confusion matrices for both the learned and the true BN. We will find that they yield the same result.
+
+```{r}
+# Confusion matrices
+table(predict_bn(bn_compiled), test$S)
+table(predict_bn(true_bn_compiled), test$S) # CM from True Asia BN
+```
