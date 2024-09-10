@@ -13,14 +13,13 @@ library(bnlearn)
 set.seed(1)
 data("asia")
 
-bn1 = hc(asia, start = NULL, score = NULL, restart = 0)
+bn1 = hc(asia, start = NULL, score = "bde", restart = 1, iss = 1)
 arcs(bn1)
 vstructs(bn1)
 cpdag(bn1)
 plot(bn1)
 
-# iss: the imaginary sample size used by the Bayesian Dirichlet scores (bde, mbde, bds, bdj). It is also known as “equivalent sample size”. The default value is equal to 1.
-bn2 = hc(asia, start = NULL, score = "bde", restart = 5, iss = 1000)
+bn2 = hc(asia, start = NULL, score = "bde", restart = 1, iss = 1000)
 arcs(bn2)
 vstructs(bn2)
 cpdag(bn2)
@@ -28,7 +27,9 @@ plot(bn2)
 
 all.equal(bn1, bn2)
 ```
-Local optima
+Definition of equivalent BN structure: "[...] the same adjacencies and unshielded colliders"
+They are non-equivalent. For example, in the first BN A,D is not adjacent, which they are in the second.
+The reason for the second graph being way more complex is due to the iss term being set very high, reducing regularization.
 
 ## 2
 ```{r}
@@ -69,16 +70,18 @@ predict = function (network){
 table(predict(compile), test_data$S)
 table(predict(true_compile), test_data$S)
 ```
+The confusion matrices are very similar.
 
 ## 3
+"Find the minimal set of nodes that separates a given node from the rest. This set is called the Markov blanket of the given node."
 ```{r}
 mb = mb(fit, c("S"))
 true_mb = mb(true_fit, c("S"))
 
-predict_mb = function (network, node){
+predict_mb = function (network, m_b){
   predictions = c()
   for (i in 1:nrow(test_data)) {
-    evidence = setEvidence(network, node, as.vector(as.matrix(subset(test_data, select = node)[i,]))) #????
+    evidence = setEvidence(network, m_b, as.vector(as.matrix(test_data[i, m_b])))
     query = querygrain(evidence, colnames(test_data)[2])$S
     
     predictions = c(predictions, ifelse(query["yes"]>query["no"], "yes", "no"))
@@ -89,5 +92,29 @@ predict_mb = function (network, node){
 table(predict_mb(compile, mb), test_data$S)
 table(predict_mb(true_compile, true_mb), test_data$S)
 ```
+The confusion matrices are once again similar. Even identical now.
 
 ## 4
+```{r}
+# Create the Naive Bayes structure manually
+nb_network = model2network("[S][A|S][B|S][D|S][E|S][L|S][T|S][X|S]")
+
+# Learn the parameters from the training data
+nb_fit <- bn.fit(nb_network, data = train_data)
+
+# Convert to gRain object and compile it for inference
+nb_grain <- compile(as.grain(nb_fit))
+
+# Use the same prediction function as in Question 2
+table(predict(nb_grain), test_data$S)
+table(predict(true_compile), test_data$S)
+```
+The confusion matrices now differ.
+
+## 5
+In question 3 we get a similar result as to question 2, because when you know the states of the nodes in the Markov blanket, no other node outside this set can provide any additional information about the node in question (S), as it is then separated form the network.
+
+Question 4 gives a different result because of the restriction "the predictive variables are independent given the class variable", which restricts us to a non-complex network. See below.
+```{r}
+plot(nb_network)
+```
