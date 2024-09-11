@@ -1,0 +1,59 @@
+# **Lab1**
+
+### **Q1**
+
+In this task we were supposed to show that multiple runs with the hill-climbing algorithm can return non-equivalent Bayesian Networks. This happens because the hill-climbing algorithm can reach local optima and is not guaranteed to reach global optima.
+
+```{r}
+# Load the data
+library(bnlearn)
+library(gRain)
+data("asia")
+```
+
+```{r}
+#Make three models with different scores to compare
+bn1 = hc(asia, start = NULL, restart = 0, score = "bde", iss = 1)
+bn2 = hc(asia, start = NULL, restart = 0, score = "bde", iss = 1)
+#bn3 = hc(asia, start = NULL, restart = 0, score = "bde")
+
+#plotting to see the resulting graph
+plot(bn1)
+plot(bn2)
+#plot(bn3)
+
+all.equal(bn1, bn2)
+```
+
+### Q2
+
+```{r}
+#divide into 80% train and 20% test
+ n=dim(asia)[1]
+ set.seed(12345)
+ id=sample(1:n, floor(n*0.8))
+ train=asia[id,]
+ test=asia[-id,]
+ 
+ #learn both structure and parameters
+ 
+```
+
+```{r}
+model = hc(train)
+
+dag = model2network("[A][S][T|A][L|S][B|S][D|B:E][E|T:L][X|E]")
+```
+
+```{r}
+#Excat inference 
+# bn.fit()
+# as.grain()
+# compile()
+# setEvidence()
+# querygrain()
+# cpquery()
+# cpdist()
+# prop.table()
+# table()
+```
