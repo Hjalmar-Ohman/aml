@@ -9,7 +9,7 @@ data("asia")
 model1 = hc(asia, start = NULL, restart = 10, score = "bic")
 model2 = hc(asia, start = NULL, restart = 10, score = "aic")
 
-
+random.graph(colnames(asia))
 # Two DAGs are equivalent if and only if they have the same
 # adjacencies and unshielded colliders.
 unshielded.colliders(model1)
@@ -19,6 +19,7 @@ bn1 <- cpdag(model1)
 bn2 <- cpdag(model2)
 
 all.equal(bn1, bn2)
+
 plot(bn1)
 plot(bn2)
 
@@ -61,7 +62,7 @@ nodes = colnames(test)[-2]
 
 # Function to classify using a given compiled model
 classify_with_model <- function(compiled_model, mb_or_S, nodes) {
-  preds = numeric()
+  #preds = numeric()
   #Apply function here to apply over whole dataframe, 1 means rows, 2 is cols
   apply(test, 1, function(row) {
     # Set evidence for the current row
