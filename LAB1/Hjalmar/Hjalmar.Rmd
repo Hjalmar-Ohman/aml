@@ -21,20 +21,19 @@ data("asia")
 bn1 = hc(asia, start = NULL, score = "bde", restart = 1, iss = 1)
 arcs(bn1)
 vstructs(bn1)
-cpdag(bn1)
 plot(bn1)
 
 bn2 = hc(asia, start = NULL, score = "bde", restart = 1, iss = 1000)
 arcs(bn2)
 vstructs(bn2)
-cpdag(bn2) #?
 plot(bn2)
 
-all.equal(bn1, bn2)
+# Cpdag to see equivalent class to get.
+all.equal(cpdag(bn1), cpdag(bn2))
 ```
 Definition of equivalent BN structure: "[...] the same adjacencies and unshielded colliders"
 They are non-equivalent. For example, in the first BN A,D is not adjacent, which they are in the second.
-The reason for the second graph being way more complex is due to the iss term being set very high, reducing regularization.
+The reason for the second graph being way more complex is due to the iss term being set very high, reducing regularization. This can happen due to HC finding local optimas, not global.
 
 ## 2
 ```{r}
