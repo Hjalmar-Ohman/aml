@@ -1,47 +1,41 @@
----
-output:
-  pdf_document: default
-  html_document: default
----
-```{r}
-if (!requireNamespace("BiocManager", quietly = TRUE))
-install.packages("BiocManager")
-BiocManager::install("RBGL", force = TRUE)
-BiocManager::install("Rgraphviz", force = TRUE)
-BiocManager::install("gRain", force = TRUE)
-```
-
 ## 1
 ```{r}
 rm(list=ls())
 library(bnlearn)
-set.seed(1)
+set.seed(12345)
 data("asia")
 
 bn1 = hc(asia, start = NULL, score = "bde", restart = 1, iss = 1)
-arcs(bn1)
-vstructs(bn1)
-cpdag(bn1)
+# arcs(bn1)
+# vstructs(bn1)
 plot(bn1)
 
 bn2 = hc(asia, start = NULL, score = "bde", restart = 1, iss = 1000)
-arcs(bn2)
-vstructs(bn2)
-cpdag(bn2) #?
+# arcs(bn2)
+# vstructs(bn2)
 plot(bn2)
-
-all.equal(bn1, bn2)
+# Cpdag to see equivalent class to get.
+cat("Different ISS gives non-equivalent classes: ", all.equal(cpdag(bn1), cpdag(bn2)))
 ```
 Definition of equivalent BN structure: "[...] the same adjacencies and unshielded colliders"
 They are non-equivalent. For example, in the first BN A,D is not adjacent, which they are in the second.
-The reason for the second graph being way more complex is due to the iss term being set very high, reducing regularization.
+The reason for the second graph being way more complex is due to the iss term being set very high, reducing regularization. This can happen due to HC finding local optimas, not global.
+```{r}
+start1 = random.graph(colnames(asia))
+startbn1 = hc(asia, start = start1)
+start2 = random.graph(colnames(asia))
+startbn2 = hc(asia, start = start2)
+
+cat("\nDifferent start gives non-equivalent classes: ", all.equal(cpdag(startbn1), cpdag(startbn2)))
+
+```
 
 ## 2
 ```{r}
 rm(list=ls())
 library(bnlearn)
 library(gRain)
-set.seed(1)
+set.seed(12345)
 data("asia")
 
 n=dim(asia)[1]
@@ -77,7 +71,7 @@ table(predict(true_compile), test_data$S)
 graphviz.plot(dag)
 graphviz.plot(bn)
 ```
-The confusion matrices are very similar. Only missing from true is A->T.
+The confusion matrices are very similar. Only difference is edge A->T in the true graph.
 
 ## 3
 "Find the minimal set of nodes that separates a given node from the rest. This set is called the Markov blanket of the given node."
