@@ -2,9 +2,9 @@
 title: "TDDE15-Lab 1"
 author: "frera064, oscho091, hjaoh082, olosw720"
 output:
+  pdf_document: default
   html_document:
     df_print: paged
-  pdf_document: default
 ---
 
 **Contribution**
@@ -184,6 +184,4 @@ plot(nb)
 
 **Task 5:** Explain why you obtain the same or different results in the exercises (2-4).
 
-***2-3 Looks the same:*** Since the markov blanket contains all the parents and the children of the node S, we can be certain that that given the markov blanket, the node is seperated and therefore independent from the other nodes. In this case the markov blanket contains
-
-***4 Is different from 2-3:*** Since the Naive Bayes drastically simplifies the dependencies. We can also see that the model is biased towards “no” compared to the previous models.
+The Markov blanket approach and the full Bayesian network yielded similar results because both rely on a more fitted structure of dependencies in the network, with the Markov blanket focusing on the minimal sufficient set of variables needed to predict S. On the other hand, the naive Bayes classifier produces different results because it makes the unrealistic assumption that all predictive variables are conditionally independent given S, leading to a loss of dependency information.
