@@ -1,0 +1,10 @@
+---
+title: "lab2"
+output: html_document
+date: "2024-09-14"
+---
+## 1 
+```{r}
+
+```
+
