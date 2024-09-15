@@ -1,6 +1,9 @@
 ---
 title: "lab2"
-output: html_document
+author: Olof Swedberg
+output:
+  pdf_document: default
+  html_document: default
 date: "2024-09-14"
 ---
 ## 1 Hidden Markov Model
@@ -16,7 +19,7 @@ for (j in 1:10) {
   transitionProb[j,j] = 0.5
   transitionProb[j,j%%10 +1 ] = 0.5
 }
-print(transitionProb)
+# print(transitionProb)
 
 emissionProb = matrix(0,nrow = 10, ncol = 10)
 for (j in 1:10) {
@@ -24,7 +27,7 @@ for (j in 1:10) {
     emissionProb[(j+i-4)%%10+1,j] = 0.2
   }
 }
-print(emissionProb)
+# print(emissionProb)
 
 startProb = rep(0.1,10)
 
@@ -36,29 +39,123 @@ hmm = initHMM(States = states, Symbols = emissionSymbols,
 ```{r}
 nIter = 100
 simulation = simHMM(hmm, nIter)
-print(simulation)
+# print(simulation)
 ```
 ## 3 Filtering, smoothing and most probable path
 ```{r}
 
+# using exp() to avoid -inf values that create 
+# NaN values in the probability distribution
 alpha = exp(forward(hmm, simulation$observation))
 beta = exp(backward(hmm, simulation$observation))
 
 #filtered distribution
-
-filtered_probs = matrix(0, nrow=10, ncol=nIter)
-
-#normalize forward probabilities to get the filtered probabilities
+filteredProbs = matrix(0, nrow=10, ncol=nIter)
 for (t in 1:nIter) {
-  filtered_probs[, t] <- alpha[,t] / sum(alpha[,t])
+  filteredProbs[, t] = alpha[,t] / sum(alpha[,t])
 }
-
-print("Filtered Probabilities:")
-print(filtered_probs)
+# print(filteredProbs)
 
 #smoothed probability distribution
-
+smoothedProbs = matrix(0, nrow=10, ncol=nIter)
+for (t in 1:nIter) {
+  smoothedProbs[, t] = (alpha*beta)[,t] / sum((alpha*beta)[,t])
+}
+# print(smoothedProbs)
 
 #most probable path via viterbi
+probablePath = viterbi(hmm, simulation$observation)
+# print(probablePath)
+```
+
+## 4 Accuracy of the filtered, smoothed and probable path probability distributions
+
+```{r}
+filteredProbs = apply(filteredProbs, 2, prop.table)
+smoothedProbs = apply(smoothedProbs, 2, prop.table)
+
+filteredStates = apply(filteredProbs, 2, which.max)
+smoothedStates = apply(smoothedProbs, 2, which.max)
+
+filteredStates = as.character(filteredStates)
+smoothedStates = as.character(smoothedStates)
+
+filteredConfustionMatrix = table(filteredStates == simulation$observation)
+smoothedConfustionMatrix = table(smoothedStates == simulation$observation)
+viterbiConfusionMatrix = table(probablePath == simulation$observation)
+
+print(paste("The filtered accuracy is ",as.character(filteredConfustionMatrix["TRUE"]),"%"))
+print(filteredConfustionMatrix)
+print(paste("The smoothed accuracy is ",as.character(smoothedConfustionMatrix["TRUE"]),"%"))
+print(smoothedConfustionMatrix)
+print(paste("The viterbi accuracy is ",as.character(viterbiConfusionMatrix["TRUE"]),"%"))
+print(viterbiConfusionMatrix)
+
+```
+
+## 5 Repetition of samples and discussion
+```{r}
+nIter = 100
+simulation = simHMM(hmm, nIter)
+alpha = exp(forward(hmm, simulation$observation))
+beta = exp(backward(hmm, simulation$observation))
+
+#filtered distribution
+filteredProbs = matrix(0, nrow=10, ncol=nIter)
+for (t in 1:nIter) {
+  filteredProbs[, t] = alpha[,t] / sum(alpha[,t])
+}
+
+smoothedProbs = matrix(0, nrow=10, ncol=nIter)
+for (t in 1:nIter) {
+  smoothedProbs[, t] = (alpha*beta)[,t] / sum((alpha*beta)[,t])
+}
+
+#most probable path via viterbi
+probablePath = viterbi(hmm, simulation$observation)
+
+filteredProbs = apply(filteredProbs, 2, prop.table)
+smoothedProbs = apply(smoothedProbs, 2, prop.table)
+
+filteredStates = apply(filteredProbs, 2, which.max)
+smoothedStates = apply(smoothedProbs, 2, which.max)
+
+filteredStates = as.character(filteredStates)
+smoothedStates = as.character(smoothedStates)
+
+filteredConfustionMatrix = table(filteredStates == simulation$observation)
+smoothedConfustionMatrix = table(smoothedStates == simulation$observation)
+viterbiConfusionMatrix = table(probablePath == simulation$observation)
+
+print(paste("The filtered accuracy is ",as.character(filteredConfustionMatrix["TRUE"]),"%"))
+print(filteredConfustionMatrix)
+print(paste("The smoothed accuracy is ",as.character(smoothedConfustionMatrix["TRUE"]),"%"))
+print(smoothedConfustionMatrix)
+print(paste("The viterbi accuracy is ",as.character(viterbiConfusionMatrix["TRUE"]),"%"))
+print(viterbiConfusionMatrix)
+
+
+```
+The filtered distribution use only the current and the past observation to estimate the current hidden state probability distribution, while the smoothed distribution uses all observations, both current and past. Therefore, the accuracy should be higher on the smoothed.
+
+Furthermore, the smoothed distribution should overperform the most probable path distribution, as the viterbi algorithm does not take into account the uncertainty in each individual state at each time step. The viterbi path may ignore some important probability mass in alternative paths that are very close in likelihood. Smoothing provides the complete probability distribution for each state, reflecting the uncertainty and potentially being more accurate at each step.
+
+## 6 Entropy of the filtered distributions   
+```{r}
+library(entropy)
+
+entropyVals = rep(0,nIter)
+for (t in 1:nIter) {
+  entropyVals[t] = entropy.empirical(filteredProbs[,t])
+}
+plot(1:nIter, entropyVals, type="l", main="Entropy of Filtered Distributions Over Time",
+     xlab="Time Step", ylab="Entropy")
+```
+Since there is ambiguity in the observations, more observations will not necessarily improve accuracy. If the observations were of high quality, it is likely that more observations would lower the entropy. In the plot, it does not seem to increase or decrease, however there are some cases where the entrpoy is 0, indicating that the probability distribution is concentrated on a single state.
+
+## 7 Probabilities of the hidden states for the time step 101
+```{r}
+timeStep101=filteredProbs[,100]%*%hmm$transProbs
+print(timeStep101)
 ```
 
