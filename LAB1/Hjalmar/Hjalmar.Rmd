@@ -20,7 +20,7 @@ bn2 = hc(asia, start = NULL, score = "bde", restart = 1, iss = 1000)
 # vstructs(bn2)
 plot(bn2)
 # Cpdag to see equivalent class to get.
-cat("Different ISS gives non-equivalent classes: ", all.equal(cpdag(bn1), cpdag(bn2)))
+# cat("Different ISS gives non-equivalent classes: ", all.equal(cpdag(bn1), cpdag(bn2)))
 ```
 Definition of equivalent BN structure: "[...] the same adjacencies and unshielded colliders"
 They are non-equivalent. For example, in the first BN A,D is not adjacent, which they are in the second.
