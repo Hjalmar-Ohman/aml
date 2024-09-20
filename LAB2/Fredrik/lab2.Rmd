@@ -1,0 +1,159 @@
+**Imports**
+
+```{r}
+library(HMM)
+library(entropy)
+```
+
+**1: Construct the hidden markov model**
+
+```{r}
+nrStates <- 10
+states <- c(1:nrStates)
+symbols <- c(1:nrStates)
+
+emissionProbs <- c()
+for (i in 1:nrStates){
+  row <- rep(0,nrStates)
+  for(j in (i-2):(i+2)){
+    row[(j-1)%%10+1] = 0.2
+  }
+  emissionProbs <- c(emissionProbs, row)
+}
+emissionProbs <- matrix(emissionProbs,nrow = nrStates)
+
+transProbs <- c()
+for (i in 1:nrStates){
+  row <- rep(0,nrStates)
+  if (i == 10) {
+    row[10] = 0.5
+    row[1] = 0.5
+  } else {
+    row[i:(i+1)] = 0.5
+  }
+  transProbs <- c(transProbs, row)
+}
+transProbs <- matrix(transProbs,nrow = nrStates, ncol = nrStates, byrow = TRUE)
+
+hmm <- initHMM(states,symbols, transProbs = transProbs, emissionProbs = emissionProbs)
+
+```
+
+**2: Simulate 100 timestreps**
+
+```{r}
+set.seed(12345)
+simulation100 <- simHMM(hmm, 100)
+table(states = simulation100$states, observations = simulation100$observation)
+```
+
+**3:** Discard the hidden states from the sample obtained above. Use the remaining observations to compute the filtered and smoothed probability distributions for each of the 100 time points. Compute also the most probable path.
+
+```{r}
+observation100 <- simulation100$observation
+alpha100 <- exp(forward(hmm, observation100))
+beta100 <-exp(backward(hmm, observation100))
+
+filter <- function(alpha) {
+  return(apply(alpha, 2, function(col) col / sum(col)))  # Normalize each column (time step)
+}
+
+smooth <- function(alpha, beta){
+  ab <- alpha*beta
+  return(apply(ab, 2, function(col) col /sum(col)))
+}
+
+filtered100 <- filter(alpha100)
+smoothed100 <- smooth(alpha100, beta100)
+#colSum(filtered100) can be used to test the normalization
+
+viterbi100 <- viterbi(hmm, observation100) #most probable path
+viterbi100
+```
+
+**4:** Compute the accuracy of the filtered and smoothed probability distributions, and of the most probable path. That is, compute the percentage of the true hidden states that are guessed by each method.
+
+**Hint:** Note that the function forward in the HMM package returns probabilities in log scale. You may need to use the functions exp and prop.table in order to obtain a normalized probability distribution. You may also want to use the functions apply and which.max to find out the most probable states. Finally, recall that you can compare two vectors A and B elementwise as A==B, and that the function table will count the number of times that the different elements in a vector occur in the vector
+
+```{r}
+
+
+predictHMM <- function(probability) {
+    prediction <- apply(probability, 2, function(col) which.max(col))
+}
+
+accuracy <- function(pred, act){
+  tab <- table(pred, act)
+  return(sum(diag(tab))/sum(tab))
+}
+
+filter_predict100 <- predictHMM(filtered100)
+smooth_predict100 <- predictHMM(smoothed100)
+
+table(Filter_Predictions = filter_predict100, Actuals = simulation100$states)
+print(paste("Accuracy: ", accuracy(filter_predict100,simulation100$states)))
+
+table(Smooth_Predictions = smooth_predict100, Actuals = simulation100$states)
+print(paste("Accuracy: ", accuracy(smooth_predict100,simulation100$states)))
+```
+
+**5:** Repeat the previous exercise with different simulated samples. In general, the smoothed distributions should be more accurate than the filtered distributions. Why ? In general, the smoothed distributions should be more accurate than the most probable paths, too. Why?
+
+```{r}
+set.seed(12345)
+
+simulation_steps <- c(100, 100, 150, 150, 200, 200, 300, 300)
+
+accuracies <- matrix(nrow = 3, ncol = length(simulation_steps) + 1, dimnames = list(c("Filter", "Smooth", "Viterbi"), c(simulation_steps, "Average")))
+
+for (i in 1:length(simulation_steps)){
+  simulation <- simHMM(hmm, simulation_steps[i])
+  actuals <- simulation$states
+  #simulations <- c(simulations, simHMM(hmm, simulation_steps[i]))
+  observation <- simulation$observation
+  
+  alpha <- exp(forward(hmm, observation))
+  beta <- exp(backward(hmm, observation))
+  
+  filtered_prob <- filter(alpha)
+  smoothed_prob <- smooth(alpha,beta)
+  
+  filtered_pred <- predictHMM(filtered_prob)
+  smoothed_pred <- predictHMM(smoothed_prob)
+  viterbi_pred <- viterbi(hmm, observation)
+  
+  accuracies[1, i] = accuracy(filtered_pred, actuals)
+  accuracies[2, i] = accuracy(smoothed_pred, actuals)
+  accuracies[3, i] = accuracy(viterbi_pred, actuals)
+}
+
+print("Accuries by simulation steps:")
+n <- ncol(accuracies)
+for (i in 1:nrow(accuracies)){
+  accuracies[i,n] = sum(accuracies[i, 1:(n-1)])/(n-1)
+}
+round(accuracies, 2)
+
+
+```
+
+***Answer:*** Generally the smoothed distributions are better, then comes the filtered and lastly the most probable path. The smoothed distribution also utilizes the future observations which will provide more observations near in time which are more "valuable" than observations far away in time. However, Viterbi has a constraint of possible path which can override the most likely.
+
+**6:** Is it always true that the later in time (i.e., the more observations you have received) the better you know where the robot is ?
+
+```{r}
+
+entropy_filtered <- apply(filtered100, MARGIN = 2, FUN = entropy.empirical)
+plot(entropy_filtered, type = "l")
+
+```
+
+***Answer:*** We do not know better where the robot is the more observations we received. This is probably due to that the filtered probability distribution will depend more on closer observations than those far away, this means that
+
+**7:** Consider any of the samples above of length 100. Compute the probabilities of the hidden states for the time step 101.
+
+```{r}
+prob101 <- hmm$transProbs%*%filtered100[,100]
+
+prob101
+```
