@@ -76,8 +76,6 @@ viterbi100
 **Hint:** Note that the function forward in the HMM package returns probabilities in log scale. You may need to use the functions exp and prop.table in order to obtain a normalized probability distribution. You may also want to use the functions apply and which.max to find out the most probable states. Finally, recall that you can compare two vectors A and B elementwise as A==B, and that the function table will count the number of times that the different elements in a vector occur in the vector
 
 ```{r}
-
-
 predictHMM <- function(probability) {
     prediction <- apply(probability, 2, function(col) which.max(col))
 }
@@ -133,7 +131,6 @@ for (i in 1:nrow(accuracies)){
   accuracies[i,n] = sum(accuracies[i, 1:(n-1)])/(n-1)
 }
 round(accuracies, 2)
-
 
 ```
 
