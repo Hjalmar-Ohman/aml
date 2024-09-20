@@ -48,6 +48,7 @@ hmm_model <- initHMM(
 set.seed(12345)
 simulation <- simHMM(hmm_model, length = 100)
 print(simulation)
+
 # Q3
 # Extract observations of the tracking device
 observations <- simulation$observation
