@@ -167,6 +167,8 @@ entropy_filtered <- apply(filteredProbs, MARGIN = 2, FUN = entropy.empirical)
 plot(entropy_filtered, type = "l", col= "blue")
 ```
 
+Since there is ambiguity in the observations, more observations will not necessarily improve accuracy. If the observations were of high quality, it is likely that more observations would lower the entropy. In the plot, it does not seem to increase or decrease, however there are some cases where the entropy is 0, indicating that the probability distribution is concentrated on a single state.
+
 **7:** Consider any of the samples above of length 100. Compute the probabilities of the hidden states for the time step 101.
 
 ```{r}
