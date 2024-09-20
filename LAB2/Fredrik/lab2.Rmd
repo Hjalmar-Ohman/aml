@@ -127,7 +127,7 @@ for (i in 1:length(simulation_steps)){
   accuracies[3, i] = accuracy(viterbi_pred, actuals)
 }
 
-print("Accuries by simulation steps:")
+print("Accuracies by simulation steps:")
 n <- ncol(accuracies)
 for (i in 1:nrow(accuracies)){
   accuracies[i,n] = sum(accuracies[i, 1:(n-1)])/(n-1)
