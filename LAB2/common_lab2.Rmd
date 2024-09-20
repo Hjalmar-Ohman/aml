@@ -1,0 +1,110 @@
+---
+title: "TDDE15-Lab 2"
+author: "frera064, oscho091, hjaoh082, olosw720"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+**Contribution**
+
+All four members solved the problems on their own and discussed the answers.
+
+```{r}
+# Load the HMM package
+library(HMM)
+library(entropy)
+rm(list = ls())
+
+# Define the hidden states and observation symbols as numeric vectors
+states <- 1:10
+symbols <- 1:10
+
+# Initialize the initial state probabilities: the robot is equally likely to start in any sector
+start_probs <- rep(1/10, 10)  # A vector of 0.1's for each state
+
+# Initialize the transition probability matrix with zeros
+trans_probs <- matrix(0, nrow = 10, ncol = 10)
+
+# Fill in the transition probabilities
+for (i in 1:10) {
+  # Stay in the current sector with probability 0.5
+  trans_probs[i, i] <- 0.5
+  
+  # Move to the next sector with probability 0.5
+  # Wrap around from sector 10 to sector 1
+  next_sector <- ifelse(i == 10, 1, i + 1)
+  trans_probs[i, next_sector] <- 0.5
+}
+
+# Initialize the emission probability matrix with zeros
+emission_probs <- matrix(0, nrow = 10, ncol = 10)
+
+# Fill in the emission probabilities
+for (i in 1:10) {
+  # Sectors [i-2, i-1, i, i+1, i+2] with wrap-around
+  sectors <- ((i - 3):(i + 1)) %% 10 + 1  # Adjust for 1-based indexing
+  # Assign equal probability to each possible observed sector 0.2
+  emission_probs[i, sectors] <- 1/5
+}
+
+# Initialize the Hidden Markov Model
+hmm_model <- initHMM(
+  States = states,           # vector of states
+  Symbols = symbols,         # vector of observation symbols
+  startProbs = start_probs,  # Initial state probabilities
+  transProbs = trans_probs,  # Transition probabilities matrix
+  emissionProbs = emission_probs  # Emission probabilities matrix
+)
+```
+
+```{r}
+# Q2
+set.seed(12345)
+simulation <- simHMM(hmm_model, length = 100)
+print(simulation)
+```
+
+```{r}
+nIter = 100
+# using exp() to avoid -inf values that create 
+# NaN values in the probability distribution
+alpha = exp(forward(hmm, simulation$observation))
+beta = exp(backward(hmm, simulation$observation))
+
+#filtered distribution
+filteredProbs = matrix(0, nrow=10, ncol=nIter)
+for (t in 1:nIter) {
+  filteredProbs[, t] = alpha[,t] / sum(alpha[,t])
+}
+# print(filteredProbs)
+
+#smoothed probability distribution
+smoothedProbs = matrix(0, nrow=10, ncol=nIter)
+for (t in 1:nIter) {
+  smoothedProbs[, t] = (alpha*beta)[,t] / sum((alpha*beta)[,t])
+}
+# print(smoothedProbs)
+
+#most probable path via viterbi
+probablePath = viterbi(hmm, simulation$observation)
+```
+
+```{r}
+predict_filtered = apply(filtered, MARGIN = 2, FUN = which.max)
+predict_smoothed = apply(smoothed, MARGIN = 2, FUN = which.max)
+
+calculate_accuracy = function(predicted_values, true_values) {
+  cm = table(predicted_values, true_values)
+  correct_predictions = sum(diag(cm))
+  total_predictions = sum(cm)
+  accuracy = correct_predictions / total_predictions
+
+  return(accuracy)
+}
+
+cat("Filtered: ", calculate_accuracy(predict_filtered, simres$states))
+cat(", Smoothed: ", calculate_accuracy(predict_smoothed, simres$states))
+cat(", Viterbi: ", calculate_accuracy(viterbi, simres$states))
+```
