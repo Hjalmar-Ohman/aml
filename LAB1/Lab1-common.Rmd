@@ -105,7 +105,7 @@ test_data=asia[-id,]
 
 bn = hc(train_data)
 dag = model2network("[A][S][T|A][L|S][B|S][D|B:E][E|T:L][X|E]")
-
+plot(dag)
 fit = bn.fit(x = bn, data = train_data)
 true_fit = bn.fit(x = dag, data = train_data)
 
