@@ -1,0 +1,12 @@
+---
+title: "Lab3"
+author: "Olof Swedberg"
+date: "2024-09-19"
+output: html_document
+---
+
+
+```{r}
+
+```
+
