@@ -92,44 +92,66 @@ The hill climbing algorithm is a heuristic and can find local optimas that are n
 ## 2
 
 ```{r}
-rm(list=ls())
-library(bnlearn)
-library(gRain)
-set.seed(1)
-data("asia")
+set.seed(12345)
 
-n=dim(asia)[1]
-id=sample(1:n, floor(n*0.8))
-train_data=asia[id,]
-test_data=asia[-id,]
+n <- nrow(asia)
+train_indices <- sample(1:n, size = round(0.8 * n))
 
-bn = hc(train_data)
-dag = model2network("[A][S][T|A][L|S][B|S][D|B:E][E|T:L][X|E]")
-plot(dag)
-fit = bn.fit(x = bn, data = train_data)
-true_fit = bn.fit(x = dag, data = train_data)
+train_data <- asia[train_indices, ]
+test_data <- asia[-train_indices, ]
 
-grain = as.grain(fit)
-true_grain = as.grain(true_fit)
+#Learning the structure
+dag <- hc(train_data)
+true_dag <- model2network("[A][S][T|A][L|S][B|S][D|B:E][E|T:L][X|E]")
 
-compile = compile(grain)
-true_compile = compile(true_grain)
+#Learning the parameters
+bn <- bn.fit(dag, train_data)
+true_bn <- bn.fit(true_dag, train_data)
 
-predict = function (network){
-  predictions = c()
-  for (i in 1:nrow(test_data)) {
-    evidence = setEvidence(network, colnames(test_data)[-2], as.vector(as.matrix(test_data[i, -2])))
-    query = querygrain(evidence, colnames(test_data)[2])$S
+#function to predict S for any bn, data and condition
+predict_S_from_bn <- function(bn, data, condition) {
+  
+  predicted_S <- c()
+  
+  bn_grain <- as.grain(bn) #convert to graintype for compatability
+  
+  #predict S for each row of data
+  for (i in 1:nrow(data)){ 
+    states <- as.vector(as.matrix(test_data[i,condition]))
+   
+    #applying the states
+    bn_grain_with_condition <- setEvidence(bn_grain, nodes = condition, states = states)
     
-    predictions = c(predictions, ifelse(query["yes"]>query["no"], "yes", "no"))
+    # Posterior probability for "yes" and "no" for each datapoint
+    posterior_S <- querygrain(bn_grain_with_condition, nodes = "S")$S
+    
+    # Classification based on the posterior probability
+    predicted_class <- ifelse(posterior_S["yes"] > posterior_S["no"], "yes", "no")
+    
+    # Store the predicted class
+    predicted_S <- c(predicted_S, predicted_class)
   }
-  return(predictions)
+  
+  # Return the predicted classes for S
+  return(predicted_S)
 }
 
-table(predict(compile), test_data$S)
-table(predict(true_compile), test_data$S)
-graphviz.plot(dag)
-graphviz.plot(bn)
+#conditional 'evidence'
+condition <- colnames(test_data)[-2]
+
+fitted_s <- predict_S_from_bn(bn, test_data, condition)
+true_fitted_s <- predict_S_from_bn(true_bn, test_data, condition)
+
+
+table(Predicted_FDR = fitted_s, Actual = test_data$S)
+table(Predicted_True = true_fitted_s, Actual = test_data$S)
+```
+
+```{r fig.width = 8, fig.height = 5}
+par(mfrow = c(1,2))
+graphviz.plot(dag, main="learned dag")
+graphviz.plot(true_dag, main = "true dag")
+
 ```
 
 The confusion matrices are very similar. Only missing from true is A-\>T in the dags.
@@ -139,22 +161,11 @@ The confusion matrices are very similar. Only missing from true is A-\>T in the 
 "Find the minimal set of nodes that separates a given node from the rest. This set is called the Markov blanket of the given node."
 
 ```{r}
-mb = mb(fit, c("S"))
-true_mb = mb(true_fit, c("S"))
+markov_blanket <- mb(bn, "S")
 
-predict_mb = function (network, m_b){
-  predictions = c()
-  for (i in 1:nrow(test_data)) {
-    evidence = setEvidence(network, m_b, as.vector(as.matrix(test_data[i, m_b])))
-    query = querygrain(evidence, colnames(test_data)[2])$S
-    
-    predictions = c(predictions, ifelse(query["yes"]>query["no"], "yes", "no"))
-  }
-  return(predictions)
-}
+predicted_S_mb <- predict_S_from_bn(bn,test_data,markov_blanket)
 
-table(predict_mb(compile, mb), test_data$S)
-table(predict_mb(true_compile, true_mb), test_data$S)
+table(Predicted = predicted_S_mb, Actual = test_data$S)
 ```
 
 The confusion matrices are once again similar. Even identical now.
@@ -167,19 +178,9 @@ The confusion matrices are once again similar. Even identical now.
 nb <- model2network("[S][A|S][B|S][D|S][E|S][L|S][T|S][X|S]")
 nbc <- bn.fit(x = nb, data = train_data) 
 
-# Transform into gRain obj
-nbc <- as.grain(nbc)
-nbc <- compile(nbc)
-
 # Confusion matrix
-table(predict(nbc), test_data$S)
+table(predict_S_from_bn(bn = nbc, data = test_data, condition = condition), test_data$S)
 plot(nb)
-```
-
-```         
-       no yes
-  no  359 180
-  yes 154 307
 ```
 
 **Task 5:** Explain why you obtain the same or different results in the exercises (2-4).
