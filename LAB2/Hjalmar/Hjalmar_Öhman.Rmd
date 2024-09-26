@@ -40,8 +40,8 @@ print(hmm_model)
 
 ## 2
 ```{r}
-rm(list = setdiff(ls(), c("hmm_model", "trans_probs")))
 simres = simHMM(hmm_model, 100)
+table(simres$states, simres$observation)
 ```
 
 ## 3
@@ -88,8 +88,6 @@ cat(", Viterbi: ", calculate_accuracy(viterbi, simres$states))
 
 ## 5
 ```{r}
-rm(list = setdiff(ls(), c("hmm_model", "trans_probs")))
-set.seed(12345)
 simres = simHMM(hmm_model, 100)
 
 simobv = simres$observation
@@ -156,5 +154,4 @@ It is not true that the later in time the better you know where the robot is. Th
 filtered_100 = filtered[, 100]
 predicted_101 = trans_probs %*% filtered_100
 print(predicted_101)
-
 ```
