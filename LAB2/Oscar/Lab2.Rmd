@@ -183,7 +183,7 @@ plot(1:length(entropy_filtered), entropy_filtered, type = "l", col = "blue", xla
 
 As seen in the graph the entropy seems to be fluctuating with no clear trend which suggest that later in time with more observations doesn't mean better predictions. Likely because the observations i-2:i+2 are too "nosy".
 
-###  7. Compute the probabilities of the hidden states for the time step 101
+### 7. Compute the probabilities of the hidden states for the time step 101
 
 ```{r}
 filtered_prob_t100 <- filtered_probs[, 100]  # Vector of probabilities for each state at t=100
