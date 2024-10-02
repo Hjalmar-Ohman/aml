@@ -5,7 +5,7 @@
 #####################################################################################################
 # Q-learning
 #####################################################################################################
-
+rm(list =ls())
 # install.packages("ggplot2")
 # install.packages("vctrs")
 library(ggplot2)
@@ -224,23 +224,16 @@ q_learning <- function(start_state, epsilon = 0.5, alpha = 0.1, gamma = 0.95, be
 
 # The agent has clearly learned to navigate towards the goal at position, 
 # as seen by the arrows pointing rightwards and upwards towards this cell.
-# The policy is optimal for states that the agent has visited often during the episodes, 
-# particularly along the path from the starting state to the goal.
-# However some areas are underexplored leading to suboptimal policies in those areas.
-# An example for the states below the -1 penalty wall Where it wuold be better to go below and not up again
+# The policy is optimal for the most states that the agent has visited often during the episodes, 
+# however some areas are underexplored leading to suboptimal policies in those areas.
+# An example for the states below the -1 penalty wall where it would be better to go below and not up again
 
-# No, the learned values in the Q-table do not reflect the fact that there are multiple path that lead to the positive reward. 
+# Mostly no, the learned values in the Q-table do not reflect the fact that there are multiple path that lead to the positive reward. 
 # The agent clearly shows a strong preference for the upper path over the lower path
 # This is likely due to the agent's early discovery of the upper path and subsequent exploitation of it. 
-# Q-learning often converge to a single optimal policy
-# To ensure that the agent recognizes both paths as equally valid, you could: 
+# To counteract this one could: 
 # - increase exploration
-# - randomize the starting state
-# - Reducing the learning rate 
-# - Run for more simulations
-
-
-
+# - Reducing the learning rate
 
 
 #####################################################################################################
@@ -268,7 +261,15 @@ for(i in 1:10000){
 }
 
 # Environment B (the effect of epsilon and gamma)
+# 2.3 Your task is to investigate how the ε and γ parameters affect the learned policy by running
+# My observations are:
 
+# ε = 0.5
+# γ = 0.5: no env plot? It chooses 5 often since the discount factor gamma is low meaning that it prioritizes future rewards less then current 
+# γ = 0.75: Most often chooses 10 but sometimes 5
+# γ = 0.95: results in that it learns to avoid 5 reward and go for 10 reward, the reward graph is also delayed and correction spikes up later
+
+# With ε = 0.1 the agent doesn't explore as much rather exploits the found policy and therefore only finds upper paths around 5, doesn't learn to completely ignore 5
 H <- 7
 W <- 8
 
@@ -296,6 +297,7 @@ for(j in c(0.5,0.75,0.95)){
   correction <- NULL
   
   for(i in 1:30000){
+    # This is for epsilon = 0.5 standard
     foo <- q_learning(gamma = j, start_state = c(4,1))
     reward <- c(reward,foo[1])
     correction <- c(correction,foo[2])
@@ -312,6 +314,7 @@ for(j in c(0.5,0.75,0.95)){
   correction <- NULL
   
   for(i in 1:30000){
+    # This is epsilon 0.1 
     foo <- q_learning(epsilon = 0.1, gamma = j, start_state = c(4,1))
     reward <- c(reward,foo[1])
     correction <- c(correction,foo[2])
@@ -323,6 +326,11 @@ for(j in c(0.5,0.75,0.95)){
 }
 
 # Environment C (the effect of beta).
+# 2.4  investigate how the β parameter affects the learned policy
+# β = 0 - no slipping, learns a direct policy, avoids -1
+# β = 0.2 - A bit uncertainty but mostly direct
+# β = 0.4 - harder to avoid negative, more erradic
+# β = 0.66 - highly inconsistent, learns to move further from -1
 
 H <- 3
 W <- 6
@@ -343,3 +351,24 @@ for(j in c(0,0.2,0.4,0.66)){
   
   vis_environment(i, gamma = 0.6, beta = j)
 }
+
+
+# 2.5 Questions??
+# 2.6 
+# - Has the agent learned a good policy? Why / Why not ?
+# Yes, the agent has learned relatively good policy.
+# The policy generalizes well during validation since the training goals were spread across the grid, allowing the agent to learn a flexible policy.
+
+#Could you have used the Q-learning algorithm to solve this task?
+# Yes, although REINFORCE is much more suitable. Q-learning could solve this task by incorporating the goal coordinates into the state representation. 
+# However, Q-learning might struggle with generalizing as effectively as REINFORCE
+
+
+# 2.7
+# - Has the agent learned a good policy? Why / Why not ?
+# No, the agent has not learned a fully generalized policy. 
+# It has overfitted to the training where the goals were located in the top row, 
+
+# - If the results obtained for environments D and E differ, explain why.
+# The difference arises from the diversity of the training goals. In Environment D, 
+# the training goals were spread across the grid, resulting in better generalization. In Environment E, the training goals were restricted to the top row, leading to overfitting and poor generalization to new goal positions during validation.
