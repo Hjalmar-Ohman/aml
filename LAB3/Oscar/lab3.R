@@ -81,6 +81,9 @@ GreedyPolicy <- function(x, y){
   # Identify all actions that have the maximum Q-value
   max_actions <- which(q_values == max_q)
   
+  #Another way
+  #max_actions = which(q_table[x, y, ] == max(q_table[x, y, ]))
+  
   # Randomly select one action among those with the maximum Q-value
   action <- sample(max_actions, 1)
   
@@ -99,8 +102,17 @@ EpsilonGreedyPolicy <- function(x, y, epsilon){
   # Returns:
   #   An action, i.e. integer in {1,2,3,4}.
   
-  # Your code here.
+  # Generate a random number between 0 and 1
+  rand_num <- runif(1)
   
+  if (rand_num < epsilon){
+    # With probability epsilon, select a random action
+    action <- sample(1:4, 1)
+  } else {
+    # With probability (1 - epsilon), use the greedy policy
+    action <- GreedyPolicy(x, y)
+  }
+  return(action)
 }
 
 transition_model <- function(x, y, action, beta){
@@ -125,8 +137,7 @@ transition_model <- function(x, y, action, beta){
   return (foo)
 }
 
-q_learning <- function(start_state, epsilon = 0.5, alpha = 0.1, gamma = 0.95, 
-                       beta = 0){
+q_learning <- function(start_state, epsilon = 0.5, alpha = 0.1, gamma = 0.95, beta = 0){
   
   # Perform one episode of Q-learning. The agent should move around in the 
   # environment using the given transition model and update the Q-table.
@@ -148,18 +159,89 @@ q_learning <- function(start_state, epsilon = 0.5, alpha = 0.1, gamma = 0.95,
   #   a global variable can be modified with the superassigment operator <<-.
   
   # Your code here.
+  # Initialize state
+  x <- start_state[1]
+  y <- start_state[2]
+  
+  # Initialize variables to track episode reward and TD corrections
+  episode_reward <- 0
+  episode_correction <- 0
   
   repeat{
-    # Follow policy, execute action, get reward.
+    # Choose an action A using the epsilon-greedy policy
+    action <- EpsilonGreedyPolicy(x, y, epsilon)
     
-    # Q-table update.
+    # Observe the next state S' and reward R after taking action A
+    next_state <- transition_model(x, y, action, beta)
+    x_new <- next_state[1]
+    y_new <- next_state[2]
+    R <- reward_map[x_new, y_new]
     
-    if(reward!=0)
-      # End episode.
-      return (c(reward,episode_correction))
+    # Get current Q-value Q(S, A)
+    Q_SA <- q_table[x, y, action]
+    
+    # Check if next state is terminal (reward != 0)
+    if (R != 0){
+      max_Q_Sprime_aprime <- 0
+    } else {
+      # Compute max Q(S', a') over all possible actions a'
+      max_Q_Sprime_aprime <- max(q_table[x_new, y_new, ])
+    }
+    
+    # Calculate the TD correction term
+    TD_correction <- R + gamma * max_Q_Sprime_aprime - Q_SA
+    
+    # Update the cumulative TD correction
+    episode_correction <- episode_correction + TD_correction
+    
+    # Update Q(S, A) in the q_table
+    q_table[x, y, action] <<- Q_SA + alpha * TD_correction
+    
+    # Accumulate the reward
+    episode_reward <- episode_reward + R
+    
+    # Move to the next state
+    x <- x_new
+    y <- y_new
+    
+    # Check if the episode has ended
+    if (R != 0){
+      # Episode ends when a terminal state is reached
+      return (c(episode_reward, episode_correction))
+    }
   }
-  
 }
+
+#2.2 Questions
+#1. What has the agent learned after the first 10 episodes?
+
+#The Q-table values are mostly zeros, with slight updates in some states near the starting position (3,1).
+# Policy Arrows: The greedy policy (arrows on the grid) point randomly due to insufficient learning.
+# ϵ=0.5, the agent is exploring randomly half the time.
+
+#2. Is the final greedy policy (after 10000 episodes) optimal for all states, i.e. not only
+# for the initial state ? Why / Why not ?
+
+# The agent has clearly learned to navigate towards the goal at position, 
+# as seen by the arrows pointing rightwards and upwards towards this cell.
+# The policy is optimal for states that the agent has visited often during the episodes, 
+# particularly along the path from the starting state to the goal.
+# However some areas are underexplored leading to suboptimal policies in those areas.
+# An example for the states below the -1 penalty wall Where it wuold be better to go below and not up again
+
+# No, the learned values in the Q-table do not reflect the fact that there are multiple path that lead to the positive reward. 
+# The agent clearly shows a strong preference for the upper path over the lower path
+# This is likely due to the agent's early discovery of the upper path and subsequent exploitation of it. 
+# Q-learning often converge to a single optimal policy
+# To ensure that the agent recognizes both paths as equally valid, you could: 
+# - increase exploration
+# - randomize the starting state
+# - Reducing the learning rate 
+# - Run for more simulations
+
+
+
+
 
 #####################################################################################################
 # Q-Learning Environments
