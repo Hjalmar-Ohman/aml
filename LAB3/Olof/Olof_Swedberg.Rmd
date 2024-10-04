@@ -32,7 +32,7 @@ Additionally, we assume state space to be fully observable. The reward function 
 
 # install.packages("ggplot2")
 # install.packages("vctrs")
-set.seed(12345)
+set.seed(1234)
 library(ggplot2)
 
 arrows <- c("^", ">", "v", "<")
@@ -103,7 +103,16 @@ GreedyPolicy <- function(x, y){
   # Returns:
   #   An action, i.e. integer in {1,2,3,4}.
   
-  return(which.max(q_table[x,y,]))
+  q_values = q_table[x, y, ]
+  
+  # Find all actions with the maximum Q-value
+  max_actions = which(q_values == max(q_values))
+  if (length(max_actions) == 1) {
+    return(max_actions)
+  } else {
+    return(sample(max_actions, 1))
+  }
+  
 }
 
 EpsilonGreedyPolicy <- function(x, y, epsilon){
@@ -121,7 +130,7 @@ EpsilonGreedyPolicy <- function(x, y, epsilon){
   if (runif(1) < epsilon) {
     return (sample(1:4,1))
   } else {
-    return (which.max(q_table[x,y,]))
+    return (GreedyPolicy(x,y))
   }
 }
 ```
@@ -235,15 +244,15 @@ Answer the following questions:
 
 #### What has the agent learned after the first 10 episodes ?
 
-After 10 episodes, the agent has learned nothing.
+After 10 episodes, the agent has learned nothing, except for avoiding some of the states, as well as favoring the best state.
 
 #### Is the final greedy policy (after 10000 episodes) optimal for all states, i.e. not only for the initial state ? Why / Why not ?
 
-After 10000 episodes, it can be viewed from the plot that the policy is still not optimal. For instance, in the state (1,2), the agent wants to go up instead of right, which would have been a shorter path to the goal state. Even though $\epsilon$ could be considered high $(0.5)$, more exploration could have a positive impact on learning the optimal actions for all states further, since a high $\epsilon$ increases the probability of the agent making a random action.
+After 10000 episodes, it can be viewed from the plot that the policy is still not optimal. For instance, in the state (5,2), the agent wants to go left instead of right, which would have been a shorter path to the goal state. Even though $\epsilon$ could be considered high $(0.5)$, more exploration could have a positive impact on learning the optimal actions for all states further, since a high $\epsilon$ increases the probability of the agent making a random action.
 
 #### Do the learned values in the Q-table reflect the fact that there are multiple paths (above and below the negative rewards) to get to the positive reward ? If not, what could be done to make it happen ?
 
-No, the learned values only considers the upper path. This might, again, be due to a small explorative $\epsilon$-value.
+No, the learned values only considers the lower path. This might, again, be due to a small explorative $\epsilon$-value.
 
 ## Environment B.
 
@@ -378,13 +387,16 @@ knitr::include_graphics(c(
 
 #### Has the agent learned a good policy? Why / Why not ?
 
-Yes, by reading from the graphs were 5000 episodes have been executed, he arrows in each state point towards the goal position, indicating the agent has learned to find the goal. 
+Yes, by reading from the graphs were 5000 episodes have been executed, he arrows in each state point towards the goal position, indicating the agent has learned to find the goal.
 
 #### Could you have used the Q-learning algorithm to solve this task ?
-Yes, for Q-learning to work in an environment with a random goal, the state needs to include information about the goal, which it does in this case. Therefore, Q-learning can learn different state-action values depending on the goal's position. However, the state space becomes significantly larger and the conversion is slower.
+
+Yes, for Q-learning to work in an environment with a random goal, the state needs to include information about the goal, which it does in this case. Therefore, Q-learning can learn different state-action values depending on the goal's position. However, the state space becomes significantly larger and the conversion is slower compared to REINFORCE.
 
 ## Environment E
+
 In this task, the goals for training are all from the top row of the grid. The validation goals are three positions from the rows below. To solve this task, simply study the code and results provided in the file RL Lab2 Colab.ipynb and answer the following questions:
+
 ```{r echo=FALSE, out.width="24%", fig.align="center"}
 # Load images and display in 4x4 grid
 knitr::include_graphics(c(
@@ -398,8 +410,9 @@ knitr::include_graphics(c(
 ```
 
 ### Has the agent learned a good policy? Why / Why not ?
+
 No, since the training data learned the model to find the goal at the top of the grid, it does not understand where to find the goal. Training data needs to be more generalized in order for the model to understand what the true goal is.
 
 ### If the results obtained for environments D and E differ, explain why
-They differ in terms of how accurate the model is on finding the goal, the reason is becuase they have been trained differently, as described in the previous question.
 
+They differ in terms of how accurate the model is on finding the goal, the reason is becuase they have been trained differently, as described in the previous question.
