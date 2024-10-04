@@ -5,84 +5,7 @@ date: "2024-10-03"
 output: pdf_document
 ---
 
-## 2.1 (just answers)
-```{r}
-GreedyPolicy <- function(x, y){
-  
-  action = which.max(q_table[x, y, ])
-  return (action)
-}
-
-EpsilonGreedyPolicy <- function(x, y, epsilon){
-
-  if (epsilon > runif(1)){
-    action <- sample(1:4, 1)
-  } else {
-    action = which.max(q_table[x, y, ])
-  }
-  
-  return (action)
-}
-
-H <- 5
-W <- 7
-
-reward_map <- matrix(0, nrow = H, ncol = W)
-reward_map[3,6] <- 10
-reward_map[2:4,3] <- -1
-
-q_table <- array(0,dim = c(H,W,4))
-
-q_learning <- function(start_state, epsilon = 0.5, alpha = 0.1, gamma = 0.95, 
-                       beta = 0){
-  
-  #Initialize
-  current_state = start_state
-  episode_correction = 0
-  reward = 0
-  
-  repeat{
-    # Current state
-    x = current_state[1]
-    y = current_state[2]
-    
-    # Action
-    action = EpsilonGreedyPolicy(x, y, epsilon)
-    
-    # Update state
-    next_state = transition_model(x, y, action, beta)
-    next_x = next_state[1]
-    next_y = next_state[2]
-    
-    # Reward
-    reward = reward_map[next_x, next_y]
-    
-    # New max Q value
-    max_q_next = max(q_table[next_x, next_y, ])
-    
-    # Correction
-    correction = reward + gamma * max_q_next - q_table[x, y, action]
-    
-    # Update q_table based on correction
-    q_table[x, y, action] <<- q_table[x, y, action] + alpha * correction
-    
-    # Accumulate corrections
-    episode_correction = episode_correction + correction
-    
-    # Update state
-    current_state = next_state
-    
-    # End the episode if a terminal state (non-zero reward) is reached
-    if (reward != 0) {
-      break
-    }
-  }
-  
-  return (c(reward, episode_correction))
-}
-```
-
-## 2.1 (full)
+## 2.1
 ```{r}
 rm(list = ls())
 # By Jose M. Peña and Joel Oskarsson.
@@ -96,6 +19,7 @@ rm(list = ls())
 # install.packages("ggplot2")
 # install.packages("vctrs")
 library(ggplot2)
+set.seed(1234)
 
 arrows <- c("^", ">", "v", "<")
 action_deltas <- list(c(1,0), # up
@@ -160,7 +84,14 @@ GreedyPolicy <- function(x, y){
   #   An action, i.e. integer in {1,2,3,4}.
   
   # Your code here.
-  action = which.max(q_table[x, y, ])
+  q_values = q_table[x, y, ]
+  
+  best_actions = which(q_values == max(q_values))
+  if (length(best_actions) > 1) {
+    action = sample(best_actions, 1)
+  } else {
+    action = best_actions
+  }
   return (action)
 }
 
@@ -176,10 +107,10 @@ EpsilonGreedyPolicy <- function(x, y, epsilon){
   #   An action, i.e. integer in {1,2,3,4}.
   
   # Your code here.
-  if (epsilon > runif(1)){
-    action <- sample(1:4, 1)
+  if (epsilon >= runif(1)){
+    action = sample(1:4, 1)
   } else {
-    action = which.max(q_table[x, y, ])
+    action = GreedyPolicy(x, y)
   }
   
   return (action)
@@ -260,7 +191,7 @@ q_learning <- function(start_state, epsilon = 0.5, alpha = 0.1, gamma = 0.95,
 ## 2.2
 ```{r}
 # Environment A (learning)
-
+set.seed(1234)
 H <- 5
 W <- 7
 
@@ -281,20 +212,21 @@ for(i in 1:10000){
 ```
 
 Q: What has the agent learned after the first 10 episodes ?
-A: To not enter(1, 4)
+A: To not enter(4, 3)
 
 Q: Is the final greedy policy (after 10000 episodes) optimal for all states, i.e. not only
 for the initial state ? Why / Why not ?
-A: No. For example, the action policy for state (3, 1) is to go left, but the optimal action is right. This is due to the agent not having had the chance of exploring this state enough times.
+A: No. For example, the action policy for state (5, 3) is to go left, but the optimal action is right. This is due to the agent not having had the chance of exploring this state enough times.
 
 Q: Do the learned values in the Q-table reflect the fact that there are multiple paths
 (above and below the negative rewards) to get to the positive reward ? If not, what
 could be done to make it happen ?
-A: No, it always tries to go above.This is due to the agent start_state being closer to the top. We could either enforce a greater epsilon, or change start_state to be closer to the middle (e.g (1, 3))
+A: No, it always tries to go below. We could either enforce a greater epsilon, or change start_state to be further up (e.g (1, 5))
 
 ## 2.3
 ```{r}
 # Environment B (the effect of epsilon and gamma)
+set.seed(1234)
 
 H <- 7
 W <- 8
@@ -355,6 +287,7 @@ A: A high $\gamma$ changes the action policy to be more prone going towards 10 o
 ## 2.4
 ``` {r}
 # Environment C (the effect of beta).
+set.seed(1234)
 
 H <- 3
 W <- 6
@@ -396,6 +329,7 @@ The validation goals are three positions from the rows below.
 
 Q: Has the agent learned a good policy? Why / Why not ?
 A: No, the agent tends to want to move upward, since that's what had the best return during training.
+
 Q: If the results obtained for environments D and E differ, explain why.
 A: The agent in E is only trained on goals to the top, causing its policy to perform bad for goals at the bottom.
 
