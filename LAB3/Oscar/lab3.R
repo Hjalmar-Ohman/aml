@@ -272,7 +272,7 @@ for(i in 1:10000){
 # My observations are:
 
 # ε = 0.5 
-# γ = 0.5: no env plot? It chooses 5 often since the discount factor gamma is low meaning that it prioritizes future rewards less then current 
+# γ = 0.5: It chooses 5 often since the discount factor gamma is low meaning that it prioritizes future rewards less then current 
 # γ = 0.75: Most often chooses 10 but sometimes 5
 # γ = 0.95: results in that it learns to avoid 5 reward and go for 10 reward, the reward graph is also delayed and correction spikes up later
 
