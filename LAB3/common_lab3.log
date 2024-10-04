@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2024.2.16)  4 OCT 2024 10:39
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2024.2.16)  4 OCT 2024 10:45
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -610,12 +610,6 @@ Underfull \hbox (badness 10000) in paragraph at lines 411--415
 files/figure-latex/unnamed-chunk-4-2.pdf> <./common_lab3_files/figure-latex/unn
 amed-chunk-4-3.pdf>] [8 <./common_lab3_files/figure-latex/unnamed-chunk-4-4.pdf
 > <./common_lab3_files/figure-latex/unnamed-chunk-4-5.pdf>]
-
-LaTeX Warning: Command \texttimes invalid in math mode on input line 439.
-
-
-LaTeX Warning: Command \texttimes invalid in math mode on input line 439.
-
 <common_lab3_files/figure-latex/unnamed-chunk-5-1.pdf, id=101, 451.6875pt x 315
 .1775pt>
 File: common_lab3_files/figure-latex/unnamed-chunk-5-1.pdf Graphic file (type p
@@ -1125,11 +1119,11 @@ sktop/Screenshot 2024-09-28 at 19.25.00.png> <../../../../Desktop/Screenshot 20
 7.png> <../../../../Desktop/Screenshot 2024-09-28 at 19.25.10.png>] [29 <../../
 ../../Desktop/Screenshot 2024-09-28 at 19.25.16.png>] (./common_lab3.aux) ) 
 Here is how much of TeX's memory you used:
- 14575 strings out of 476025
- 249314 string characters out of 5790017
+ 14577 strings out of 476025
+ 249336 string characters out of 5790017
  1869388 words of memory out of 5000000
  34568 multiletter control sequences out of 15000+600000
- 568844 words of font info for 129 fonts, out of 8000000 for 9000
+ 568909 words of font info for 130 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  77i,6n,81p,1008b,520s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </us
@@ -1146,7 +1140,7 @@ al/texlive/2023/texmf-dist/fonts/type1/public/lm/lmsy10.pfb></usr/local/texlive
 s/type1/public/lm/lmtko10.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/p
 ublic/lm/lmtt10.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/lm/l
 mtti10.pfb>
-Output written on common_lab3.pdf (29 pages, 2082497 bytes).
+Output written on common_lab3.pdf (29 pages, 2083977 bytes).
 PDF statistics:
  568 PDF objects out of 1000 (max. 8388607)
  354 compressed objects within 4 object streams
