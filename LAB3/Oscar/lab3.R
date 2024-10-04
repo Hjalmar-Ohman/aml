@@ -6,6 +6,7 @@
 # Q-learning
 #####################################################################################################
 rm(list =ls())
+set.seed(1234)
 # install.packages("ggplot2")
 # install.packages("vctrs")
 library(ggplot2)
@@ -81,11 +82,14 @@ GreedyPolicy <- function(x, y){
   # Identify all actions that have the maximum Q-value
   max_actions <- which(q_values == max_q)
   
-  #Another way
-  #max_actions = which(q_table[x, y, ] == max(q_table[x, y, ]))
-  
-  # Randomly select one action among those with the maximum Q-value
-  action <- sample(max_actions, 1)
+  # Check if there are multiple actions with the maximum Q-value
+  if (length(max_actions) > 1) {
+    # If there's a tie, randomly select one of the best actions
+    action <- sample(max_actions, 1)
+  } else {
+    # If there's only one max action, use that action
+    action <- max_actions
+  }
   
   return(action)
 }
@@ -215,7 +219,7 @@ q_learning <- function(start_state, epsilon = 0.5, alpha = 0.1, gamma = 0.95, be
 #2.2 Questions
 #1. What has the agent learned after the first 10 episodes?
 
-#The Q-table values are mostly zeros, with slight updates in some states near the starting position (3,1).
+#The Q-table values are mostly zeros, with slight updates in some states around -1.
 # Policy Arrows: The greedy policy (arrows on the grid) point randomly due to insufficient learning.
 # ϵ=0.5, the agent is exploring randomly half the time.
 
@@ -228,6 +232,9 @@ q_learning <- function(start_state, epsilon = 0.5, alpha = 0.1, gamma = 0.95, be
 # however some areas are underexplored leading to suboptimal policies in those areas.
 # An example for the states below the -1 penalty wall where it would be better to go below and not up again
 
+
+# Do the learned values in the Q-table reflect the fact that there are multiple paths
+# (above and below the negative rewards) to get to the positive reward ? If not, what could be done to make it happen ?
 # Mostly no, the learned values in the Q-table do not reflect the fact that there are multiple path that lead to the positive reward. 
 # The agent clearly shows a strong preference for the upper path over the lower path
 # This is likely due to the agent's early discovery of the upper path and subsequent exploitation of it. 
@@ -264,7 +271,7 @@ for(i in 1:10000){
 # 2.3 Your task is to investigate how the ε and γ parameters affect the learned policy by running
 # My observations are:
 
-# ε = 0.5
+# ε = 0.5 
 # γ = 0.5: no env plot? It chooses 5 often since the discount factor gamma is low meaning that it prioritizes future rewards less then current 
 # γ = 0.75: Most often chooses 10 but sometimes 5
 # γ = 0.95: results in that it learns to avoid 5 reward and go for 10 reward, the reward graph is also delayed and correction spikes up later
