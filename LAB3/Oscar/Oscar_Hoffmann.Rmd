@@ -1,14 +1,19 @@
-# By Jose M. Peña and Joel Oskarsson.
-# For teaching purposes.
-# jose.m.pena@liu.se.
+---
+title: "Lab3"
+author: "Oscar Hoffmann"
+date: "2024-10-05"
+output:
+  pdf_document: default
+  html_document: default
+---
 
-#####################################################################################################
-# Q-learning
-#####################################################################################################
+## 2.1 Q-Learning
+
+Complete the Q-learning algorithm for a grid-world environment where the agent navigates using four actions (up, down, left, right) and faces a probability of slipping. The agent must learn the optimal policy using a model-free approach, as the transition model is unknown.
+
+```{r}
 rm(list =ls())
 set.seed(1234)
-# install.packages("ggplot2")
-# install.packages("vctrs")
 library(ggplot2)
 
 arrows <- c("^", ">", "v", "<")
@@ -162,41 +167,13 @@ q_learning <- function(start_state, epsilon = 0.5, alpha = 0.1, gamma = 0.95, be
     }
   }
 }
+```
 
-#2.2 Questions
-#1. What has the agent learned after the first 10 episodes?
+## 2.2 Environment A
 
-#The Q-table values are mostly zeros, with slight updates in some states around -1.
-# Policy Arrows: The greedy policy (arrows on the grid) point randomly due to insufficient learning.
-# ϵ=0.5, the agent is exploring randomly half the time.
+Implement and visualize Q-learning in a 5×7 grid-world environment with specific rewards, and complete tasks including implementing greedy and epsilon-greedy policies, and running 10,000 episodes of Q-learning to analyze the learned policy and Q-table.
 
-#2. Is the final greedy policy (after 10000 episodes) optimal for all states, i.e. not only
-# for the initial state ? Why / Why not ?
-
-# The agent has clearly learned to navigate towards the goal at position, 
-# as seen by the arrows pointing rightwards and upwards towards this cell.
-# The policy is optimal for the most states that the agent has visited often during the episodes, 
-# however some areas are underexplored leading to suboptimal policies in those areas.
-# An example for the states below the -1 penalty wall where it would be better to go below and not up again
-
-
-# Do the learned values in the Q-table reflect the fact that there are multiple paths
-
-# (above and below the negative rewards) to get to the positive reward ? If not, what could be done to make it happen ?
-# Mostly no, the learned values in the Q-table do not reflect the fact that there are multiple path that lead to the positive reward. 
-# The agent clearly shows a strong preference for the upper path over the lower path
-# This is likely due to the agent's early discovery of the upper path and subsequent exploitation of it. 
-# To counteract this one could: 
-# - increase exploration
-# - Reducing the learning rate
-
-
-#####################################################################################################
-# Q-Learning Environments
-#####################################################################################################
-
-# Environment A (learning)
-
+```{r}
 H <- 5
 W <- 7
 
@@ -214,17 +191,31 @@ for(i in 1:10000){
   if(any(i==c(10,100,1000,10000)))
     vis_environment(i)
 }
+```
 
-# Environment B (the effect of epsilon and gamma)
-# 2.3 Your task is to investigate how the ε and γ parameters affect the learned policy by running
-# My observations are:
+**What has the agent learned after the first 10 episodes?**
 
-# ε = 0.5 
-# γ = 0.5: It chooses 5 often since the discount factor gamma is low meaning that it prioritizes future rewards less then current 
-# γ = 0.75: Most often chooses 10 but sometimes 5
-# γ = 0.95: results in that it learns to avoid 5 reward and go for 10 reward, the reward graph is also delayed and correction spikes up later
+The Q-table values are mostly zeros, with slight updates in some states around -1. The greedy policy (arrows on the grid) point randomly due to insufficient learning.
 
-# With ε = 0.1 the agent doesn't explore as much rather exploits the found policy and therefore only finds upper paths around 5, doesn't learn to completely ignore 5
+**Is the final greedy policy (after 10000 episodes) optimal for all states, i.e. not only for the initial state ? Why / Why not ?**
+
+The agent has clearly learned to navigate towards the goal at position, as seen by the arrows pointing rightwards and downwards towards this cell. The policy is optimal for the most states that the agent has visited often during the episodes, however some areas are under explored leading to sub-optimal policies in those areas. An example is the states above the -1 penalty wall where it would be better to go above and not down again.
+
+**Do the learned values in the Q-table reflect the fact that there are multiple paths (above and below the negative rewards) to get to the positive reward ? If not, what could be done to make it happen ?**
+
+Mostly no, the learned values in the Q-table do not reflect the fact that there are multiple path that lead to the positive reward. The agent clearly shows a strong preference for the lower path over the upper path. This is likely due to the agent's early discovery of the upper path and subsequent exploitation of it.
+
+To counteract this one could:
+
+\- increase exploration
+
+\- Reducing the learning rate
+
+## 2.3 Environment B
+
+Investigate how the parameters epsilon and gamma affect the learned policy in a 7×8 environment with negative and positive rewards by running 30,000 episodes of Q-learning with different parameter settings.
+
+```{r}
 H <- 7
 W <- 8
 
@@ -279,14 +270,27 @@ for(j in c(0.5,0.75,0.95)){
   plot(MovingAverage(reward,100),type = "l")
   plot(MovingAverage(correction,100),type = "l")
 }
+```
 
-# Environment C (the effect of beta).
-# 2.4  investigate how the β parameter affects the learned policy
-# β = 0 - no slipping, learns a direct policy, avoids -1
-# β = 0.2 - A bit uncertainty but mostly direct
-# β = 0.4 - harder to avoid negative, more erradic
-# β = 0.66 - highly inconsistent, learns to move further from -1
+**Your task is to investigate how the epsilon and gamma parameters affect the learned policy by running**
 
+My observations are:
+
+**epsilon = 0.5**
+
+**gamma = 0.5**: It chooses 5 quite often since the discount factor gamma is low meaning that it prioritizes future rewards low
+
+**gamma = 0.75**: Most often chooses 10 but sometimes 5
+
+**gamma = 0.95**: results in that it learns to avoid 5 reward and go for 10 reward
+
+With epsilon = 0.1 the agent doesn't explore as much and subsequently doesn't find the 10 reward. It only finds 5 reward.
+
+## 2.4 Environment C
+
+Explore how the beta parameter affects the learned policy in a 3×6 environment by running 10,000 episodes of Q-learning with different beta values and analyzing the outcomes.
+
+```{r}
 H <- 3
 W <- 6
 
@@ -305,22 +309,42 @@ for(j in c(0,0.2,0.4,0.66)){
     foo <- q_learning(gamma = 0.6, beta = j, start_state = c(1,1))
     vis_environment(i, gamma = 0.6, beta = j)
 }
+```
 
-# 2.6 
-# - Has the agent learned a good policy? Why / Why not ?
-# Yes, the agent has learned relatively good policy.
-# The policy generalizes well during validation since the training goals were spread across the grid, allowing the agent to learn a flexible policy.
+Here, Beta determines the probability that the agent will slip. A higher beta results in the agent avoiding the -1 wall with greater margin since it might slip.
 
-#Could you have used the Q-learning algorithm to solve this task?
-# Yes, although REINFORCE is much more suitable. Q-learning could solve this task by incorporating the goal coordinates into the state representation. 
-# However, Q-learning might struggle with generalizing as effectively as REINFORCE
+## 2.5 REINFORCE
 
+Study the provided REINFORCE algorithm for a 4×4 grid-world, where the agent must learn to navigate to a random goal position, and analyze the code and results without needing to run it.
 
-# 2.7
-# - Has the agent learned a good policy? Why / Why not ?
-# No, the agent has not learned a fully generalized policy. 
-# It has overfitted to the training where the goals were located in the top row, 
+Plot 1 and 2
 
-# - If the results obtained for environments D and E differ, explain why.
-# The difference arises from the diversity of the training goals. In Environment D, 
-# the training goals were spread across the grid, resulting in better generalization. In Environment E, the training goals were restricted to the top row, leading to overfitting and poor generalization to new goal positions during validation.
+![](images/Skärmavbild%202024-10-05%20kl.%2010.39.41.png)
+
+Plot 3 and 4
+
+![](images/Skärmavbild%202024-10-05%20kl.%2010.39.52.png)
+
+## 2.6 Environment D
+
+Train a REINFORCE agent on eight goal positions and validate it on the remaining eight positions, then answer questions on whether the agent learned a good policy and whether Q-learning could solve the task.
+
+**Has the agent learned a good policy? Why / Why not ?**
+
+Yes, the agent has learned relatively good policy (plot 3 and 4). The policy generalizes well during validation since the training goals were spread across the grid, allowing the agent to learn a flexible policy.
+
+**Could you have used the Q-learning algorithm to solve this task?**
+
+Yes, although REINFORCE is much more suitable. Q-learning could solve this task by incorporating the goal coordinates into the state representation. However, Q-learning might struggle with generalizing as effectively as REINFORCE.
+
+## 2.7 Environment E
+
+Analyze the agent’s performance when trained with goals from the top row and validated with goals from lower rows, and compare the results with environment D, explaining any differences.
+
+**Has the agent learned a good policy? Why / Why not ?**
+
+No, the agent has not learned a fully generalized policy (plot 1 and 2). It has overfitted to the training where the goals were located in the top row making the policy arrows pointing upward.
+
+**If** **the results obtained for environments D and E differ, explain why.**
+
+The difference arises from the diversity of the training goals. In Environment D, the training goals were spread across the grid, resulting in better generalization. In Environment E, the training goals were restricted to the top row, leading to overfitting and poor generalization to new goal positions during validation.
