@@ -1,0 +1,199 @@
+---
+title: "Lab4"
+author: "Olof Swedberg"
+date: "2024-10-08"
+output: html_document
+---
+
+## 2.1 Implementing GP Regression
+
+This first exercise will have you writing your own code for the Gaussian process regression model:
+
+$$ y = f(x) + \epsilon \quad \text{with} \quad \epsilon \sim N(0, \sigma_n^2) \quad \text{and} \quad f \sim GP(0, k(x, x')) $$
+
+You must implement Algorithm 2.1 on page 19 of Rasmussen and Williams’ book. The algorithm uses the Cholesky decomposition (`chol` in `R`) to attain numerical stability. Note that **L** in the algorithm is a lower triangular matrix, whereas the R function returns an upper triangular matrix. So, you need to transpose the output of the R function. In the algorithm, the notation **A/b** means the vector **x** that solves the equation **Ax = b** (see p. xvii in the book). This is implemented in R with the help of the function `solve`.
+
+Here is what you need to do:
+
+### Task (1)
+
+Write your own code for simulating from the posterior distribution of **f** using the squared exponential kernel. The function (name it `posteriorGP`) should return a vector with the posterior mean and variance of **f**, both evaluated at a set of x-values (**X∗**). You can assume that the prior mean of **f** is zero for all **x**. The function should have the following inputs:
+
+-   **X**: Vector of training inputs.
+-   **y**: Vector of training targets/outputs.
+-   **XStar**: Vector of inputs where the posterior distribution is evaluated, i.e., **X∗**.
+-   **sigmaNoise**: Noise standard deviation $\sigma_n$.
+-   **k**: Covariance function or kernel. That is, the kernel should be a separate function (see the file GaussianProcesses.R on the course web page).
+
+```{r}
+
+posteriorGP = function(X, y, sigmaNoise, XStar, k, ...) {
+
+  # Line 2
+  n = length(X) # No of training points
+  K = k(X,X,...)    # Covariance for training points
+  kStar = k(X,XStar,...) # Covariance for training and test points
+  # Cholesky decomposition, Lower triangular matrix
+  L = t(chol(K + sigmaNoise**2 * diag(nrow = length(n)))) 
+  alpha = solve(t(L), solve(L, y))
+  
+  # Line 4
+  fStar = t(kStar)%*%alpha #posterior mean
+  v = solve(L, kStar)
+  
+  # Line 6 :  Posterior variance 
+  V_fStar = k(XStar, XStar,...) - t(v)%*%v
+  log_marg_likelihood = -(1/2)*t(y)%*%alpha - sum(log(diag(L))) - (n/2)*log(2*pi)
+  
+  return(list(mean = fStar, variance = V_fStar, log_likelihood = log_marg_likelihood))
+}
+
+
+```
+
+### Task (2)
+
+Let the prior hyperparameters be $\sigma_f = 1$ and $\ell = 0.3$. Update this prior with a single observation: $(x, y) = (0.4, 0.719)$. Assume that $\sigma_n = 0.1$. Plot the posterior mean of $f$ over the interval $x \in [-1, 1]$ and also plot the 95% probability (pointwise) bands for $f$.
+
+We will use the squared exponential kernel function provided in the `GaussianProcesses.R` file.
+
+```{r}
+########################################
+###### Code from Lab instructions ######
+######### GaussianProcesses.R ##########
+########################################
+
+library("mvtnorm")
+
+# Covariance function
+SquaredExpKernel <- function(x1,x2,sigmaF=1,ell=3){
+  n1 <- length(x1)
+  n2 <- length(x2)
+  K <- matrix(NA,n1,n2)
+  for (i in 1:n2){
+    K[,i] <- sigmaF^2*exp(-0.5*( (x1-x2[i])/ell)^2 )
+  }
+  return(K)
+}
+
+########################################
+########################################
+
+# Initialize paramters
+sigmaF = 1
+ell = 0.3
+x = 0.4
+y = 0.719
+sigmaN = 0.1
+
+xGrid = seq(-1,1,length = 100)
+
+posterior = posteriorGP(X=x, y=y, sigmaNoise=sigmaN, XStar=xGrid, k = SquaredExpKernel, sigmaF, ell)
+
+plot(x = xGrid, y = posterior$mean, type = "l", col = 3, ylim = c(-2,2), ylab = "f", xlab = "", main = "Posterior mean of f")
+lines(x = xGrid, y =posterior$mean +1.96*sqrt(diag(posterior$variance)), type = "l", col = 2)
+lines(x = xGrid, y =posterior$mean -1.96*sqrt(diag(posterior$variance)), type = "l", col = 2)
+
+```
+
+### Task (3)
+
+Update your posterior from (2) with another observation: $(x, y) = (-0.6, -0.044)$. Plot the posterior mean of $f$ over the interval $x \in [-1, 1]$. Plot also 95% probability (pointwise) bands for $f$.
+
+*Hint: Updating the posterior after one observation with a new observation gives the same result as updating the prior directly with the two observations.*
+
+### Task (4)
+
+Compute the posterior distribution of $f$ using all five data points in the table below (note that the two previous observations are included in the table). Plot the posterior mean of $f$ over the interval $x \in [-1, 1]$. Plot also 95% probability (pointwise) bands for $f$.
+
+| x   | -1.0  | -0.6   | -0.2   | 0.4   | 0.8    |
+|-----|-------|--------|--------|-------|--------|
+| y   | 0.768 | -0.044 | -0.940 | 0.719 | -0.664 |
+
+### Task (5)
+
+Repeat the previous step, but this time with hyperparameters $\sigma_f = 1$ and $\ell = 1$. Compare the results.
+
+```{r}
+
+########################################
+###### Code from Lab instructions ######
+######### GaussianProcesses.R ##########
+########################################
+
+#install.packages("kernlab")
+#install.packages("mvtnorm")
+#install.packages("manipulate")
+library("mvtnorm")
+
+# Covariance function
+SquaredExpKernel <- function(x1,x2,sigmaF=1,l=3){
+  n1 <- length(x1)
+  n2 <- length(x2)
+  K <- matrix(NA,n1,n2)
+  for (i in 1:n2){
+    K[,i] <- sigmaF^2*exp(-0.5*( (x1-x2[i])/l)^2 )
+  }
+  return(K)
+}
+
+# Mean function
+MeanFunc <- function(x){
+  m <- sin(x)
+  return(m)
+}
+
+# Simulates nSim realizations (function) from a GP with mean m(x) and covariance K(x,x')
+# over a grid of inputs (x)
+SimGP <- function(m = 0,K,x,nSim,...){
+  n <- length(x)
+  if (is.numeric(m)) meanVector <- rep(0,n) else meanVector <- m(x)
+  covMat <- K(x,x,...)
+  f <- rmvnorm(nSim, mean = meanVector, sigma = covMat)
+  return(f)
+}
+
+xGrid <- seq(-5,5,length=20)
+
+# Plotting one draw
+sigmaF <- 1
+l <- 1
+nSim <- 1
+fSim <- SimGP(m=MeanFunc, K=SquaredExpKernel, x=xGrid, nSim, sigmaF, l)
+plot(xGrid, fSim[1,], type="p", ylim = c(-3,3))
+if(nSim>1){
+  for (i in 2:nSim) {
+    lines(xGrid, fSim[i,], type="p")
+  }
+}
+lines(xGrid,MeanFunc(xGrid), col = "red", lwd = 3)
+lines(xGrid, MeanFunc(xGrid) - 1.96*sqrt(diag(SquaredExpKernel(xGrid,xGrid,sigmaF,l))), col = "blue", lwd = 2)
+lines(xGrid, MeanFunc(xGrid) + 1.96*sqrt(diag(SquaredExpKernel(xGrid,xGrid,sigmaF,l))), col = "blue", lwd = 2)
+
+# Plotting using manipulate package
+library(manipulate)
+
+plotGPPrior <- function(sigmaF, l, nSim){
+  fSim <- SimGP(m=MeanFunc, K=SquaredExpKernel, x=xGrid, nSim, sigmaF, l)
+  plot(xGrid, fSim[1,], type="l", ylim = c(-3,3), ylab="f(x)", xlab="x")
+  if(nSim>1){
+    for (i in 2:nSim) {
+      lines(xGrid, fSim[i,], type="l")
+    }
+  }
+  lines(xGrid,MeanFunc(xGrid), col = "red", lwd = 3)
+  lines(xGrid, MeanFunc(xGrid) - 1.96*sqrt(diag(SquaredExpKernel(xGrid,xGrid,sigmaF,l))), col = "blue", lwd = 2)
+  lines(xGrid, MeanFunc(xGrid) + 1.96*sqrt(diag(SquaredExpKernel(xGrid,xGrid,sigmaF,l))), col = "blue", lwd = 2)
+  title(paste('length scale =',l,', sigmaf =',sigmaF))
+}
+
+manipulate(
+  plotGPPrior(sigmaF, l, nSim = 10),
+  sigmaF = slider(0, 2, step=0.1, initial = 1, label = "SigmaF"),
+  l = slider(0, 2, step=0.1, initial = 1, label = "Length scale, l")
+)
+
+########################################
+########################################
+########################################
+```
