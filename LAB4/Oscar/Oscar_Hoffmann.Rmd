@@ -1,0 +1,121 @@
+---
+title: "Lab4"
+author: "Oscar Hoffmann"
+date: "2024-10-08"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+## 2.1 Implement GP Regression
+
+### Task 1: Write Function for Posterior GP Simulation
+
+Implement a function named `posteriorGP` to simulate from the posterior distribution using the squared exponential kernel.
+
+```{r}
+# Placeholder for posteriorGP function implementation
+posteriorGP <- function(X, y, XStar, sigmaNoise, k) {
+  # Your implementation here
+}
+```
+
+### Task 2: Update Posterior with Single Observation
+
+Let prior hyperparameters be σf = 1 and l = 0.3, update with (x, y) = (0.4, 0.719), and plot the posterior mean with 95% bands.
+
+```{r}
+# Placeholder for updating posterior with a single observation and plotting
+# Use X = 0.4, y = 0.719, sigmaNoise = 0.1
+```
+
+### Task 3: Update with Another Observation
+
+Update your posterior from Task 2 with (x, y) = (-0.6, -0.044), plot the posterior mean, and include 95% probability bands.
+
+```{r}
+# Placeholder for updating with the second observation and plotting
+```
+
+### Task 4: Compute Posterior with All Observations
+
+Compute the posterior distribution of f using all five data points and plot the posterior mean with 95% bands.
+
+```{r}
+# Placeholder for computing posterior with all observations
+# Data points: x = c(-1.0, -0.6, -0.2, 0.4, 0.8), y = c(0.768, -0.044, -0.940, 0.719, -0.664)
+```
+
+### Task 5: Compare Hyperparameter Settings
+
+Repeat Task 4 using different hyperparameters: σf = 1 and l = 1, compare the results.
+
+```{r}
+# Placeholder for comparison of hyperparameters
+```
+
+## 2.2 GP Regression with kernlab
+
+### Task 1: Define Kernel and Compute Covariance Matrix
+
+Define your own squared exponential kernel and use the `kernelMatrix` function to compute the covariance matrix for given vectors.
+
+```{r}
+# Placeholder for defining squared exponential kernel and computing covariance matrix
+```
+
+### Task 2: Estimate GP Model with gausspr
+
+Use the `gausspr` function with σf = 20 and l = 100, estimate the Gaussian process regression model, and plot the posterior mean.
+
+```{r}
+# Placeholder for Gaussian process regression with gausspr
+```
+
+### Task 3: Implement Algorithm 2.1 for GP Regression
+
+Implement Algorithm 2.1 from Rasmussen and Williams' book to compute the posterior mean and variance.
+
+```{r}
+# Placeholder for implementation of Algorithm 2.1
+```
+
+### Task 4: Estimate Model with day Variable
+
+Estimate the model using `gausspr` with the day variable, superimpose the posterior mean on the previous model.
+
+```{r}
+# Placeholder for estimating model with day variable
+```
+
+### Task 5: Implement Locally Periodic Kernel
+
+Implement the extended squared exponential kernel with a periodic kernel and compare the results.
+
+```{r}
+# Placeholder for implementing locally periodic kernel
+```
+
+## 2.3 GP Classification with kernlab
+
+### Task 1: Fit GP Classification Model
+
+Use the `kernlab` package to fit a Gaussian process classification model for fraud, and plot contours of prediction probabilities.
+
+```{r}
+# Placeholder for Gaussian process classification model
+```
+
+### Task 2: Make Predictions for Test Set
+
+Make predictions for the test set and compute the accuracy.
+
+```{r}
+# Placeholder for making predictions on test set
+```
+
+### Task 3: Train Model with All Covariates
+
+Train a model using all four covariates and compare the accuracy to the model with only two covariates.
+
+\`\`\`{r} \# Placeholder for training model with all covariates and comparing accuracy
