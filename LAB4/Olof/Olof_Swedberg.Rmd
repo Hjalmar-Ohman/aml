@@ -34,7 +34,7 @@ posteriorGP = function(X, y, sigmaNoise, XStar, k, ...) {
   K = k(X,X,...)    # Covariance for training points
   kStar = k(X,XStar,...) # Covariance for training and test points
   # Cholesky decomposition, Lower triangular matrix
-  L = t(chol(K + sigmaNoise**2 * diag(nrow = length(n)))) 
+  L = t(chol(K + sigmaNoise**2 * diag(n))) 
   alpha = solve(t(L), solve(L, y))
   
   # Line 4
@@ -102,6 +102,18 @@ Update your posterior from (2) with another observation: $(x, y) = (-0.6, -0.044
 
 *Hint: Updating the posterior after one observation with a new observation gives the same result as updating the prior directly with the two observations.*
 
+```{r}
+# Initialize paramters
+x = c(0.4, -0.6)
+y = c(0.719, -0.044)
+
+posterior = posteriorGP(X=x, y=y, sigmaNoise=sigmaN, XStar=xGrid, k = SquaredExpKernel, sigmaF, ell)
+
+plot(x = xGrid, y = posterior$mean, type = "l", col = 3, ylim = c(-2,2), ylab = "f", xlab = "", main = "Posterior mean of f")
+lines(x = xGrid, y =posterior$mean +1.96*sqrt(diag(posterior$variance)), type = "l", col = 2)
+lines(x = xGrid, y =posterior$mean -1.96*sqrt(diag(posterior$variance)), type = "l", col = 2)
+```
+
 ### Task (4)
 
 Compute the posterior distribution of $f$ using all five data points in the table below (note that the two previous observations are included in the table). Plot the posterior mean of $f$ over the interval $x \in [-1, 1]$. Plot also 95% probability (pointwise) bands for $f$.
@@ -110,9 +122,213 @@ Compute the posterior distribution of $f$ using all five data points in the tabl
 |-----|-------|--------|--------|-------|--------|
 | y   | 0.768 | -0.044 | -0.940 | 0.719 | -0.664 |
 
+```{r}
+# Initialize paramters
+x = c(-1, -0.6, -0.2, 0.4, 0.8)
+y = c(0.768, -0.044, -0.94, 0.719, -0.664)
+
+posterior = posteriorGP(X=x, y=y, sigmaNoise=sigmaN, XStar=xGrid, k = SquaredExpKernel, sigmaF, ell)
+
+plot(x = xGrid, y = posterior$mean, type = "l", col = 3, ylim = c(-2,2), ylab = "f", xlab = "", main = "Posterior mean of f")
+lines(x = xGrid, y =posterior$mean +1.96*sqrt(diag(posterior$variance)), type = "l", col = 2)
+lines(x = xGrid, y =posterior$mean -1.96*sqrt(diag(posterior$variance)), type = "l", col = 2)
+
+```
+
 ### Task (5)
 
 Repeat the previous step, but this time with hyperparameters $\sigma_f = 1$ and $\ell = 1$. Compare the results.
+
+```{r}
+# Initialize paramters
+sigmaF = 1
+ell = 1
+
+posterior = posteriorGP(X=x, y=y, sigmaNoise=sigmaN, XStar=xGrid, k = SquaredExpKernel, sigmaF, ell)
+
+plot(x = xGrid, y = posterior$mean, type = "l", col = 3, ylim = c(-2,2), ylab = "f", xlab = "", main = "Posterior mean of f, with smoothing factor ell")
+lines(x = xGrid, y =posterior$mean +1.96*sqrt(diag(posterior$variance)), type = "l", col = 2)
+lines(x = xGrid, y =posterior$mean -1.96*sqrt(diag(posterior$variance)), type = "l", col = 2)
+
+```
+
+## 2.2 GP Regression with `kernlab`.
+
+In this exercise, you will work with the daily mean temperature in Stockholm (Tullinge) during the period January 1, 2010 - December 31, 2015. We have removed the leap year day February 29, 2012 to make things simpler
+
+Create the variable time which records the day number since the start of the dataset (i.e., `time` = $1$, $2$, . . ., $365 × 6 = 2190$). Also, create the variable day that records the day number since the start of each year (i.e., `day`= $1$, $2$, . . ., $365$, $1$, $2$, . . ., $365$). Estimating a GP on $2190$ observations can take some time on slower computers, so let us subsample the data and use only every fifth observation. This means that your time and day variables are now `time`= $1$, $6$, $11$, . . ., $2186$ and `day`= $1$, $6$, $11$, . . ., $361$, $1$, $6$, $11$, . . ., $361$.
+
+```{r}
+data = read.csv("https://github.com/STIMALiU/AdvMLCourse/raw/master/GaussianProcess/Code/TempTullinge.csv", header=TRUE, sep=";")
+
+data$time = 1:nrow(data)
+data$day = rep(1:365, 6)
+
+# Subsample every 5th observation
+subsample_idx = seq(1, nrow(data), by = 5)
+data_sub = data[subsample_idx, ]
+```
+
+### Task (1)
+
+Familiarize yourself with the functions `gausspr` and `kernelMatrix` in `kernlab`. Use `?gausspr` to read the input arguments and the output. Also, go through the file `KernLabDemo.R` available on the course website. You will need to understand it.
+
+Now, define your own square exponential kernel function (with parameters $\ell$ (`ell`) and $\sigma_f$ (`sigma_f`)), evaluate it at the point $x = 1, x' = 2$, and use the `kernelMatrix` function to compute the covariance matrix $K(X, X^*)$ for the input vectors $X = (1, 3, 4)^T$ and $X^* = (2, 3, 4)^T$.
+
+```{r}
+library(kernlab)
+####################################################
+###### Inspired by code from Lab instructions ######
+################ KernLabDemo.R #####################
+####################################################
+SquaredExpKernel <- function(sigmaF=1,ell=3){
+  rval <- function(x1, x2) {
+    n1 <- length(x1)
+    n2 <- length(x2)
+    K <- matrix(NA,n1,n2)
+    for (i in 1:n2){
+      K[,i] <- sigmaF^2*exp(-0.5*( (x1-x2[i])/ell)^2 )
+    }
+    return(K)
+  }
+  class(rval) <- "kernel"
+  return(rval)
+}
+####################################################
+
+
+SE_kernel = SquaredExpKernel(1,2)
+print("Evaluation at 1,2")
+print(SE_kernel)
+X = c(1,2,3)
+XStar = c(2,3,4)
+print("kernelMatrix")
+kernelMatrix(SE_kernel,X,XStar)
+```
+
+### Task (2)
+
+Consider first the following model:
+
+$$
+\text{temp} = f(\text{time}) + \epsilon, \quad \epsilon \sim \mathcal{N}(0, \sigma_n^2) \quad \text{and} \quad f \sim \mathcal{GP}(0, k(\text{time}, \text{time'}))
+$$
+
+Let $\sigma_n^2$ be the residual variance from a simple quadratic regression fit (using the `lm` function in R). Estimate the above Gaussian process regression model using the `gausspr` function with the squared exponential function from (1) with $\sigma_f = 20$ and $\ell = 100$ (use the option `scaled=FALSE` in the `gausspr` function, otherwise these $\sigma_f$ and $\ell$ values are not suitable).
+
+Use the `predict` function in R to compute the posterior mean at every data point in the training dataset. Make a scatterplot of the data and superimpose the posterior mean of $f$ as a curve (use `type="l"` in the `plot` function). Plot also the 95% probability (pointwise) bands for $f$. Play around with different values of $\sigma$ and $\ell$ (no need to write this in the report though).
+
+```{r}
+temp = data_sub$temp
+time = data_sub$time
+day = data_sub$day
+
+polyFit = lm(temp ~  time + I(time^2))
+sigmaNoise = sd(polyFit$residuals)
+
+
+GPfit = gausspr(time,temp, kernel = SquaredExpKernel(sigmaF = 20, ell = 100), var = sigmaNoise, scaled = FALSE)
+meanPred = predict(GPfit, time)
+
+plot(time,temp, main = "Posterior mean and confidence interval", ylim = c(-20,30))
+lines(time, meanPred, col="red", lwd = 3)
+lines(time, meanPred+1.96*sd(meanPred),col="blue")
+lines(time, meanPred-1.96*sd(meanPred),col="blue")
+
+```
+
+### Task (3)
+
+Repeat the previous exercise, but now use Algorithm 2.1 on page 19 of Rasmussen and Williams' book to compute the posterior mean and variance of $f$.
+
+```{r}
+posterior = posteriorGP(X=time, y=temp, sigmaNoise = sigmaNoise, XStar = time, k = SquaredExpKernel(20,100))
+meanPred = posterior$mean
+
+plot(time,temp, main = "Posterior mean and confidence interval", ylim = c(-20,30))
+lines(time, meanPred, col="red", lwd = 3)
+lines(time, meanPred+1.96*sd(meanPred),col="blue")
+lines(time, meanPred-1.96*sd(meanPred),col="blue")
+```
+
+As expected, these look exaclty the same since they both use the same kernel.
+
+### Task (4)
+
+Consider now the following model:
+
+$$
+\text{temp} = f(\text{day}) + \epsilon, \quad \epsilon \sim \mathcal{N}(0, \sigma_n^2) \quad \text{and} \quad f \sim \mathcal{GP}(0, k(\text{day}, \text{day'}))
+$$
+
+Estimate the model using the `gausspr` function with the squared exponential function from (1) with $\sigma_f = 20$ and $\ell = 100$ (use the option `scaled=FALSE` in the `gausspr` function, otherwise these $\sigma_f$ and $\ell$ values are not suitable).
+
+Superimpose the posterior mean from this model on the posterior mean from the model in (2). Note that this plot should also have the time variable on the horizontal axis. Compare the results of both models. What are the pros and cons of each model?
+
+```{r}
+
+GPfit = gausspr(day,temp, kernel = SquaredExpKernel(sigmaF = 20, ell = 100), var = sigmaNoise, scaled = FALSE)
+meanPredDays = predict(GPfit, day)
+
+plot(time,temp, main = "Posterior mean and confidence interval", ylim = c(-20,30))
+lines(time, meanPredDays, col="green", lwd = 3)
+lines(time, meanPred, col="red", lwd = 3)
+lines(time, meanPred+1.96*sd(meanPred),col="red")
+lines(time, meanPred-1.96*sd(meanPred),col="red")
+lines(time, meanPredDays+1.96*sd(meanPredDays),col="green")
+lines(time, meanPredDays-1.96*sd(meanPredDays),col="green")
+```
+
+Here, the posterior fitted with time (red) does not show similar increase in temperature over time. The posterior fitted with days (green) increases slightly more. However, these are very similar averages.
+
+### Task (5)
+
+Finally, implement the following extension of the squared exponential kernel with a periodic kernel (a.k.a. locally periodic kernel):
+
+$$
+k(x, x') = \sigma_f^2 \exp\left(-\frac{2 \sin^2\left(\frac{\pi \lvert x - x' \rvert}{d}\right)}{\ell_1^2}\right) \exp\left(-\frac{1}{2} \frac{\lvert x - x' \rvert^2}{\ell_2^2}\right)
+$$
+
+Note that we have two different length scales in the kernel. Intuitively, $\ell_1$ controls the correlation between two days in the same year, and $\ell_2$ controls the correlation between the same day in different years.
+
+Estimate the GP model using the time variable with this kernel and hyperparameters $\sigma_f = 20$, $\ell_1 = 1$, $\ell_2 = 100$ and $d = 365$. Use the `gausspr` function with the option `scaled=FALSE`, otherwise these $\sigma_f$, $\ell_1$, and $\ell_2$ values are not suitable.
+
+Compare the fit to the previous two models (with $\sigma_f = 20$ and $\ell = 100$). Discuss the results.
+
+```{r}
+ExtendedSquaredExpKernel <- function(sigmaF,ell1, ell2, d){
+  rval <- function(x1, x2) {
+    n1 <- length(x1)
+    n2 <- length(x2)
+    K <- matrix(NA,n1,n2)
+    for (i in 1:n2){
+      diff = abs(x1 - x2[i])
+      K[, i] = sigmaF^2*exp(-2*sin(pi*diff/d)^2/ell1^2) * exp(-0.5*diff^2/ell2^2)
+    }
+    return(K)
+  }
+  class(rval) <- "kernel"
+  return(rval)
+}
+
+GPfit = gausspr(time,temp, kernel = ExtendedSquaredExpKernel(sigmaF = 20, ell1 = 1, ell2 = 100, d = 365 ), var = sigmaNoise, scaled = FALSE)
+meanPredExtended = predict(GPfit, time)
+
+plot(time,temp, main = "Posterior mean and confidence interval", ylim = c(-20,30))
+lines(time, meanPred, col="red", lwd = 1)
+lines(time, meanPred+1.96*sd(meanPred),col="red")
+lines(time, meanPred-1.96*sd(meanPred),col="red")
+lines(time, meanPredDays, col="green", lwd = 1)
+lines(time, meanPredDays+1.96*sd(meanPredDays),col="green")
+lines(time, meanPredDays-1.96*sd(meanPredDays),col="green")
+lines(time, meanPredExtended, col="blue", lwd = 2)
+lines(time, meanPredExtended+1.96*sd(meanPredExtended),col="blue")
+lines(time, meanPredExtended-1.96*sd(meanPredExtended),col="blue")
+
+
+```
+
+The extended periodic kernel is better at fitting the data because it can find correlation between days in different years. The time-based model might be better for long-term trends, while the day-based and periodic models capture seasonal patterns more effectively.
 
 ```{r}
 
