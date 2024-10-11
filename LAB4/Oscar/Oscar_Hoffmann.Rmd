@@ -9,54 +9,170 @@ output:
 
 ## 2.1 Implement GP Regression
 
-### Task 1: Write Function for Posterior GP Simulation
+Libraries
+
+```{r}
+library(kernlab)
+rm(list =ls())
+```
+
+#### Task 1: Write Function for Posterior GP Simulation
 
 Implement a function named `posteriorGP` to simulate from the posterior distribution using the squared exponential kernel.
 
 ```{r}
-# Placeholder for posteriorGP function implementation
-posteriorGP <- function(X, y, XStar, sigmaNoise, k) {
-  # Your implementation here
+# Squared Exponential Kernel Function
+SquaredExpKernel <- function(x1,x2,sigmaF=1,l=3){
+  n1 <- length(x1)
+  n2 <- length(x2)
+  K <- matrix(NA,n1,n2)
+  for (i in 1:n2){
+    K[,i] <- sigmaF^2*exp(-0.5*( (x1-x2[i])/l)^2 )
+  }
+  return(K)
 }
+
+# Posterior GP Function
+posteriorGP <- function(X, y, XStar, sigmaNoise, k, ...) {
+  
+  K <- k(X, X, ...)  # Compute the covariance matrices K(X, X)
+  kStar <- k(X, XStar, ...) # Compute covariance between training and test inputs
+  
+  # Step 2 in algo
+  #--------------------
+  K_y <- K + sigmaNoise^2 * diag(length(X)) # Add noise variance to diagonal, K_y= covariance matrix of y
+  L <- t(chol(K_y))   # Compute Cholesky decomposition, to get lower triangular L we take t()
+  alpha <- solve(t(L), solve(L, y))   # Solve for alpha
+  #---------------------
+  
+  # Step 4 in algo
+  #--------------------
+  fStar_mean <- t(kStar) %*% alpha   # Compute posterior mean
+  v <- solve(L, kStar)   # Compute v = solve(L, kStar)
+  #-------------------
+  
+  # Step 6 in algo
+  #-------------------
+  V_fStar <- k(XStar, XStar, ...) - t(v) %*% v # pred variance (cov matrix)
+  #-------------------
+  
+  # Return posterior mean and variance
+  return(list(mean = fStar_mean, variance = V_fStar))
+}
+
 ```
 
-### Task 2: Update Posterior with Single Observation
+#### Task 2: Update Posterior with Single Observation
 
 Let prior hyperparameters be σf = 1 and l = 0.3, update with (x, y) = (0.4, 0.719), and plot the posterior mean with 95% bands.
 
 ```{r}
-# Placeholder for updating posterior with a single observation and plotting
-# Use X = 0.4, y = 0.719, sigmaNoise = 0.1
+# Single observation
+X <- c(0.4)
+y <- c(0.719)
+
+# Test inputs over the interval [-1, 1]
+XStar <- seq(-1, 1, length.out = 100)
+
+# Hyperparameters
+sigmaF <- 1        # σ_f
+ell <- 0.3         # length-scale l
+sigmaNoise <- 0.1  # σ_n
+
+# Call posteriorGP with named hyperparameters
+pos_res <- posteriorGP(
+  X = X, 
+  y = y, 
+  XStar = XStar, 
+  sigmaNoise = sigmaNoise, 
+  k = SquaredExpKernel, 
+  sigmaF = sigmaF, 
+  l = ell
+)
+
+# Extract posterior mean and variance
+pos_mean <- as.vector(pos_res$predMean)
+pos_var <- diag(pos_res$predVar)
+
+# Compute 95% confidence intervals
+lower_bound <- pos_mean - 1.96 * sqrt(pos_var)
+upper_bound <- pos_mean + 1.96 * sqrt(pos_var)
+
+# Plot the posterior mean and 95% probability bands
+plot(
+  XStar, pos_mean, type = "l", lwd = 2,
+  ylim = range(c(lower_bound, upper_bound, y)),
+  ylab = "f(x)", xlab = "x",
+  main = "Posterior Mean and 95% Probability Bands"
+)
+# Add the confidence intervals
+lines(XStar, lower_bound, lty = 2)
+lines(XStar, upper_bound, lty = 2)
+# Plot the training data point
+points(X, y, pch = 19, col = "red")
+
 ```
 
-### Task 3: Update with Another Observation
+#### Task 3: Update with Another Observation
 
 Update your posterior from Task 2 with (x, y) = (-0.6, -0.044), plot the posterior mean, and include 95% probability bands.
 
 ```{r}
-# Placeholder for updating with the second observation and plotting
+# Step 3: Update with another observation
+X <- c(0.4, -0.6)
+y <- c(0.719, -0.044)
+
+result <- posteriorGP(X, y, XStar, sigmaNoise, squared_exp_kernel, sigma_f, l)
+
+# Plot the posterior mean and 95% confidence intervals
+plot(XStar, result$mean, type = "l", col = "blue", ylim = c(-2, 2), main = "Posterior Mean with Two Observations")
+lines(XStar, result$mean + 1.96 * sqrt(result$variance), col = "red", lty = 2)
+lines(XStar, result$mean - 1.96 * sqrt(result$variance), col = "red", lty = 2)
+points(X, y, col = "black", pch = 19)
+
 ```
 
-### Task 4: Compute Posterior with All Observations
+#### Task 4: Compute Posterior with All Observations
 
 Compute the posterior distribution of f using all five data points and plot the posterior mean with 95% bands.
 
 ```{r}
-# Placeholder for computing posterior with all observations
-# Data points: x = c(-1.0, -0.6, -0.2, 0.4, 0.8), y = c(0.768, -0.044, -0.940, 0.719, -0.664)
+# Step 4: Posterior with all five observations
+X <- c(-1.0, -0.6, -0.2, 0.4, 0.8)
+y <- c(0.768, -0.044, -0.940, 0.719, -0.664)
+
+result <- posteriorGP(X, y, XStar, sigmaNoise, squared_exp_kernel, sigma_f, l)
+
+# Plot the posterior mean and 95% confidence intervals
+plot(XStar, result$mean, type = "l", col = "blue", ylim = c(-2, 2), main = "Posterior Mean with All Observations")
+lines(XStar, result$mean + 1.96 * sqrt(result$variance), col = "red", lty = 2)
+lines(XStar, result$mean - 1.96 * sqrt(result$variance), col = "red", lty = 2)
+points(X, y, col = "black", pch = 19)
+
 ```
 
-### Task 5: Compare Hyperparameter Settings
+#### Task 5: Compare Hyperparameter Settings
 
 Repeat Task 4 using different hyperparameters: σf = 1 and l = 1, compare the results.
 
 ```{r}
-# Placeholder for comparison of hyperparameters
+# Step 5: Posterior with new hyperparameters
+sigma_f <- 1
+l <- 1
+
+result <- posteriorGP(X, y, XStar, sigmaNoise, squared_exp_kernel, sigma_f, l)
+
+# Plot the posterior mean and 95% confidence intervals
+plot(XStar, result$mean, type = "l", col = "blue", ylim = c(-2, 2), main = "Posterior Mean with New Hyperparameters")
+lines(XStar, result$mean + 1.96 * sqrt(result$variance), col = "red", lty = 2)
+lines(XStar, result$mean - 1.96 * sqrt(result$variance), col = "red", lty = 2)
+points(X, y, col = "black", pch = 19)
+
 ```
 
 ## 2.2 GP Regression with kernlab
 
-### Task 1: Define Kernel and Compute Covariance Matrix
+#### Task 1: Define Kernel and Compute Covariance Matrix
 
 Define your own squared exponential kernel and use the `kernelMatrix` function to compute the covariance matrix for given vectors.
 
@@ -64,7 +180,7 @@ Define your own squared exponential kernel and use the `kernelMatrix` function t
 # Placeholder for defining squared exponential kernel and computing covariance matrix
 ```
 
-### Task 2: Estimate GP Model with gausspr
+#### Task 2: Estimate GP Model with gausspr
 
 Use the `gausspr` function with σf = 20 and l = 100, estimate the Gaussian process regression model, and plot the posterior mean.
 
@@ -72,7 +188,7 @@ Use the `gausspr` function with σf = 20 and l = 100, estimate the Gaussian proc
 # Placeholder for Gaussian process regression with gausspr
 ```
 
-### Task 3: Implement Algorithm 2.1 for GP Regression
+#### Task 3: Implement Algorithm 2.1 for GP Regression
 
 Implement Algorithm 2.1 from Rasmussen and Williams' book to compute the posterior mean and variance.
 
@@ -80,7 +196,7 @@ Implement Algorithm 2.1 from Rasmussen and Williams' book to compute the posteri
 # Placeholder for implementation of Algorithm 2.1
 ```
 
-### Task 4: Estimate Model with day Variable
+#### Task 4: Estimate Model with day Variable
 
 Estimate the model using `gausspr` with the day variable, superimpose the posterior mean on the previous model.
 
@@ -88,7 +204,7 @@ Estimate the model using `gausspr` with the day variable, superimpose the poster
 # Placeholder for estimating model with day variable
 ```
 
-### Task 5: Implement Locally Periodic Kernel
+#### Task 5: Implement Locally Periodic Kernel
 
 Implement the extended squared exponential kernel with a periodic kernel and compare the results.
 
@@ -98,7 +214,7 @@ Implement the extended squared exponential kernel with a periodic kernel and com
 
 ## 2.3 GP Classification with kernlab
 
-### Task 1: Fit GP Classification Model
+#### Task 1: Fit GP Classification Model
 
 Use the `kernlab` package to fit a Gaussian process classification model for fraud, and plot contours of prediction probabilities.
 
@@ -106,7 +222,7 @@ Use the `kernlab` package to fit a Gaussian process classification model for fra
 # Placeholder for Gaussian process classification model
 ```
 
-### Task 2: Make Predictions for Test Set
+#### Task 2: Make Predictions for Test Set
 
 Make predictions for the test set and compute the accuracy.
 
@@ -114,7 +230,7 @@ Make predictions for the test set and compute the accuracy.
 # Placeholder for making predictions on test set
 ```
 
-### Task 3: Train Model with All Covariates
+#### Task 3: Train Model with All Covariates
 
 Train a model using all four covariates and compare the accuracy to the model with only two covariates.
 
