@@ -2,7 +2,9 @@
 title: "Lab4"
 author: "Olof Swedberg"
 date: "2024-10-08"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ## 2.1 Implementing GP Regression
@@ -17,11 +19,11 @@ Here is what you need to do:
 
 ### Task (1)
 
-Write your own code for simulating from the posterior distribution of **f** using the squared exponential kernel. The function (name it `posteriorGP`) should return a vector with the posterior mean and variance of **f**, both evaluated at a set of x-values (**X∗**). You can assume that the prior mean of **f** is zero for all **x**. The function should have the following inputs:
+Write your own code for simulating from the posterior distribution of **f** using the squared exponential kernel. The function (name it `posteriorGP`) should return a vector with the posterior mean and variance of **f**, both evaluated at a set of x-values (**X***). You can assume that the prior mean of **f** is zero for all **x**. The function should have the following inputs:
 
 -   **X**: Vector of training inputs.
 -   **y**: Vector of training targets/outputs.
--   **XStar**: Vector of inputs where the posterior distribution is evaluated, i.e., **X∗**.
+-   **XStar**: Vector of inputs where the posterior distribution is evaluated, i.e., **X***.
 -   **sigmaNoise**: Noise standard deviation $\sigma_n$.
 -   **k**: Covariance function or kernel. That is, the kernel should be a separate function (see the file GaussianProcesses.R on the course web page).
 
@@ -330,86 +332,75 @@ lines(time, meanPredExtended-1.96*sd(meanPredExtended),col="blue")
 
 The extended periodic kernel is better at fitting the data because it can find correlation between days in different years. The time-based model might be better for long-term trends, while the day-based and periodic models capture seasonal patterns more effectively.
 
+## 2.3 GP Classification with `Kernlab`
+
+GP Classification with kernlab. Download the banknote fraud data:
+
 ```{r}
-
-########################################
-###### Code from Lab instructions ######
-######### GaussianProcesses.R ##########
-########################################
-
-#install.packages("kernlab")
-#install.packages("mvtnorm")
-#install.packages("manipulate")
-library("mvtnorm")
-
-# Covariance function
-SquaredExpKernel <- function(x1,x2,sigmaF=1,l=3){
-  n1 <- length(x1)
-  n2 <- length(x2)
-  K <- matrix(NA,n1,n2)
-  for (i in 1:n2){
-    K[,i] <- sigmaF^2*exp(-0.5*( (x1-x2[i])/l)^2 )
-  }
-  return(K)
-}
-
-# Mean function
-MeanFunc <- function(x){
-  m <- sin(x)
-  return(m)
-}
-
-# Simulates nSim realizations (function) from a GP with mean m(x) and covariance K(x,x')
-# over a grid of inputs (x)
-SimGP <- function(m = 0,K,x,nSim,...){
-  n <- length(x)
-  if (is.numeric(m)) meanVector <- rep(0,n) else meanVector <- m(x)
-  covMat <- K(x,x,...)
-  f <- rmvnorm(nSim, mean = meanVector, sigma = covMat)
-  return(f)
-}
-
-xGrid <- seq(-5,5,length=20)
-
-# Plotting one draw
-sigmaF <- 1
-l <- 1
-nSim <- 1
-fSim <- SimGP(m=MeanFunc, K=SquaredExpKernel, x=xGrid, nSim, sigmaF, l)
-plot(xGrid, fSim[1,], type="p", ylim = c(-3,3))
-if(nSim>1){
-  for (i in 2:nSim) {
-    lines(xGrid, fSim[i,], type="p")
-  }
-}
-lines(xGrid,MeanFunc(xGrid), col = "red", lwd = 3)
-lines(xGrid, MeanFunc(xGrid) - 1.96*sqrt(diag(SquaredExpKernel(xGrid,xGrid,sigmaF,l))), col = "blue", lwd = 2)
-lines(xGrid, MeanFunc(xGrid) + 1.96*sqrt(diag(SquaredExpKernel(xGrid,xGrid,sigmaF,l))), col = "blue", lwd = 2)
-
-# Plotting using manipulate package
-library(manipulate)
-
-plotGPPrior <- function(sigmaF, l, nSim){
-  fSim <- SimGP(m=MeanFunc, K=SquaredExpKernel, x=xGrid, nSim, sigmaF, l)
-  plot(xGrid, fSim[1,], type="l", ylim = c(-3,3), ylab="f(x)", xlab="x")
-  if(nSim>1){
-    for (i in 2:nSim) {
-      lines(xGrid, fSim[i,], type="l")
-    }
-  }
-  lines(xGrid,MeanFunc(xGrid), col = "red", lwd = 3)
-  lines(xGrid, MeanFunc(xGrid) - 1.96*sqrt(diag(SquaredExpKernel(xGrid,xGrid,sigmaF,l))), col = "blue", lwd = 2)
-  lines(xGrid, MeanFunc(xGrid) + 1.96*sqrt(diag(SquaredExpKernel(xGrid,xGrid,sigmaF,l))), col = "blue", lwd = 2)
-  title(paste('length scale =',l,', sigmaf =',sigmaF))
-}
-
-manipulate(
-  plotGPPrior(sigmaF, l, nSim = 10),
-  sigmaF = slider(0, 2, step=0.1, initial = 1, label = "SigmaF"),
-  l = slider(0, 2, step=0.1, initial = 1, label = "Length scale, l")
-)
-
-########################################
-########################################
-########################################
+data <- read.csv("https://github.com/STIMALiU/AdvMLCourse/raw/master/GaussianProcess/Code/banknoteFraud.csv", header=FALSE, sep=",")
+names(data) <- c("varWave","skewWave","kurtWave","entropyWave","fraud")
+data[,5] <- as.factor(data[,5])
 ```
+
+You can read about this dataset here. Choose 1000 observations as training data using the following command (i.e., use the vector `SelectTraining` to subset the training observations):
+
+```{r}
+set.seed(111); 
+SelectTraining <- sample(1:dim(data)[1], size = 1000,replace = FALSE)
+trainingData = data[SelectTraining,]
+testingData = data[-SelectTraining,]
+```
+
+### Task (1)
+
+Use the R package `kernlab` to fit a Gaussian process classification model for fraud on the training data. Use the default kernel and hyperparameters. Start using only the covariates `varWave` and `skewWave` in the model. Plot contours of the prediction probabilities over a suitable grid of values for `varWave` and `skewWave`. Overlay the training data for fraud = 1 (as blue points) and fraud = 0 (as red points). You can reuse code from the file `KernLabDemo.R` available on the course website. Compute the confusion matrix for the classifier and its accuracy.
+
+```{r}
+library(kernlab)
+GPfitFraud = gausspr(fraud ~ varWave + skewWave, data = trainingData)
+GPfitFraud
+
+# predict on the training set
+predictions = predict(GPfitFraud, trainingData[,1:2])
+table(predictions, trainingData[,5]) # confusion matrix
+mean(predictions == trainingData[,5]) # accuracy
+
+varWave_seq = seq(min(trainingData$varWave), max(trainingData$varWave), length = 100)
+skewWave_seq = seq(min(trainingData$skewWave), max(trainingData$skewWave), length = 100)
+
+grid = expand.grid(varWave = varWave_seq, skewWave = skewWave_seq)
+probabilities = predict(GPfitFraud, grid, type = "probabilities")
+
+# Plot the contour
+prob_matrix = matrix(probabilities[, 1], nrow = 100)
+contour(varWave_seq, skewWave_seq, prob_matrix, 10, col = "black", xlab = "varWave", ylab = "skewWave", main = 'Prob(Fraud) - Fraud is red')
+points(trainingData[trainingData[,5] =='1',1],trainingData[trainingData[,5] =='1',2],col="red")
+points(trainingData[trainingData[,5] =='0',1],trainingData[trainingData[,5] =='0',2],col="blue")
+```
+
+
+### Task (2)
+
+Using the estimated model from (1), make predictions for the test set. Compute the accuracy.
+
+```{r}
+predictions = predict(GPfitFraud, testingData[,1:2])
+table(predictions, testingData[,5]) # confusion matrix
+mean(predictions == testingData[,5]) # accuracy
+```
+The accuracy on the testing data is a little lower than the training data, which is expected.
+
+### Task (3)
+
+Train a model using all four covariates. Make predictions on the test set and compare the accuracy to the model with only two covariates.
+
+```{r}
+GPfitFraud = gausspr(fraud ~ varWave + skewWave + kurtWave + entropyWave, data = trainingData)
+GPfitFraud
+
+# predict on the training set
+predictions = predict(GPfitFraud, testingData[,1:4])
+table(predictions, testingData[,5]) # confusion matrix
+mean(predictions == testingData[,5]) # accuracy
+```
+The accuracy is 99.46%, which is higher than when predicting using two variables and is reasonable since the model can use more information. 
