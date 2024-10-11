@@ -123,7 +123,7 @@ lines(XStar, posterior_f$mean + 1.96*sqrt(diag(posterior_f$variance)), col = "bl
 
 ### 1.5
 
-Repeat the previous step using the five data points in the table, but this time with hyperparameters $\sigma_f = 1$ and $\ell = 1$. Compare the results.
+Repeat the previous step using the five data points in the table, but this time with hyperparameters $\sigma_f = 1$ and $\ell = 1$.
 
 ```{r}
 l = 1
@@ -134,7 +134,8 @@ lines(XStar, posterior_f$mean - 1.96*sqrt(diag(posterior_f$variance)), col = "bl
 lines(XStar, posterior_f$mean + 1.96*sqrt(diag(posterior_f$variance)), col = "blue")
 ```
 
-Gives a smoother graph since we increased the scale of the kernel, causing points further away to affect the given point more.
+Q: Compare the results.\
+A: Gives a smoother graph since we increased the scale of the kernel, causing points further away to affect the given point more.
 
 ## 2. GP Regression with kernlab
 
@@ -208,9 +209,10 @@ lines(time, time_meanPred, col="red", lwd = 2)
 lines(time, time_meanPred+1.96*predict(GPfit,time, type="sdeviation"),col="blue")
 lines(time, time_meanPred-1.96*predict(GPfit,time, type="sdeviation"),col="blue")
 ```
+
 ## 2.3 Algorithm 2.1
 
-Repeat the previous exercise, but now use Algorithm 2.1 on page 19 of Rasmussen and Williams' book to compute the posterior mean and variance of $f$.
+Repeat the previous exercise, but now use Algorithm 2.1 on page 19 of Rasmussen and Williams' book to compute the posterior mean and variance of $f$. #Fördelar nackdelar med denna?
 
 ```{r}
 posteriorGP = function(x, y, XStar, sigmaNoise, k, ...){
@@ -233,6 +235,7 @@ lines(time, predictions$mean, col="red", lwd = 2)
 lines(time, predictions$mean+1.96*sqrt(diag(predictions$variance)),col="blue") ##Correct?: sqrt(diag(predictions$variance))
 lines(time, predictions$mean-1.96*sqrt(diag(predictions$variance)),col="blue")
 ```
+
 ## 2.4 New Model Based on Day
 
 Consider now the following model:
@@ -241,8 +244,7 @@ $$
 \text{temp} = f(\text{day}) + \epsilon \quad \text{with} \quad \epsilon \sim \mathcal{N}(0, \sigma_n^2) \quad \text{and} \quad f \sim \mathcal{GP}(0, k(\text{day}, \text{day}'))
 $$
 
-Estimate the model using the `gausspr` function with the squared exponential function from (1) with $\sigma_f = 20$ and $\ell = 100$ (use the option `scaled=FALSE` in the `gausspr` function, otherwise these $\sigma_f$ and $\ell$ values are not suitable). Superimpose the posterior mean from this model on the posterior mean from the model in (2). Note that this plot should also have the time variable on the horizontal axis. Compare the results of both models. What are the pros and cons of each model?
-
+Estimate the model using the `gausspr` function with the squared exponential function from (1) with $\sigma_f = 20$ and $\ell = 100$ (use the option `scaled=FALSE` in the `gausspr` function, otherwise these $\sigma_f$ and $\ell$ values are not suitable). Superimpose the posterior mean from this model on the posterior mean from the model in (2). Note that this plot should also have the time variable on the horizontal axis.
 
 ```{r}
 temp = data$temp
@@ -255,10 +257,14 @@ GPfit = gausspr(day, temp, kernel = SquareExponential(ell = 100, sigmaf = 20), v
 
 day_meanPred <- predict(GPfit, day)
 plot(time, temp)
-lines(time, day_meanPred, col="red", lwd = 2)
-lines(time, day_meanPred+1.96*predict(GPfit,day, type="sdeviation"),col="blue")
-lines(time, day_meanPred-1.96*predict(GPfit,day, type="sdeviation"),col="blue")
+lines(time, time_meanPred, col = "red")
+lines(time, day_meanPred, col = "blue")
 ```
+
+Q: Compare the results of both models. What are the pros and cons of each model?
+
+A: They seem to perform somewhat similarly. The model with time as its input feature seem to have slight more variance than the one with day. Day values repeats itself, meaning that the 1st of January 2010 is the same value as 1st of January 2011. The model therefore gets multiple temperatures to train on for the same day value, while for the model with time, 1st of Jan each year is distinct.
+
 ## 2.5 Extended Squared Exponential Kernel
 
 Implement the following periodic kernel (a.k.a. locally periodic kernel):
@@ -291,18 +297,75 @@ lines(time, day_meanPred, col = "blue")
 lines(time, periodic_meanPred, col = "green")
 ```
 
+The new model with a periodic kernel allows to capture periodic patterns, creating a model with higher variance.
+
 ## 3. GP Classification with kernlab
 
 Choose 1000 observations as training data.
 
+```{r}
+rm(list = ls())
+data <- read.csv("https://github.com/STIMALiU/AdvMLCourse/raw/master/GaussianProcess/Code/banknoteFraud.csv", header=FALSE, sep=",")
+names(data) <- c("varWave","skewWave","kurtWave","entropyWave","fraud")
+data[,5] <- as.factor(data[,5])
+set.seed(111); SelectTraining <- sample(1:dim(data)[1], size = 1000, replace = FALSE)
+train_data = data[SelectTraining, ]
+test_data = data[-SelectTraining, ]
+```
+
 ## 3.1.
 
 Use the R package `kernlab` to fit a Gaussian process classification model for fraud on the training data. Use the default kernel and hyperparameters. Start using only the covariates `varWave` and `skewWave` in the model. Plot contours of the prediction probabilities over a suitable grid of values for `varWave` and `skewWave`. Overlay the training data for `fraud = 1` (as blue points) and `fraud = 0` (as red points). You can reuse code from the file *KernLabDemo.R* available on the course website. Compute the confusion matrix for the classifier and its accuracy.
+```{r}
+library(kernlab)
+library(AtmRay)
+GPfitFraud <- gausspr(fraud ~ varWave + skewWave, data=train_data)
+
+classPreds = predict(GPfitFraud, newdata=train_data)
+cm = table(classPreds, train_data$fraud) # confusion matrix
+cm
+
+sum(diag(cm))/sum(cm)
+
+
+x1 <- seq(min(train_data[,1]),max(train_data[,1]),length=100)
+x2 <- seq(min(train_data[,2]),max(train_data[,2]),length=100)
+gridPoints <- meshgrid(x1, x2)
+gridPoints <- cbind(c(gridPoints$x), c(gridPoints$y))
+
+gridPoints <- data.frame(gridPoints)
+names(gridPoints) <- names(train_data)[1:2]
+probPreds <- predict(GPfitFraud, gridPoints, type="probabilities")
+
+# Plotting for Prob(fraud)
+contour(x1,x2,matrix(probPreds[,1],100,byrow = TRUE), 20, xlab = "varWave", ylab = "skewWave", main = 'Prob(fraud)')
+points(train_data[train_data[,5]==1,1],train_data[train_data[,5]==1,2],col="red")
+points(train_data[train_data[,5]==0,1],train_data[train_data[,5]==0,2],col="blue")
+```
 
 ## 3.2.
 
-Using the estimated model from (1), make predictions for the test set. Compute the accuracy.
+Using the estimated model from 3.1, make predictions for the test set. Compute the accuracy.
+
+```{r}
+classPreds = predict(GPfitFraud, newdata=test_data)
+cm = table(classPreds, test_data$fraud) # confusion matrix
+cm
+
+sum(diag(cm))/sum(cm)
+```
 
 ## 3.3.
 
 Train a model using all four covariates. Make predictions on the test set and compare the accuracy to the model with only two covariates.
+```{r}
+GPfitFraud <- gausspr(fraud ~ ., data=train_data)
+
+classPreds = predict(GPfitFraud, newdata=test_data)
+cm = table(classPreds, test_data$fraud) # confusion matrix
+cm
+
+sum(diag(cm))/sum(cm)
+```
+
+The accuracy is a lot better (0.9946237 vs. 0.9247312)
