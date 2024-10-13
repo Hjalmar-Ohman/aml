@@ -67,6 +67,33 @@ posteriorGP <- function(X, y, XStar, sigmaNoise, k, ...) {
 Let prior hyperparameters be σf = 1 and l = 0.3, update with (x, y) = (0.4, 0.719), and plot the posterior mean with 95% bands.
 
 ```{r}
+# Plotting Function
+plotGP <- function(XStar, res, X_train, y_train, title) {
+  
+  # Extract posterior mean and variance
+  pos_mean <- res$mean
+  pos_var <- diag(res$variance)
+
+  # Compute 95% confidence intervals
+  lower_bound <- pos_mean - 1.96 * sqrt(pos_var)
+  upper_bound <- pos_mean + 1.96 * sqrt(pos_var)
+  
+  # Plot the posterior mean and 95% probability bands
+  plot(XStar, pos_mean, type = "l", lwd = 2,
+    ylim = range(c(lower_bound, upper_bound, y_train)),
+    ylab = "f(x)", xlab = "x", main = title)
+  
+  # Add the confidence intervals
+  lines(XStar, lower_bound, lty = 2)
+  lines(XStar, upper_bound, lty = 2)
+  # Plot the training data points
+  points(X_train, y_train, pch = 19, col = "red")
+}
+```
+
+Put plotting into a function for easy reuse
+
+```{r}
 # Single observation
 X <- c(0.4)
 y <- c(0.719)
@@ -79,38 +106,10 @@ sigmaF <- 1        # σ_f
 ell <- 0.3         # length-scale l
 sigmaNoise <- 0.1  # σ_n
 
-# Call posteriorGP with named hyperparameters
-pos_res <- posteriorGP(
-  X = X, 
-  y = y, 
-  XStar = XStar, 
-  sigmaNoise = sigmaNoise, 
-  k = SquaredExpKernel, 
-  sigmaF = sigmaF, 
-  l = ell
-)
+# Call posteriorGP
+res <- posteriorGP(X, y, XStar, sigmaNoise, k = SquaredExpKernel, sigmaF = sigmaF, l = ell)
 
-# Extract posterior mean and variance
-pos_mean <- as.vector(pos_res$predMean)
-pos_var <- diag(pos_res$predVar)
-
-# Compute 95% confidence intervals
-lower_bound <- pos_mean - 1.96 * sqrt(pos_var)
-upper_bound <- pos_mean + 1.96 * sqrt(pos_var)
-
-# Plot the posterior mean and 95% probability bands
-plot(
-  XStar, pos_mean, type = "l", lwd = 2,
-  ylim = range(c(lower_bound, upper_bound, y)),
-  ylab = "f(x)", xlab = "x",
-  main = "Posterior Mean and 95% Probability Bands"
-)
-# Add the confidence intervals
-lines(XStar, lower_bound, lty = 2)
-lines(XStar, upper_bound, lty = 2)
-# Plot the training data point
-points(X, y, pch = 19, col = "red")
-
+plotGP(XStar, res, X, y, "Posterior Mean and 95% Probability Bands")
 ```
 
 #### Task 3: Update with Another Observation
@@ -118,18 +117,14 @@ points(X, y, pch = 19, col = "red")
 Update your posterior from Task 2 with (x, y) = (-0.6, -0.044), plot the posterior mean, and include 95% probability bands.
 
 ```{r}
-# Step 3: Update with another observation
+# Updated training data
 X <- c(0.4, -0.6)
 y <- c(0.719, -0.044)
 
-result <- posteriorGP(X, y, XStar, sigmaNoise, squared_exp_kernel, sigma_f, l)
+# Same XStar and hyperparameters as in task2
+res <- posteriorGP(X, y, XStar, sigmaNoise, k = SquaredExpKernel, sigmaF = sigmaF, l = ell)
 
-# Plot the posterior mean and 95% confidence intervals
-plot(XStar, result$mean, type = "l", col = "blue", ylim = c(-2, 2), main = "Posterior Mean with Two Observations")
-lines(XStar, result$mean + 1.96 * sqrt(result$variance), col = "red", lty = 2)
-lines(XStar, result$mean - 1.96 * sqrt(result$variance), col = "red", lty = 2)
-points(X, y, col = "black", pch = 19)
-
+plotGP(XStar, res, X, y, "Posterior Mean and 95% Probability Bands")
 ```
 
 #### Task 4: Compute Posterior with All Observations
@@ -141,14 +136,8 @@ Compute the posterior distribution of f using all five data points and plot the 
 X <- c(-1.0, -0.6, -0.2, 0.4, 0.8)
 y <- c(0.768, -0.044, -0.940, 0.719, -0.664)
 
-result <- posteriorGP(X, y, XStar, sigmaNoise, squared_exp_kernel, sigma_f, l)
-
-# Plot the posterior mean and 95% confidence intervals
-plot(XStar, result$mean, type = "l", col = "blue", ylim = c(-2, 2), main = "Posterior Mean with All Observations")
-lines(XStar, result$mean + 1.96 * sqrt(result$variance), col = "red", lty = 2)
-lines(XStar, result$mean - 1.96 * sqrt(result$variance), col = "red", lty = 2)
-points(X, y, col = "black", pch = 19)
-
+res <- posteriorGP(X, y, XStar, sigmaNoise, k = SquaredExpKernel, sigmaF = sigmaF, l = ell)
+plotGP(XStar, res, X, y, "Posterior Mean and 95% Probability Bands, 5 obs")
 ```
 
 #### Task 5: Compare Hyperparameter Settings
@@ -156,19 +145,15 @@ points(X, y, col = "black", pch = 19)
 Repeat Task 4 using different hyperparameters: σf = 1 and l = 1, compare the results.
 
 ```{r}
-# Step 5: Posterior with new hyperparameters
-sigma_f <- 1
-l <- 1
+# Hyperparameters
+sigmaF <- 1     # σ_f
+ell <- 1        # length-scale l
 
-result <- posteriorGP(X, y, XStar, sigmaNoise, squared_exp_kernel, sigma_f, l)
-
-# Plot the posterior mean and 95% confidence intervals
-plot(XStar, result$mean, type = "l", col = "blue", ylim = c(-2, 2), main = "Posterior Mean with New Hyperparameters")
-lines(XStar, result$mean + 1.96 * sqrt(result$variance), col = "red", lty = 2)
-lines(XStar, result$mean - 1.96 * sqrt(result$variance), col = "red", lty = 2)
-points(X, y, col = "black", pch = 19)
-
+res <- posteriorGP(X, y, XStar, sigmaNoise, k = SquaredExpKernel, sigmaF = sigmaF, l = ell)
+plotGP(XStar, res, X, y, "Posterior Mean and 95% Probability Bands, new hyp params")
 ```
+
+When increasing ell from 0.3 to 1 we get more smoothness which is expected.
 
 ## 2.2 GP Regression with kernlab
 
@@ -177,7 +162,14 @@ points(X, y, col = "black", pch = 19)
 Define your own squared exponential kernel and use the `kernelMatrix` function to compute the covariance matrix for given vectors.
 
 ```{r}
-# Placeholder for defining squared exponential kernel and computing covariance matrix
+data = read.csv("https://github.com/STIMALiU/AdvMLCourse/raw/master/GaussianProcess/Code/TempTullinge.csv", header=TRUE, sep=";")
+
+time = seq(1,2190, 5)
+day = seq(1,365, 5)
+
+data_sampled = data[time,]
+data_sampled$time = time
+data_sampled$day = day
 ```
 
 #### Task 2: Estimate GP Model with gausspr
