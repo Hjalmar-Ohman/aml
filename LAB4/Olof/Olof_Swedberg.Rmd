@@ -1,11 +1,15 @@
 ---
-title: "Lab4"
-author: "Olof Swedberg"
-date: "2024-10-08"
+title: "TDDE15-Lab 4"
+author: "frera064, oscho091, hjaoh082, olosw720"
 output:
   pdf_document: default
-  html_document: default
+  html_document:
+    df_print: paged
 ---
+
+**Contribution**
+
+All four members solved the problems on their own. We then discussed the answers and compiled the group report by combining our solutions. We used olosw720 for task 1. hjaoh082 for task 2, and oscho091 for task 3. Frera064 contributed by suggesting interesting insights and valuable reflections.
 
 ## 2.1 Implementing GP Regression
 

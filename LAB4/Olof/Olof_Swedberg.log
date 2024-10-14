@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2024.2.16)  14 OCT 2024 14:52
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2024.2.16)  14 OCT 2024 15:13
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -568,23 +568,23 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 File: mt-msb.cfg 2005/06/01 v1.0 microtype config. file: AMS symbols (b) (RS)
 )
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <10> on input line 132.
+(Font)              <10> on input line 140.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <7> on input line 132.
+(Font)              <7> on input line 140.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <5> on input line 132.
+(Font)              <5> on input line 140.
 LaTeX Font Info:    Trying to load font information for T1+lmtt on input line 1
-35.
+43.
 (/usr/local/texlive/2023/texmf-dist/tex/latex/lm/t1lmtt.fd
 File: t1lmtt.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
 LaTeX Font Info:    Trying to load font information for TS1+lmr on input line 1
-58.
+66.
 (/usr/local/texlive/2023/texmf-dist/tex/latex/lm/ts1lmr.fd
 File: ts1lmr.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
 LaTeX Font Info:    Font shape `T1/lmtt/bx/n' in size <10> not available
-(Font)              Font shape `T1/lmtt/b/n' tried instead on input line 174.
+(Font)              Font shape `T1/lmtt/b/n' tried instead on input line 182.
 [1
 
 {/usr/local/texlive/2023/texmf-var/fonts/map/pdftex/updmap/pdftex.map}{/usr/loc
@@ -595,7 +595,7 @@ vips/lm/lm-mathsy.enc}{/usr/local/texlive/2023/texmf-dist/fonts/enc/dvips/lm/lm
 -ts1.enc}]
 
 LaTeX Font Warning: Font shape `T1/lmtt/bx/it' in size <10> not available
-(Font)              Font shape `T1/lmtt/b/sl' tried instead on input line 210.
+(Font)              Font shape `T1/lmtt/b/sl' tried instead on input line 218.
 
 <Olof_Swedberg_files/figure-latex/unnamed-chunk-2-1.pdf, id=26, 436.63126pt x 2
 53.94875pt>
@@ -603,7 +603,7 @@ File: Olof_Swedberg_files/figure-latex/unnamed-chunk-2-1.pdf Graphic file (type
  pdf)
 <use Olof_Swedberg_files/figure-latex/unnamed-chunk-2-1.pdf>
 Package pdftex.def Info: Olof_Swedberg_files/figure-latex/unnamed-chunk-2-1.pdf
-  used on input line 248.
+  used on input line 256.
 (pdftex.def)             Requested size: 436.63019pt x 253.94812pt.
 [2]
 <Olof_Swedberg_files/figure-latex/unnamed-chunk-3-1.pdf, id=33, 436.63126pt x 2
@@ -612,7 +612,7 @@ File: Olof_Swedberg_files/figure-latex/unnamed-chunk-3-1.pdf Graphic file (type
  pdf)
 <use Olof_Swedberg_files/figure-latex/unnamed-chunk-3-1.pdf>
 Package pdftex.def Info: Olof_Swedberg_files/figure-latex/unnamed-chunk-3-1.pdf
-  used on input line 275.
+  used on input line 283.
 (pdftex.def)             Requested size: 436.63019pt x 253.94812pt.
 [3 <./Olof_Swedberg_files/figure-latex/unnamed-chunk-2-1.pdf>]
 <Olof_Swedberg_files/figure-latex/unnamed-chunk-4-1.pdf, id=48, 436.63126pt x 2
@@ -621,7 +621,7 @@ File: Olof_Swedberg_files/figure-latex/unnamed-chunk-4-1.pdf Graphic file (type
  pdf)
 <use Olof_Swedberg_files/figure-latex/unnamed-chunk-4-1.pdf>
 Package pdftex.def Info: Olof_Swedberg_files/figure-latex/unnamed-chunk-4-1.pdf
-  used on input line 310.
+  used on input line 318.
 (pdftex.def)             Requested size: 436.63019pt x 253.94812pt.
 [4 <./Olof_Swedberg_files/figure-latex/unnamed-chunk-3-1.pdf>]
 <Olof_Swedberg_files/figure-latex/unnamed-chunk-5-1.pdf, id=63, 436.63126pt x 2
@@ -630,16 +630,16 @@ File: Olof_Swedberg_files/figure-latex/unnamed-chunk-5-1.pdf Graphic file (type
  pdf)
 <use Olof_Swedberg_files/figure-latex/unnamed-chunk-5-1.pdf>
 Package pdftex.def Info: Olof_Swedberg_files/figure-latex/unnamed-chunk-5-1.pdf
-  used on input line 332.
+  used on input line 340.
 (pdftex.def)             Requested size: 436.63019pt x 253.94812pt.
 [5 <./Olof_Swedberg_files/figure-latex/unnamed-chunk-4-1.pdf>]
 LaTeX Font Info:    Font shape `T1/lmtt/bx/n' in size <12> not available
-(Font)              Font shape `T1/lmtt/b/n' tried instead on input line 339.
+(Font)              Font shape `T1/lmtt/b/n' tried instead on input line 347.
 
-LaTeX Warning: Command \texttimes invalid in math mode on input line 348.
+LaTeX Warning: Command \texttimes invalid in math mode on input line 356.
 
 
-LaTeX Warning: Command \texttimes invalid in math mode on input line 348.
+LaTeX Warning: Command \texttimes invalid in math mode on input line 356.
 
 [6 <./Olof_Swedberg_files/figure-latex/unnamed-chunk-5-1.pdf>] [7]
 <Olof_Swedberg_files/figure-latex/unnamed-chunk-8-1.pdf, id=97, 436.63126pt x 2
@@ -648,7 +648,7 @@ File: Olof_Swedberg_files/figure-latex/unnamed-chunk-8-1.pdf Graphic file (type
  pdf)
 <use Olof_Swedberg_files/figure-latex/unnamed-chunk-8-1.pdf>
 Package pdftex.def Info: Olof_Swedberg_files/figure-latex/unnamed-chunk-8-1.pdf
-  used on input line 498.
+  used on input line 506.
 (pdftex.def)             Requested size: 436.63019pt x 283.0568pt.
 [8 <./Olof_Swedberg_files/figure-latex/unnamed-chunk-8-1.pdf>]
 <Olof_Swedberg_files/figure-latex/unnamed-chunk-9-1.pdf, id=111, 436.63126pt x 
@@ -657,7 +657,7 @@ File: Olof_Swedberg_files/figure-latex/unnamed-chunk-9-1.pdf Graphic file (type
  pdf)
 <use Olof_Swedberg_files/figure-latex/unnamed-chunk-9-1.pdf>
 Package pdftex.def Info: Olof_Swedberg_files/figure-latex/unnamed-chunk-9-1.pdf
-  used on input line 519.
+  used on input line 527.
 (pdftex.def)             Requested size: 436.63019pt x 283.0568pt.
 <Olof_Swedberg_files/figure-latex/unnamed-chunk-10-1.pdf, id=112, 436.63126pt x
  283.0575pt>
@@ -665,7 +665,7 @@ File: Olof_Swedberg_files/figure-latex/unnamed-chunk-10-1.pdf Graphic file (typ
 e pdf)
 <use Olof_Swedberg_files/figure-latex/unnamed-chunk-10-1.pdf>
 Package pdftex.def Info: Olof_Swedberg_files/figure-latex/unnamed-chunk-10-1.pd
-f  used on input line 555.
+f  used on input line 563.
 (pdftex.def)             Requested size: 436.63019pt x 283.0568pt.
 [9 <./Olof_Swedberg_files/figure-latex/unnamed-chunk-9-1.pdf>] [10{/usr/local/t
 exlive/2023/texmf-dist/fonts/enc/dvips/lm/lm-mathex.enc} <./Olof_Swedberg_files
@@ -676,11 +676,11 @@ File: Olof_Swedberg_files/figure-latex/unnamed-chunk-11-1.pdf Graphic file (typ
 e pdf)
 <use Olof_Swedberg_files/figure-latex/unnamed-chunk-11-1.pdf>
 Package pdftex.def Info: Olof_Swedberg_files/figure-latex/unnamed-chunk-11-1.pd
-f  used on input line 626.
+f  used on input line 634.
 (pdftex.def)             Requested size: 436.63019pt x 283.0568pt.
 [11 <./Olof_Swedberg_files/figure-latex/unnamed-chunk-11-1.pdf>]
 LaTeX Font Info:    Trying to load font information for TS1+lmtt on input line 
-742.
+750.
 (/usr/local/texlive/2023/texmf-dist/tex/latex/lm/ts1lmtt.fd
 File: ts1lmtt.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 ) [12]
@@ -690,16 +690,16 @@ File: Olof_Swedberg_files/figure-latex/unnamed-chunk-14-1.pdf Graphic file (typ
 e pdf)
 <use Olof_Swedberg_files/figure-latex/unnamed-chunk-14-1.pdf>
 Package pdftex.def Info: Olof_Swedberg_files/figure-latex/unnamed-chunk-14-1.pd
-f  used on input line 748.
+f  used on input line 756.
 (pdftex.def)             Requested size: 436.63019pt x 283.0568pt.
 [13 <./Olof_Swedberg_files/figure-latex/unnamed-chunk-14-1.pdf>] [14] (./Olof_S
 wedberg.aux) ) 
 Here is how much of TeX's memory you used:
- 14619 strings out of 476025
- 234693 string characters out of 5790017
+ 14621 strings out of 476025
+ 234713 string characters out of 5790017
  1865388 words of memory out of 5000000
  34658 multiletter control sequences out of 15000+600000
- 569906 words of font info for 138 fonts, out of 8000000 for 9000
+ 569989 words of font info for 139 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  77i,6n,81p,1010b,482s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2023/texmf-dist/fonts/type1/public/lm/lmbx10.
@@ -717,7 +717,7 @@ t/fonts/type1/public/lm/lmsy7.pfb></usr/local/texlive/2023/texmf-dist/fonts/typ
 e1/public/lm/lmtk10.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/
 lm/lmtko10.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/lm/lmtt10
 .pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/lm/lmtti10.pfb>
-Output written on Olof_Swedberg.pdf (14 pages, 588746 bytes).
+Output written on Olof_Swedberg.pdf (14 pages, 592683 bytes).
 PDF statistics:
  323 PDF objects out of 1000 (max. 8388607)
  240 compressed objects within 3 object streams
