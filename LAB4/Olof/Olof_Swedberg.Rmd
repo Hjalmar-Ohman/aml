@@ -19,11 +19,11 @@ Here is what you need to do:
 
 ### Task (1)
 
-Write your own code for simulating from the posterior distribution of **f** using the squared exponential kernel. The function (name it `posteriorGP`) should return a vector with the posterior mean and variance of **f**, both evaluated at a set of x-values (**X***). You can assume that the prior mean of **f** is zero for all **x**. The function should have the following inputs:
+Write your own code for simulating from the posterior distribution of **f** using the squared exponential kernel. The function (name it `posteriorGP`) should return a vector with the posterior mean and variance of **f**, both evaluated at a set of x-values (**X**\*). You can assume that the prior mean of **f** is zero for all **x**. The function should have the following inputs:
 
 -   **X**: Vector of training inputs.
 -   **y**: Vector of training targets/outputs.
--   **XStar**: Vector of inputs where the posterior distribution is evaluated, i.e., **X***.
+-   **XStar**: Vector of inputs where the posterior distribution is evaluated, i.e., **X**\*.
 -   **sigmaNoise**: Noise standard deviation $\sigma_n$.
 -   **k**: Covariance function or kernel. That is, the kernel should be a separate function (see the file GaussianProcesses.R on the course web page).
 
@@ -134,7 +134,7 @@ posterior = posteriorGP(X=x, y=y, sigmaNoise=sigmaN, XStar=xGrid, k = SquaredExp
 plot(x = xGrid, y = posterior$mean, type = "l", col = 3, ylim = c(-2,2), ylab = "f", xlab = "", main = "Posterior mean of f")
 lines(x = xGrid, y =posterior$mean +1.96*sqrt(diag(posterior$variance)), type = "l", col = 2)
 lines(x = xGrid, y =posterior$mean -1.96*sqrt(diag(posterior$variance)), type = "l", col = 2)
-
+points(x,y)
 ```
 
 ### Task (5)
@@ -151,8 +151,10 @@ posterior = posteriorGP(X=x, y=y, sigmaNoise=sigmaN, XStar=xGrid, k = SquaredExp
 plot(x = xGrid, y = posterior$mean, type = "l", col = 3, ylim = c(-2,2), ylab = "f", xlab = "", main = "Posterior mean of f, with smoothing factor ell")
 lines(x = xGrid, y =posterior$mean +1.96*sqrt(diag(posterior$variance)), type = "l", col = 2)
 lines(x = xGrid, y =posterior$mean -1.96*sqrt(diag(posterior$variance)), type = "l", col = 2)
-
+points(x,y)
 ```
+
+As visualized, the smoothing factor ell makes the postieror underfit to the data, because it cant adjust enough after the first datapoint due to the generalizing prior.
 
 ## 2.2 GP Regression with `kernlab`.
 
@@ -199,13 +201,13 @@ SquaredExpKernel <- function(sigmaF=1,ell=3){
 ####################################################
 
 
-SE_kernel = SquaredExpKernel(1,2)
+SE_kernel = SquaredExpKernel()
 print("Evaluation at 1,2")
-print(SE_kernel)
-X = c(1,2,3)
+SE_kernel(1,2)
+X = c(1,3,4)
 XStar = c(2,3,4)
 print("kernelMatrix")
-kernelMatrix(SE_kernel,X,XStar)
+kernelMatrix(SquaredExpKernel(),X,XStar)
 ```
 
 ### Task (2)
@@ -226,16 +228,17 @@ time = data_sub$time
 day = data_sub$day
 
 polyFit = lm(temp ~  time + I(time^2))
-sigmaNoise = sd(polyFit$residuals)
+sigmaNoise = var(polyFit$residuals)
 
-
-GPfit = gausspr(time,temp, kernel = SquaredExpKernel(sigmaF = 20, ell = 100), var = sigmaNoise, scaled = FALSE)
+GPfit = gausspr(time,temp, kernel = SquaredExpKernel(sigmaF = 20, ell = 100), var = sigmaNoise, scaled = FALSE, variance.model = TRUE)
 meanPred = predict(GPfit, time)
+
+model2conf = predict(GPfit, time, type = "sdeviation")
 
 plot(time,temp, main = "Posterior mean and confidence interval", ylim = c(-20,30))
 lines(time, meanPred, col="red", lwd = 3)
-lines(time, meanPred+1.96*sd(meanPred),col="blue")
-lines(time, meanPred-1.96*sd(meanPred),col="blue")
+lines(time, meanPred+1.96*model2conf ,col="blue")
+lines(time, meanPred-1.96*model2conf,col="blue")
 
 ```
 
@@ -244,13 +247,14 @@ lines(time, meanPred-1.96*sd(meanPred),col="blue")
 Repeat the previous exercise, but now use Algorithm 2.1 on page 19 of Rasmussen and Williams' book to compute the posterior mean and variance of $f$.
 
 ```{r}
+sigmaNoise = sd(polyFit$residuals)
 posterior = posteriorGP(X=time, y=temp, sigmaNoise = sigmaNoise, XStar = time, k = SquaredExpKernel(20,100))
 meanPred = posterior$mean
 
 plot(time,temp, main = "Posterior mean and confidence interval", ylim = c(-20,30))
 lines(time, meanPred, col="red", lwd = 3)
-lines(time, meanPred+1.96*sd(meanPred),col="blue")
-lines(time, meanPred-1.96*sd(meanPred),col="blue")
+lines(time, meanPred+1.96*sqrt(diag(posterior$variance)),col="blue")
+lines(time, meanPred-1.96*sqrt(diag(posterior$variance)),col="blue")
 ```
 
 As expected, these look exaclty the same since they both use the same kernel.
@@ -268,17 +272,18 @@ Estimate the model using the `gausspr` function with the squared exponential fun
 Superimpose the posterior mean from this model on the posterior mean from the model in (2). Note that this plot should also have the time variable on the horizontal axis. Compare the results of both models. What are the pros and cons of each model?
 
 ```{r}
-
-GPfit = gausspr(day,temp, kernel = SquaredExpKernel(sigmaF = 20, ell = 100), var = sigmaNoise, scaled = FALSE)
+sigmaNoise = var(polyFit$residuals)
+GPfit = gausspr(day,temp, kernel = SquaredExpKernel(sigmaF = 20, ell = 100), var = sigmaNoise, scaled = FALSE, variance.model = TRUE)
 meanPredDays = predict(GPfit, day)
 
+model4conf = predict(GPfit, day, type = "sdeviation")
 plot(time,temp, main = "Posterior mean and confidence interval", ylim = c(-20,30))
 lines(time, meanPredDays, col="green", lwd = 3)
 lines(time, meanPred, col="red", lwd = 3)
-lines(time, meanPred+1.96*sd(meanPred),col="red")
-lines(time, meanPred-1.96*sd(meanPred),col="red")
-lines(time, meanPredDays+1.96*sd(meanPredDays),col="green")
-lines(time, meanPredDays-1.96*sd(meanPredDays),col="green")
+#lines(time, meanPred+1.96*model2conf,col="red")
+#lines(time, meanPred-1.96*model2conf,col="red")
+#lines(time, meanPredDays+1.96*model4conf,col="green")
+#lines(time, meanPredDays-1.96*model4conf,col="green")
 ```
 
 Here, the posterior fitted with time (red) does not show similar increase in temperature over time. The posterior fitted with days (green) increases slightly more. However, these are very similar averages.
@@ -298,6 +303,7 @@ Estimate the GP model using the time variable with this kernel and hyperparamete
 Compare the fit to the previous two models (with $\sigma_f = 20$ and $\ell = 100$). Discuss the results.
 
 ```{r}
+sigmaNoise = var(polyFit$residuals)
 ExtendedSquaredExpKernel <- function(sigmaF,ell1, ell2, d){
   rval <- function(x1, x2) {
     n1 <- length(x1)
@@ -313,19 +319,19 @@ ExtendedSquaredExpKernel <- function(sigmaF,ell1, ell2, d){
   return(rval)
 }
 
-GPfit = gausspr(time,temp, kernel = ExtendedSquaredExpKernel(sigmaF = 20, ell1 = 1, ell2 = 100, d = 365 ), var = sigmaNoise, scaled = FALSE)
+GPfit = gausspr(time,temp, kernel = ExtendedSquaredExpKernel(sigmaF = 20, ell1 = 1, ell2 = 100, d = 365 ), var = sigmaNoise, scaled = FALSE, variance.model = TRUE)
 meanPredExtended = predict(GPfit, time)
 
 plot(time,temp, main = "Posterior mean and confidence interval", ylim = c(-20,30))
 lines(time, meanPred, col="red", lwd = 1)
-lines(time, meanPred+1.96*sd(meanPred),col="red")
-lines(time, meanPred-1.96*sd(meanPred),col="red")
+#lines(time, meanPred+1.96*model2conf,col="red")
+#lines(time, meanPred-1.96*model2conf,col="red")
 lines(time, meanPredDays, col="green", lwd = 1)
-lines(time, meanPredDays+1.96*sd(meanPredDays),col="green")
-lines(time, meanPredDays-1.96*sd(meanPredDays),col="green")
+#lines(time, meanPredDays+1.96*model4conf,col="green")
+#lines(time, meanPredDays-1.96*model4conf,col="green")
 lines(time, meanPredExtended, col="blue", lwd = 2)
-lines(time, meanPredExtended+1.96*sd(meanPredExtended),col="blue")
-lines(time, meanPredExtended-1.96*sd(meanPredExtended),col="blue")
+#lines(time, meanPredExtended+1.96*predict(GPfit, day, type = "sdeviation"),col="blue")
+#lines(time, meanPredExtended-1.96*predict(GPfit, day, type = "sdeviation"),col="blue")
 
 
 ```
@@ -378,7 +384,6 @@ points(trainingData[trainingData[,5] =='1',1],trainingData[trainingData[,5] =='1
 points(trainingData[trainingData[,5] =='0',1],trainingData[trainingData[,5] =='0',2],col="blue")
 ```
 
-
 ### Task (2)
 
 Using the estimated model from (1), make predictions for the test set. Compute the accuracy.
@@ -388,6 +393,7 @@ predictions = predict(GPfitFraud, testingData[,1:2])
 table(predictions, testingData[,5]) # confusion matrix
 mean(predictions == testingData[,5]) # accuracy
 ```
+
 The accuracy on the testing data is a little lower than the training data, which is expected.
 
 ### Task (3)
@@ -403,4 +409,5 @@ predictions = predict(GPfitFraud, testingData[,1:4])
 table(predictions, testingData[,5]) # confusion matrix
 mean(predictions == testingData[,5]) # accuracy
 ```
-The accuracy is 99.46%, which is higher than when predicting using two variables and is reasonable since the model can use more information. 
+
+The accuracy is 99.46%, which is higher than when predicting using two variables and is reasonable since the model can use more information.
