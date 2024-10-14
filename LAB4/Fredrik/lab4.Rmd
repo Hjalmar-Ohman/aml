@@ -2,9 +2,9 @@
 title: "TDDE15-Lab 4"
 author: "Fredrik Ramberg"
 output:
+  pdf_document: default
   html_document:
     df_print: paged
-  pdf_document: default
 ---
 
 # Part 2.1
@@ -17,7 +17,7 @@ library("mvtnorm")
 
 **2.1. Implementing GP Regression.**
 
-This first exercise will have you writing your own code for the Gaussian process regression model: y = f (x) + *Epsilon* with *Epsilon* ∼ N (0, σ2 n) and f ∼ GP(0, k(x, x′))
+This first exercise will have you writing your own code for the Gaussian process regression model: y = f (x) + *Epsilon* with *Epsilon* \~ N (0, sigma\^2 n) and f \~ GP(0, k(x, x'))
 
 ![](images/Screenshot%202024-10-13%20at%2015.21.25.png){width="532"}
 
@@ -93,7 +93,9 @@ points(obs$X, obs$Y, col = "black", pch = 19)  # Plot the training point
 
 ```
 
-**(3)** Update your posterior from (2) with another observation: (x,y) = (−0.6,−0.044). Plot the posterior mean of f over the interval x ∈ [−1, 1]. Plot also 95 % probability (point-wise) bands for f.
+**Answer:** The confidence interval is the narrowest nearby the point which is expected with a distance decaying covariance.
+
+**(3)** Update your posterior from (2) with another observation: (x,y) = (-0.6,-0.044). Plot the posterior mean of f over the interval x E [-1, 1]. Plot also 95 % probability (point-wise) bands for f.
 
 **Hint**: Updating the posterior after one observation with a new observation gives the same result as updating the prior directly with the two observations.
 
@@ -121,6 +123,8 @@ points(obs2$X, obs2$Y, col = "black", pch = 19)  # Plot the training point
 
 ```
 
+Now the the confidence intervals narrows at both of the points.
+
 ![](images/Screenshot%202024-10-13%20at%2016.21.55.png)
 
 ```{r}
@@ -146,7 +150,9 @@ lines(XStar, lower_bound, col = "red", lty = 2)
 points(obs5$X, obs5$Y, col = "black", pch = 19)  # Plot the training point
 ```
 
-**(5)** Repeat (4), this time with hyperparameters σf = 1 and l = 1. Compare the results.
+Now the the confidence interval is smaller overall due to several points different from eachother effecting the results. We can also see a wave pattern emerging.
+
+**(5)** Repeat (4), this time with hyperparameters sigmaf = 1 and l = 1. Compare the results.
 
 ```{r}
 #changing the hyperparameters, the rest is the same .....
@@ -169,6 +175,8 @@ lines(XStar, lower_bound, col = "red", lty = 2)
 points(obs5$X, obs5$Y, col = "black", pch = 19)  # Plot the training point
 
 ```
+
+A higher l will smooth out the function which is visible in the plot. This is due to minimizing dividing the distance with a lower number, which will lead values far from each other being "assigned" higher covariance. Here l clearly is to high resulting in underfitting the data.
 
 # **Part 2.2**
 
@@ -233,8 +241,8 @@ time <- trainData$time
 posteriorMeanTime <- predict(modelGP, time)
 sdMeanTime <- predict(modelGP, time, type="sdeviation")
 
-upper <- posteriorMean + 1.96 * sdMeanTime
-lower <- posteriorMean - 1.96 * sdMeanTime
+upper <- posteriorMeanTime + 1.96 * sdMeanTime
+lower <- posteriorMeanTime - 1.96 * sdMeanTime
 
 plot(x= trainData$time, y = trainData$temp,
      xlab = "time", ylab = "temp", main = "Temperature predictions", lwd = 1.5)
@@ -246,7 +254,8 @@ legend("bottomright", legend=c("Data", "Predictions", "Confidence Interval"), pc
 
 ```
 
-**Answer:** \
+\
+\
 ![](images/Screenshot%202024-10-13%20at%2018.21.20.png)
 
 ```{r}
@@ -271,6 +280,8 @@ legend("bottomright", legend=c("Data", "Predictions", "Confidence Interval"), pc
 
 ```
 
+This gives the same posterior, this is expected due to the functions using the same kernels.
+
 ![](images/Screenshot%202024-10-13%20at%2018.38.30.png)
 
 ```{r}
@@ -287,6 +298,8 @@ lines(x=trainData$time, y = posteriorMeanTime, col = "red", lwd = 2)
 lines(x=trainData$time, y = posteriorMeanDay, col = "blue", lwd = 2)
 legend("bottomright", legend=c("Data", "Prediction Time", "Prediction Day"), pch=c(1, NA, NA), lty=c(NA, 1, 1), lwd=c(NA, 2, 2), col=c("black", "red", "blue"))
 ```
+
+The models trained on Days vs Time gives different posteriors. The day posterior is similar every year whereas the time model differs. For instance the time model seems to show a slight increase in temperature over the years.
 
 ![](images/Screenshot%202024-10-13%20at%2019.08.37.png)
 
@@ -320,6 +333,8 @@ lines(x=trainData$time, y = posteriorMeanDay, col = "blue", lwd = 2)
 legend("bottomright", legend=c("Data", "Prediction Time", "Prediction Day", "Prediction Periodic"), pch=c(1, NA, NA, NA), lty=c(NA, 1, 1, 1), lwd=c(NA, 2, 2, 2), col=c("black", "red", "blue", "green"))
 
 ```
+
+The new periodic model fits the spikes of the data more closely than the previous models. This is due to the period of 365 which essentially adds the cyclical nature of years to the model.
 
 # Part 2.3
 
@@ -376,6 +391,8 @@ points(trainData[trainData$fraud==1,1],trainData[trainData$fraud==1,2],col="red"
 points(trainData[trainData$fraud==0,1],trainData[trainData$fraud==0,2],col="blue")
 
 ```
+
+The contours of the probabilities follow the data closely.
 
 ![](images/Screenshot%202024-10-13%20at%2020.11.27.png)
 
