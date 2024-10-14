@@ -159,7 +159,7 @@ Go through the file *KernLabDemo.R* available on the course website. You will ne
 ```{r}
 library(kernlab)
 
-SquareExponential <- function(sigmaf = 1, ell = 1) 
+SquareExponential <- function(sigmaf, ell) 
 {
   rval <- function(x, y = NULL) {
     n1 <- length(x)
@@ -198,7 +198,7 @@ Let $\sigma_n^2$ be the residual variance from a simple quadratic regression fit
 temp = data$temp
 time = data$time
 
-polyFit = lm(temp~time + time**2)
+polyFit = lm(temp~I(time) + I(time**2))
 sigmaNoise = sd(polyFit$residuals)
 plot(time, temp)
 
@@ -212,7 +212,7 @@ lines(time, time_meanPred-1.96*predict(GPfit,time, type="sdeviation"),col="blue"
 
 ## 2.3 Algorithm 2.1
 
-Repeat the previous exercise, but now use Algorithm 2.1 on page 19 of Rasmussen and Williams' book to compute the posterior mean and variance of $f$. #Fördelar nackdelar med denna?
+Repeat the previous exercise, but now use Algorithm 2.1 on page 19 of Rasmussen and Williams' book to compute the posterior mean and variance of $f$.
 
 ```{r}
 posteriorGP = function(x, y, XStar, sigmaNoise, k, ...){
@@ -232,7 +232,7 @@ posteriorGP = function(x, y, XStar, sigmaNoise, k, ...){
 predictions = posteriorGP(x = time, y = temp, XStar = time, sigmaNoise = sigmaNoise, k = SquareExponential(sigmaf = 20, ell = 100))
 plot(time, temp)
 lines(time, predictions$mean, col="red", lwd = 2)
-lines(time, predictions$mean+1.96*sqrt(diag(predictions$variance)),col="blue") ##Correct?: sqrt(diag(predictions$variance))
+lines(time, predictions$mean+1.96*sqrt(diag(predictions$variance)),col="blue")
 lines(time, predictions$mean-1.96*sqrt(diag(predictions$variance)),col="blue")
 ```
 
@@ -250,7 +250,7 @@ Estimate the model using the `gausspr` function with the squared exponential fun
 temp = data$temp
 day = data$day
 
-polyFit = lm(temp~day + day**2)
+polyFit = lm(temp~I(day) + I(day**2))
 sigmaNoise = sd(polyFit$residuals)
 
 GPfit = gausspr(day, temp, kernel = SquareExponential(ell = 100, sigmaf = 20), var = sigmaNoise^2, variance.model = TRUE,scaled=FALSE)
@@ -263,7 +263,7 @@ lines(time, day_meanPred, col = "blue")
 
 Q: Compare the results of both models. What are the pros and cons of each model?
 
-A: They seem to perform somewhat similarly. The model with time as its input feature seem to have slight more variance than the one with day. Day values repeats itself, meaning that the 1st of January 2010 is the same value as 1st of January 2011. The model therefore gets multiple temperatures to train on for the same day value, while for the model with time, 1st of Jan each year is distinct.
+A: The model with time as its input feature seem to have slight more variance than the one with day. Day values repeats itself, meaning that the 1st of January 2010 is the same value as 1st of January 2011. The model therefore gets multiple temperatures to train on for the same day value, while for the model with time, 1st of Jan each year is distinct.
 
 ## 2.5 Extended Squared Exponential Kernel
 
@@ -273,7 +273,7 @@ $$
 k(x, x') = \sigma_f^2 \exp \left\{ -\frac{2 \sin^2 \left( \pi |x - x'| / d \right)}{\ell_1^2} \right\} \exp \left\{ -\frac{1}{2} \frac{|x - x'|^2}{\ell_2^2} \right\}
 $$
 
-Note that we have two different length scales in the kernel. Intuitively, $\ell_1$ controls the correlation between two days in the same year, and $\ell_2$ controls the correlation between the same day in different years. Estimate the GP model using the time variable with this kernel and hyperparameters $\sigma_f = 20$, $\ell_1 = 1$, $\ell_2 = 100$, and $d = 365$. Use the `gausspr` function with the option `scaled=FALSE`, otherwise these $\sigma_f$, $\ell_1$, and $\ell_2$ values are not suitable. Compare the fit to the previous two models (with $\sigma_f = 20$ and $\ell = 100$). Discuss the results.
+Note that we have two different length scales in the kernel. Intuitively, $\ell_1$ controls the correlation between two days in the same year, and $\ell_2$ controls the correlation between the same day in different years. Estimate the GP model using the time variable with this kernel and hyperparameters $\sigma_f = 20$, $\ell_1 = 1$, $\ell_2 = 100$, and $d = 365$. Use the `gausspr` function with the option `scaled=FALSE`, otherwise these $\sigma_f$, $\ell_1$, and $\ell_2$ values are not suitable.
 
 ```{r}
 periodic <- function(sigmaf, ell1, ell2, d) 
@@ -287,7 +287,7 @@ periodic <- function(sigmaf, ell1, ell2, d)
   return(rval)
 }
 
-GPfit <- gausspr(time, temp, kernel = periodic, kpar = list(sigmaf=20, ell1=1, ell2=100, d=365), var = sigmaNoise^2, variance.model = TRUE, scaled=FALSE)
+GPfit <- gausspr(time, temp, kernel = periodic(sigmaf=20, ell1=1, ell2=100, d=365), var = sigmaNoise^2, variance.model = TRUE, scaled=FALSE)
 
 periodic_meanPred = predict(GPfit, time)
 
@@ -296,8 +296,8 @@ lines(time, time_meanPred, col = "red")
 lines(time, day_meanPred, col = "blue")
 lines(time, periodic_meanPred, col = "green")
 ```
-
-The new model with a periodic kernel allows to capture periodic patterns, creating a model with higher variance.
+Q: Compare the fit to the previous two models (with $\sigma_f = 20$ and $\ell = 100$). Discuss the results.
+A: The new model with a periodic kernel allows to capture periodic patterns, creating a model with higher variance.
 
 ## 3. GP Classification with kernlab
 
