@@ -1,0 +1,397 @@
+---
+title: "TDDE15-Lab 4"
+author: "Fredrik Ramberg"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+# Part 2.1
+
+**Imports**
+
+```{r}
+library("mvtnorm")
+```
+
+**2.1. Implementing GP Regression.**
+
+This first exercise will have you writing your own code for the Gaussian process regression model: y = f (x) + *Epsilon* with *Epsilon* ∼ N (0, σ2 n) and f ∼ GP(0, k(x, x′))
+
+![](images/Screenshot%202024-10-13%20at%2015.21.25.png){width="532"}
+
+```{r}
+
+
+# Covariance function
+SquaredExpKernel <- function(x1,x2,sigmaF=1,l=3){
+  n1 <- length(x1)
+  n2 <- length(x2)
+  K <- matrix(NA,n1,n2)
+  for (i in 1:n2){
+    K[,i] <- sigmaF^2*exp(-0.5*( (x1-x2[i])/l)^2 )
+  }
+  return(K)
+}
+
+posteriorGP <- function(X, y, XStar, sigmaNoise, k, ...){
+  n <- length(X)
+  K <- k(X, X, ...)
+  kStar <- k(X,XStar, ...)
+  
+  #Cholesky 
+  L <- t(chol(K + sigmaNoise^2*diag(n)))
+
+  #alpha
+  alpha <- solve(t(L),solve(L,y))
+  
+  #Posterior mean = fStar
+  kStar <- k(X, XStar, ...)
+  fStar <- t(kStar)%*%alpha
+
+  #Posterior variance
+  v <- solve(L,kStar)
+  variance <- k(XStar, XStar, ...) - t(v)%*%v
+  
+  return(list(mean =fStar, variance =variance))
+}
+
+```
+
+```{r}
+
+#Hyperparameters
+sigmaF <- 1
+l <- 0.3
+sigmaNoise <- 0.1
+
+
+#observation
+obs <- data.frame(X = 0.4, Y = 0.719)
+
+#test points
+XStar <- seq(-1,1,length=100)
+
+posterior <- posteriorGP(obs$X, obs$Y, XStar, sigmaNoise, SquaredExpKernel, sigmaF, l)
+
+# mean and posterior
+posterior_mean <- posterior$mean
+posterior_variance <- diag(posterior$variance)
+
+# 95% confidence intervals
+upper_bound <- posterior_mean + 1.96 * sqrt(posterior_variance)
+lower_bound <- posterior_mean - 1.96 * sqrt(posterior_variance)
+
+# Plot posterior mean and 95% confidence intervals
+plot(XStar, posterior_mean, type = "l", col = "blue", lwd = 2,
+     ylim = c(min(lower_bound), max(upper_bound)),
+     xlab = "x", ylab = "f(x)", main = "Posterior Mean and 95% Confidence Bands of Single Observation")
+lines(XStar, upper_bound, col = "red", lty = 2)
+lines(XStar, lower_bound, col = "red", lty = 2)
+points(obs$X, obs$Y, col = "black", pch = 19)  # Plot the training point
+
+```
+
+**(3)** Update your posterior from (2) with another observation: (x,y) = (−0.6,−0.044). Plot the posterior mean of f over the interval x ∈ [−1, 1]. Plot also 95 % probability (point-wise) bands for f.
+
+**Hint**: Updating the posterior after one observation with a new observation gives the same result as updating the prior directly with the two observations.
+
+```{r}
+#Calculating the posterior for two points
+obs2 <- rbind(obs, data.frame(X= -0.6, Y = -0.044))
+posterior <- posteriorGP(obs2$X, obs2$Y, XStar, sigmaNoise, SquaredExpKernel, sigmaF, l)
+
+# mean and posterior
+posterior_mean <- posterior$mean
+posterior_variance <- diag(posterior$variance)
+
+# 95% confidence intervals
+upper_bound <- posterior_mean + 1.96 * sqrt(posterior_variance)
+lower_bound <- posterior_mean - 1.96 * sqrt(posterior_variance)
+
+# Plot posterior mean and 95% confidence intervals
+plot(XStar, posterior_mean, type = "l", col = "blue", lwd = 2,
+     ylim = c(min(lower_bound), max(upper_bound)),
+     xlab = "x", ylab = "f(x)", main = "Posterior Mean and 95% Confidence Bands of Two Observations")
+lines(XStar, upper_bound, col = "red", lty = 2)
+lines(XStar, lower_bound, col = "red", lty = 2)
+points(obs2$X, obs2$Y, col = "black", pch = 19)  # Plot the training point
+
+
+```
+
+![](images/Screenshot%202024-10-13%20at%2016.21.55.png)
+
+```{r}
+#Calculating the posterior for all five points
+obs5 <- data.frame(X = c(-1,-0.6,-0.2,0.4,0.8), 
+                   Y = c(0.768,-0.044,-0.940,0.719,-0.664))
+posterior <- posteriorGP(obs5$X, obs5$Y, XStar, sigmaNoise, SquaredExpKernel, sigmaF, l)
+
+# mean and posterior
+posterior_mean <- posterior$mean
+posterior_variance <- diag(posterior$variance)
+
+# 95% confidence intervals
+upper_bound <- posterior_mean + 1.96 * sqrt(posterior_variance)
+lower_bound <- posterior_mean - 1.96 * sqrt(posterior_variance)
+
+# Plot posterior mean and 95% confidence intervals
+plot(XStar, posterior_mean, type = "l", col = "blue", lwd = 2,
+     ylim = c(min(lower_bound), max(upper_bound)),
+     xlab = "x", ylab = "f(x)", main = "Posterior Mean and 95% Confidence Bands of Five Observations")
+lines(XStar, upper_bound, col = "red", lty = 2)
+lines(XStar, lower_bound, col = "red", lty = 2)
+points(obs5$X, obs5$Y, col = "black", pch = 19)  # Plot the training point
+```
+
+**(5)** Repeat (4), this time with hyperparameters σf = 1 and l = 1. Compare the results.
+
+```{r}
+#changing the hyperparameters, the rest is the same .....
+posterior <- posteriorGP(obs5$X, obs5$Y, XStar, sigmaNoise, SquaredExpKernel, sigmaF = 1, l = 1)
+
+# mean and posterior
+posterior_mean <- posterior$mean
+posterior_variance <- diag(posterior$variance)
+
+# 95% confidence intervals
+upper_bound <- posterior_mean + 1.96 * sqrt(posterior_variance)
+lower_bound <- posterior_mean - 1.96 * sqrt(posterior_variance)
+
+# Plot posterior mean and 95% confidence intervals
+plot(XStar, posterior_mean, type = "l", col = "blue", lwd = 2,
+     ylim = c(min(lower_bound), max(upper_bound)),
+     xlab = "x", ylab = "f(x)", main = "Posterior Mean and 95% Confidence Bands of Five Observations, l = 1")
+lines(XStar, upper_bound, col = "red", lty = 2)
+lines(XStar, lower_bound, col = "red", lty = 2)
+points(obs5$X, obs5$Y, col = "black", pch = 19)  # Plot the training point
+
+```
+
+# **Part 2.2**
+
+**Imports and data structure**
+
+```{r}
+library(kernlab)
+
+tempData <- read.csv("https://github.com/STIMALiU/AdvMLCourse/raw/master/GaussianProcess/Code/TempTullinge.csv", header=TRUE, sep=";")
+tempData <- cbind(tempData, time = 1:nrow(tempData))
+tempData <- cbind(tempData, day = ((tempData$time-1)%%365)+1)
+
+trainData <- subset(tempData, (time - 1)%%5 == 0)
+```
+
+![](images/Screenshot%202024-10-13%20at%2017.14.24.png)
+
+![](images/Screenshot%202024-10-13%20at%2017.14.46.png)
+
+```{r}
+#nested Square Exponetial Kernel
+nestedSEK <- function(sigmaF=1,l=3) {
+  fixedSEK <- function(x1,x2){
+    n1 <- length(x1)
+    n2 <- length(x2)
+    K <- matrix(NA,n1,n2)
+    for (i in 1:n2){
+      K[,i] <- sigmaF^2*exp(-0.5*( (x1-x2[i])/l)^2 )
+    }
+    return(K)
+  }
+  class(fixedSEK) <- 'kernel'
+  return(fixedSEK)
+}
+
+SEK <- nestedSEK()
+
+#testing kernal function for x=1, xstar=2
+SEK(1,2)
+
+# kernel matrix where x = X, y = Xstar
+kernelMatrix(kernel = SEK, x = c(1,3,4), y =c(2,3,4))
+```
+
+**Answer:** We can see that SEK(1,2) is the same as positions (1,1) and (2,1) which is where the function is applied on 1 & 2.
+
+![](images/Screenshot%202024-10-13%20at%2017.13.16.png)
+
+```{r}
+#Estimating sigmaNoise from fitting a two degree polynomial to data
+polyFit <- lm(trainData$temp ~  trainData$time + I(trainData$time^2))
+sigmaNoise <- sd(polyFit$residuals)
+
+#setting hyperparameters in kernel function
+SEK <- nestedSEK(sigmaF = 20, l = 100)
+
+modelGP <- gausspr(trainData$time, trainData$temp, scaled = FALSE, kernel = SEK, var = sigmaNoise^2, variance.model = TRUE)
+
+
+time <- trainData$time
+
+posteriorMeanTime <- predict(modelGP, time)
+sdMeanTime <- predict(modelGP, time, type="sdeviation")
+
+upper <- posteriorMean + 1.96 * sdMeanTime
+lower <- posteriorMean - 1.96 * sdMeanTime
+
+plot(x= trainData$time, y = trainData$temp,
+     xlab = "time", ylab = "temp", main = "Temperature predictions", lwd = 1.5)
+lines(x=trainData$time, y = posteriorMeanTime, col = "red", lwd = 3)
+lines(trainData$time, upper, col = "blue", lwd = 1)
+lines(trainData$time, lower, col = "blue", lwd = 1)
+legend("bottomright", legend=c("Data", "Predictions", "Confidence Interval"), pch=c(1, NA, NA), lty=c(NA, 1, 1), lwd=c(NA, 2, 2), col=c("black", "red", "blue"))
+
+
+```
+
+**Answer:** \
+![](images/Screenshot%202024-10-13%20at%2018.21.20.png)
+
+```{r}
+#setting hyperparameters in kernel function
+SEK <- nestedSEK(sigmaF = 20, l = 100)
+
+posterior <- posteriorGP(trainData$time, trainData$temp, trainData$time, sigmaNoise, SEK)
+
+posteriorMean <- posterior$mean
+posteriorVariance <- diag(posterior$variance)
+
+# 95% confidence intervals
+upper <- posteriorMean + 1.96 * sqrt(posteriorVariance)
+lower <- posteriorMean - 1.96 * sqrt(posteriorVariance)
+
+plot(x= trainData$time, y = trainData$temp,
+     xlab = "time", ylab = "temp", main = "Temperature predictions", lwd = 1.5)
+lines(x=trainData$time, y = posteriorMean, col = "red", lwd = 3)
+lines(trainData$time, upper, col = "blue", lwd = 1)
+lines(trainData$time, lower, col = "blue", lwd = 1)
+legend("bottomright", legend=c("Data", "Predictions", "Confidence Interval"), pch=c(1, NA, NA), lty=c(NA, 1, 1), lwd=c(NA, 2, 2), col=c("black", "red", "blue"))
+
+```
+
+![](images/Screenshot%202024-10-13%20at%2018.38.30.png)
+
+```{r}
+SEK <- nestedSEK(sigmaF = 20, l = 100)
+
+modelGP <- gausspr(trainData$day, trainData$temp, scaled = FALSE, kernel = SEK, var = sigmaNoise^2)
+
+posteriorMeanDay <- predict(modelGP)
+
+
+plot(x= trainData$time, y = trainData$temp,
+     xlab = "time", ylab = "temp", main = "Temperature predictions", lwd = 1.5)
+lines(x=trainData$time, y = posteriorMeanTime, col = "red", lwd = 2)
+lines(x=trainData$time, y = posteriorMeanDay, col = "blue", lwd = 2)
+legend("bottomright", legend=c("Data", "Prediction Time", "Prediction Day"), pch=c(1, NA, NA), lty=c(NA, 1, 1), lwd=c(NA, 2, 2), col=c("black", "red", "blue"))
+```
+
+![](images/Screenshot%202024-10-13%20at%2019.08.37.png)
+
+```{r fig.width=7}
+
+periodicKernel <- function(x, xstar, sigmaF = 20,l1 =1, l2 = 100, d=365){
+  n1 <- length(x)
+  n2 <- length(xstar)
+  K <- matrix(NA,n1,n2)
+  
+  for (i in 1:n2){
+    absDiff <- absDiff <- abs(x-xstar[i])
+    K[,i] <- sigmaF^2*exp(-2*sin(pi*absDiff/d)^2/l1^2)*exp(-0.5*absDiff^2/l2^2)
+  }
+  return(K)
+}
+class(periodicKernel) <- 'kernel'
+
+
+modelGP <- gausspr(trainData$time, trainData$temp, scaled = FALSE, kernel = periodicKernel, var = sigmaNoise^2)
+
+
+posteriorMeanPeriodic <- predict(modelGP)
+
+
+plot(x= trainData$time, y = trainData$temp,
+     xlab = "time", ylab = "temp", main = "Temperature predictions", lwd = 1.5)
+lines(x=trainData$time, y = posteriorMeanPeriodic, col = "green", lwd = 2)
+lines(x=trainData$time, y = posteriorMeanTime, col = "red", lwd = 2)
+lines(x=trainData$time, y = posteriorMeanDay, col = "blue", lwd = 2)
+legend("bottomright", legend=c("Data", "Prediction Time", "Prediction Day", "Prediction Periodic"), pch=c(1, NA, NA, NA), lty=c(NA, 1, 1, 1), lwd=c(NA, 2, 2, 2), col=c("black", "red", "blue", "green"))
+
+```
+
+# Part 2.3
+
+**Import & Data**
+
+```{r}
+#install.packages("https://cran.r-project.org/src/contrib/Archive/AtmRay/AtmRay_1.31.tar.gz", repos = NULL, type = "source")
+
+library(kernlab)
+library(AtmRay)
+
+data <- read.csv("https://github.com/STIMALiU/AdvMLCourse/raw/master/GaussianProcess/Code/banknoteFraud.csv", header=FALSE, sep=",") 
+names(data) <- c("varWave","skewWave","kurtWave","entropyWave","fraud") 
+data[,5] <- as.factor(data[,5])
+
+set.seed(111)
+SelectTraining <- sample(1:dim(data)[1], size = 1000, replace = FALSE)
+trainData <- data[SelectTraining,]
+testData <- data[-SelectTraining,]
+
+#accuracy function
+accuracy <- function(true, pred){
+  return(mean(true == pred))
+}
+```
+
+![](images/Screenshot%202024-10-13%20at%2020.10.54.png)
+
+![](images/Screenshot%202024-10-13%20at%2020.11.11.png)
+
+```{r}
+# Model and prediction
+GPfitFraud <- gausspr(fraud ~ varWave + skewWave, data=trainData)
+predictionTrain <- predict(GPfitFraud)
+
+#Confusionmatrix and accuracy
+table(trainData$fraud, predictionTrain)
+accuracy(trainData$fraud, predictionTrain)
+
+# class probabilities 
+probPreds <- predict(GPfitFraud, type="probabilities")
+x1 <- seq(min(trainData$varWave),max(trainData$varWave),length=100)
+x2 <- seq(min(trainData$skewWave),max(trainData$skewWave),length=100)
+gridPoints <- meshgrid(x1, x2)
+gridPoints <- cbind(c(gridPoints$x), c(gridPoints$y))
+
+gridPoints <- data.frame(gridPoints)
+names(gridPoints) <- names(trainData)[1:2]
+probPreds <- predict(GPfitFraud, gridPoints, type="probabilities")
+
+# Plotting for Prob(fraud)
+contour(x1,x2,matrix(probPreds[,1],100,byrow = TRUE), 20, xlab = "varSkew", ylab = "skewWave", main = 'Prob(fraud), fraud is red')
+points(trainData[trainData$fraud==1,1],trainData[trainData$fraud==1,2],col="red")
+points(trainData[trainData$fraud==0,1],trainData[trainData$fraud==0,2],col="blue")
+
+```
+
+![](images/Screenshot%202024-10-13%20at%2020.11.27.png)
+
+```{r}
+predictionTest <- predict(GPfitFraud, testData[,c(1,2)])
+
+accuracy(testData$fraud, predictionTest)
+```
+
+![](images/Screenshot%202024-10-13%20at%2020.11.36.png)
+
+```{r}
+GPfitFraud4 <- gausspr(fraud ~ ., data=trainData)
+
+prediction4 <- predict(GPfitFraud4, testData[,-5])
+accuracy(testData$fraud, prediction4)
+```
+
+The accuracy of the model using all covariates has a significantly better accuracy.
