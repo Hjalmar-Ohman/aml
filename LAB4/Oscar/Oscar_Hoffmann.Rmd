@@ -36,12 +36,12 @@ SquaredExpKernel <- function(x1,x2,sigmaF=1,ell=3){
 # Posterior GP Function
 posteriorGP <- function(X, y, XStar, sigmaNoise, k, ...) {
   
-  K <- k(X, X, ...)  # Compute the covariance matrices K(X, X)
-  kStar <- k(X, XStar, ...) # Compute covariance between training and test inputs
+  K <- k(X, X, ...)  # Compute the covariance matrix
+  kStar <- k(X, XStar, ...) # Compute covariance
   
   # Step 2 in algo
   #--------------------
-  K_y <- K + sigmaNoise^2 * diag(length(X)) # Add noise variance to diagonal, K_y= covariance matrix of y
+  K_y <- K + sigmaNoise^2 * diag(length(X)) # Add noise variance to diagonal
   L <- t(chol(K_y))   # Compute Cholesky decomposition, to get lower triangular L we take t()
   alpha <- solve(t(L), solve(L, y))   # Solve for alpha
   #---------------------
@@ -92,8 +92,6 @@ plotGP <- function(XStar, res, X_train, y_train, title) {
 }
 ```
 
-Put plotting into a function for easy reuse
-
 ```{r}
 # Single observation
 X <- c(0.4)
@@ -115,7 +113,7 @@ plotGP(XStar, res, X, y, "Posterior Mean and 95% Probability Bands")
 
 #### Task 3: Update with Another Observation
 
-Update your posterior from Task 2 with (x, y) = (-0.6, -0.044), plot the posterior mean, and include 95% probability bands.
+Update posterior from Task 2 with (x, y) = (-0.6, -0.044), plot the posterior mean, and include 95% probability bands.
 
 ```{r}
 # Updated training data
@@ -160,7 +158,7 @@ When increasing ell from 0.3 to 1 we get more smoothness which is expected.
 
 #### Task 1: Define Kernel and Compute Covariance Matrix
 
-Define your own squared exponential kernel and use the `kernelMatrix` function to compute the covariance matrix for given vectors.
+Define own squared exponential kernel and use the `kernelMatrix` function to compute the covariance matrix for given vectors.
 
 ```{r}
 # Preparing the data
@@ -170,8 +168,6 @@ time = seq(1,2190, 5)
 day = seq(1,365, 5)
 
 data_sampled = data[time,]
-# data_sampled$time = time
-# data_sampled$day = day
 temps = data_sampled$temp
 ```
 
@@ -189,11 +185,14 @@ SEKernel = function(ell, sigmaF) {
   return (calc_K)
 }
 
-# Recap how x and x' work here
-kernel = SEKernel(1,2)
+kernel = SEKernel(1,1)
+# eval in points 1,2
+kernel(1,2)
+
 X = c(1,3,4) 
 XStar = c(2,3,4)
-kernelMatrix(kernel,x = X,y = XStar) #K(X,XStar)
+# gives matrix for X and XStar
+kernelMatrix(kernel, X, XStar) #K(X,XStar)
 
 ```
 
@@ -212,7 +211,7 @@ lines(time, lower ,lty = 2)
 ```
 
 ```{r}
-quad_model = lm(temps~time + I(time)^2, data = data_sampled)
+quad_model = lm(temps~time + I(time^2), data = data_sampled)
 
 fit = gausspr(time, temps, kernel = SEKernel(ell = 100, sigmaF = 20), var = var(quad_model$residuals), variance.model = TRUE, scaled=FALSE)
 time_mean_pred <- predict(fit, time)
@@ -247,7 +246,7 @@ Estimate the model using `gausspr` with the day variable, superimpose the poster
 # constructing day vector for 6 years
 days = rep(day, 6)
 
-quad_model_day = lm(temps~days + I(days)^2, data = data_sampled)
+quad_model_day = lm(temps~days + I(days^2), data = data_sampled)
 
 fit_day = gausspr(days, temps, kernel = SEKernel(ell = 100, sigmaF = 20), var = var(quad_model_day$residuals), variance.model = TRUE, scaled=FALSE)
 
@@ -256,11 +255,10 @@ day_mean_pred <- predict(fit_day, days)
 upper2 = day_mean_pred+1.96*predict(fit_day,days, type="sdeviation")
 lower2 = day_mean_pred-1.96*predict(fit_day,days, type="sdeviation")
   
-# Could be integrated into function
 plot(time, temps, pch = 1, cex = 0.5, col = "red")
 lines(time, time_mean_pred, lwd = 2)
-lines(time, upper,lty = 2)
-lines(time, lower ,lty = 2)
+#lines(time, upper,lty = 2)
+#lines(time, lower ,lty = 2)
 lines(time, day_mean_pred, lwd = 2, col = "blue")
 
 # bands for days
@@ -291,7 +289,6 @@ PeriodicKernel <- function(sigmaF, ell1, ell2, d){
   return (calc_K)
 }
 
-# Do I need loop in periodic kernel?
 fit_periodic = gausspr(time, temps, kernel = PeriodicKernel(ell1 = 1, ell2 = 100, sigmaF = 20, d = 365), variance.model = TRUE, scaled=FALSE)
 
 time_mean_periodic_pred = predict(fit_periodic, time)
@@ -304,7 +301,7 @@ GP_plot_new(time_mean_periodic_pred, upper, lower, "Periodic kernel")
 
 Q: Compare the fit to the previous two models (with Sigmaf = 20 and l = 100). Discuss the results.
 
-A: The periodic GP fits the data more tightly with much narrower confidence bands compared to previous models. I think that periodic is the best choice to model temp data.
+A: The periodic GP fits the data more tightly with much narrower confidence bands compared to previous models. This could indicate over-fitting but at the same time we don't have any test data so we cant decide which generalizes better
 
 ## 2.3 GP Classification with kernlab
 
@@ -313,7 +310,6 @@ A: The periodic GP fits the data more tightly with much narrower confidence band
 Use the `kernlab` package to fit a Gaussian process classification model for fraud, and plot contours of prediction probabilities.
 
 ```{r}
-rm(list = ls())
 data <- read.csv("https://github.com/STIMALiU/AdvMLCourse/raw/master/GaussianProcess/Code/banknoteFraud.csv", header=FALSE, sep=",") 
 names(data) <- c("varWave","skewWave","kurtWave","entropyWave","fraud") 
 data[,5] <- as.factor(data[,5])
