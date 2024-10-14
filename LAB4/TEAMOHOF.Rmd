@@ -1,0 +1,9 @@
+---
+title: "TEAM OHOF"
+author: "Hjalmar Öhman"
+date: "2024-10-10"
+output: pdf_document
+---
+Contribution:
+All four members solved the problems on their own. We then discussed the answers and compiled the group report by combining our solutions. We used olosw720 and hjaoh082's solution for 2.1, frera064s solution for 2.2, oscho091s solution for 2.3.
+

@@ -19,7 +19,7 @@ rm(list =ls())
 
 #### Task 1: Write Function for Posterior GP Simulation
 
-Implement a function named `posteriorGP` to simulate from the posterior distribution using the squared exponential kernel.
+Implement a function named `posteriorGP` according to algorithm 2.1 in the book to simulate from the posterior distribution using the squared exponential kernel.
 
 ```{r}
 # Squared Exponential Kernel Function
@@ -224,7 +224,7 @@ GP_plot_new(time_mean_pred, upper, lower, "GP model with gausspr")
 
 #### Task 3: Implement Algorithm 2.1 for GP Regression
 
-Implement Algorithm 2.1 from Rasmussen and Williams' book to compute the posterior mean and variance.
+Use Algorithm 2.1 from Rasmussen and Williams' book (posteriorGP) to compute the posterior mean and variance.
 
 ```{r}
 
@@ -301,7 +301,7 @@ GP_plot_new(time_mean_periodic_pred, upper, lower, "Periodic kernel")
 
 Q: Compare the fit to the previous two models (with Sigmaf = 20 and l = 100). Discuss the results.
 
-A: The periodic GP fits the data more tightly with much narrower confidence bands compared to previous models. This could indicate over-fitting but at the same time we don't have any test data so we cant decide which generalizes better
+A: The periodic GP fits the data more tightly with much narrower confidence bands compared to previous models. This could indicate over-fitting but at the same time we don't have any test data so we cant decide which generalizes better.
 
 ## 2.3 GP Classification with kernlab
 
