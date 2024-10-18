@@ -108,3 +108,112 @@ netcom <- compile(as.grain(netfit))
 evidence = querygrain(setEvidence(netcom,nodes=c("D","Ah"),states=c("1","0")))
 evidence$Dh
 ```
+
+# 2 hmm
+
+```{r}
+set.seed(12345) 
+library(HMM)
+
+# Sector X: Steps -- implement this with a counter
+# Sector 1: 2
+# Sector 2: 3
+# Sector 3: 2
+# Sector 4: 1
+# Sector 5: 2
+
+states=c("Z=1.C=2","Z=1.C=1",
+         "Z=2.C=3","Z=2.C=2","Z=2.C=1",
+         "Z=3.C=2","Z=3.C=1",
+         "Z=4.C=1",
+         "Z=5.C=2","Z=5.C=1")
+
+emissionSymbols = 1:5
+transitionProb = matrix(0,nrow = length(states), ncol = length(states)) 
+
+transitionProb = matrix(c(0, 1, 0, 0, 0, 0, 0, 0, 0, 0, # Z=1.C=2
+                          0,.5,.5, 0, 0, 0, 0, 0, 0, 0, # Z=1.C=1 Can stay or move forward 
+                          0, 0, 0, 1, 0, 0, 0, 0, 0, 0, # Z=2.C=3
+                          0, 0, 0, 0, 1, 0, 0, 0, 0, 0, # Z=2.C=2
+                          0, 0, 0, 0,.5,.5, 0, 0, 0, 0, # Z=2.C=1 Can stay or move forward 
+                          0, 0, 0, 0, 0, 0, 1, 0, 0, 0, # Z=3.C=2
+                          0, 0, 0, 0, 0, 0,.5,.5, 0, 0, # Z=3.C=1 Can stay or move forward
+                          0, 0, 0, 0, 0, 0, 0,.5,.5, 0, # Z=4.C=1 Can stay or move forward 
+                          0, 0, 0, 0, 0, 0, 0, 0, 0, 1, # Z=5.C=2 
+                          .5, 0, 0, 0, 0, 0, 0, 0, 0,.5), # Z=5.C=1 Can stay or move forward
+                        nrow = length(states), ncol = length(states), byrow = TRUE)
+b = 1/3
+emissionProb = matrix(c(b, b, 0, 0, b, # Z=1.C=2
+                        b, b, 0, 0, b, # Z=1.C=1 Can stay or move forward 
+                        0, b, b, b, 0, # Z=2.C=3
+                        0, b, b, b, 0, # Z=2.C=2
+                        0, b, b, b, 0, # Z=2.C=1 Can stay or move forward 
+                        0, 0, b, b, b, # Z=3.C=2
+                        0, 0, b, b, b, # Z=3.C=1 Can stay or move forward
+                        b, 0, 0, b, b, # Z=4.C=1 Can stay or move forward 
+                        b, 0, 0, b, b, # Z=5.C=2 
+                        b, b, 0, 0, b), # Z=5.C=1 Can stay or move forward
+                        nrow = length(states), ncol = length(emissionSymbols), byrow = TRUE)
+
+# Assuming we start at with full countdown  
+startProb = c(.2, 0,.2, 0, 0,.2, 0, .2,.2,0)
+
+hmm = initHMM(States = states, Symbols = emissionSymbols, startProbs = startProb, transProbs = transitionProb,
+              emissionProbs = emissionProb)
+nIter = 100
+simulation = simHMM(hmm, nIter) 
+print(simulation)
+
+```
+
+### Prove this expression:
+
+$p(z^{T-1}|x^{0:T}) = \Sigma_{z^T} \frac{p(z^T|z^{T-1})p(z^{T-1}|x^{0:T})p(z^T|x^{0:T})}{\Sigma_{z^{T-1}} p(z^T|z^{T-1})p(z^{T-1}|x^{0:T-1})}$
+
+#### Step 1: Marginalization over $z^T$
+
+$p(z^{T-1}|x^{0:T})=\sum_{z^T} p(z^{T-1},z^T|x^{0:T})$
+
+This step comes from the law of total probability, where you marginalize over the hidden state $z^T$ at time $T$. Essentially, you are summing over all possible values of $z^T$ to get the marginal distribution of $z^{T-1}$ conditioned on the observations.
+
+#### Step 2: Conditional Probability Decomposition
+
+$=\sum_{z^T} p(z^{T-1},z^T|x^{0:T}) =\sum_{z^T} p(z^{T-1}|z^T,x^{0:T}) p(z^T|x^{0:T})$
+
+This is just applying the product rule of conditional probability. You are expressing the joint probability $\sum_{z^T} p(z^{T-1},z^T|x^{0:T})$ as the product of the conditional probability $\sum_{z^T}p(z^{T-1}|z^T,x^{0:T})$ and the marginal probability $p(z^T|x^{0:T})$.
+
+#### Step 3: Exploit conditional independence
+
+Next, simplify $\sum_{z^T} p(z^{T-1}|z^T,x^{0:T})$ Due to the Markov property (which assumes that the current state only depends on the previous state and is conditionally independent of earlier states given the current state), we can simplify it to the expression: $p(z^{T-1}|z^T,x^{0:T-1})$. The whole expression:
+
+$=\sum_{z^T} p(z^{T-1}|z^T,x^{0:T}) p(z^T|x^{0:T}) = \sum_{z^T} p(z^{T-1}|z^T,x^{0:T-1}) p(z^T|x^{0:T})$
+
+#### Step 4: Apply Bayes rule
+
+Apply Bayes rule to the expression $p(z^{T-1}|z^T,x^{0:T-1})$ to decompose the term into known conditional probabilites.
+
+$= \sum_{z^T} p(z^{T-1}|z^T,x^{0:T-1}) p(z^T|x^{0:T}) =\sum_{z^T} \frac{p(z^T|z^{T-1},x^{0:T-1}) p(z^{T-1}|x^{0:T-1}) p(z^T|x^{0:T})}{p(z^T|x^{0:T-1})}$
+
+#### Step 5: Simplification Using Conditional Independence
+
+Simplify $p(z^T|z^{T-1},x^{0:T-1})$ to $p(z^T|z^{T-1})$ Since the Markov property tells us that only $z^T$ only depends on $z^{T-1}$, not the full observation history:
+
+$=\sum_{z^T} \frac{p(z^T|z^{T-1},x^{0:T-1}) p(z^{T-1}|x^{0:T-1}) p(z^T|x^{0:T})}{p(z^T|x^{0:T-1})} =\sum_{z^T} \frac{p(z^T|z^{T-1}) p(z^{T-1}|x^{0:T-1}) p(z^T|x^{0:T})}{p(z^T|x^{0:T-1})}$
+
+#### Step 6: Denominator Expansion
+
+In this step, expand $p(z^T|x^{0:T-1})$ using the law of probability
+
+$=\sum_{z^T} \frac{p(z^T|z^{T-1}) p(z^{T-1}|x^{0:T-1}) p(z^T|x^{0:T})}{p(z^T|x^{0:T-1})}=\sum_{z^T} \frac{p(z^T|z^{T-1}) p(z^{T-1}|x^{0:T-1}) p(z^T|x^{0:T})}{\sum_{z^{T-1}} p(z^{T-1},z^T|x^{0:T-1})}$
+
+#### Step 7: Expand even more
+
+$=\sum_{z^T} \frac{p(z^T|z^{T-1}) p(z^{T-1}|x^{0:T-1}) p(z^T|x^{0:T})}{\sum_{z^{T-1}} p(z^{T-1},z^T|x^{0:T-1})}=\sum_{z^T} \frac{p(z^T|z^{T-1}) p(z^{T-1}|x^{0:T-1}) p(z^T|x^{0:T})}{\sum_{z^{T-1}} p(z^T|z^{T-1},x^{0:T-1}) p(z^{T-1}|x^{0:T-1})}$
+
+#### Step 8: Use the Markov Property
+
+$=\sum_{z^T} \frac{p(z^T|z^{T-1}) p(z^{T-1}|x^{0:T-1}) p(z^T|x^{0:T})}{\sum_{z^{T-1}} p(z^T|z^{T-1},x^{0:T-1}) p(z^{T-1}|x^{0:T-1})}=\sum_{z^T} \frac{p(z^T|z^{T-1}) p(z^{T-1}|x^{0:T-1}) p(z^T|x^{0:T})}{\sum_{z^{T-1}} p(z^T|z^{T-1}) p(z^{T-1}|x^{0:T-1})}$
+
+#### Step 9: Conclusion
+
+$p(z^{T-1}|x^{0:T}) =\sum_{z^T} \frac{p(z^T|z^{T-1}) p(z^{T-1}|x^{0:T-1}) p(z^T|x^{0:T})}{\sum_{z^{T-1}} p(z^T|z^{T-1}) p(z^{T-1}|x^{0:T-1})}$
