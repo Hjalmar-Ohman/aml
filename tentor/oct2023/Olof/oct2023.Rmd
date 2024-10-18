@@ -1,0 +1,110 @@
+---
+title: "oct2023"
+author: "Olof Swedberg"
+date: "2024-10-18"
+output: html_document
+---
+
+# 1 Probabilistic Graphical Models
+
+-   U: Court orders the execution in the actual and hypothetical worlds.
+-   C: Captain orders fire in the actual world.
+-   A: Rifleman A shoots in the actual world.
+-   B: Rifleman B shoots in the actual world.
+-   D: Prisoner dies in the actual world.
+-   Ch: Captain orders fire in the hypothetical world.
+-   Ah: Rifleman A shoots in the hypothetical world.
+-   Bh: Rifleman B shoots in the hypothetical world.
+-   Dh: Prisoner dies in the hypothetical world.
+
+```{r}
+library(bnlearn)
+library(gRain)
+#Naive assumption: independence between all features
+arc.set = matrix(c("U", "C",
+                   "C", "A",
+                   "C", "B",
+                   "A", "D",
+                   "B", "D",
+                   "U", "Ch",
+                   "Ch", "Ah",
+                   "Ch", "Bh",
+                   "Ah", "Dh",
+                   "Bh", "Dh"),
+                 ncol = 2, byrow = TRUE,
+                 dimnames = list(NULL, c("from", "to")))
+
+net = empty.graph(c("U", "C", "A", "B", "D", "Ch", "Ah", "Bh", "Dh")) 
+arcs(net) = arc.set
+
+graphviz.plot(net)
+
+# U: Prob that Court orders the execution in the actual  and hypothetical worlds
+cptU <- c(.5,.5)
+dim(cptU) <- c(2)
+dimnames(cptU) <- list(c("0", "1"))
+print(cptU)
+
+############ REAL WORLD #############
+# C: Prob that Captain orders fire in the actual world given U
+cptC <- matrix(c(.9,.1,.1,.9), nrow=2, ncol=2)
+dim(cptC) <- c(2,2)
+dimnames(cptC) <- list("C" = c("0", "1"), "U" =  c("0", "1"))
+print(cptC)
+
+# A: Prob Rifleman A shoots in the actual world given C
+cptA = matrix(c(1,0,0.2,0.8), ncol=2, nrow = 2)
+dim(cptA) = c(2,2)
+dimnames(cptA) = list("A" = c("0","1"), "C" = c("0","1"))
+print(cptA)
+
+# B: Prob Rifleman B shoots in the actual world given C
+cptB = matrix(c(1,0,0.2,0.8), ncol=2, nrow = 2)
+dim(cptB) = c(2,2)
+dimnames(cptB) = list("B" = c("0","1"), "C" = c("0","1"))
+print(cptB)
+
+# D: Prob Prisoner dies in the actual world given A (1 = dies) and B
+# Question here: how do we know the probability p(D=1|A=0, B=0) = 0.1?
+cptD = matrix(c(0.9,0.1,0,1,0,1,0,1), nrow = 2, ncol = 4)
+dim(cptD) = c(2,2,2)
+dimnames(cptD) = list("D" = c("0", "1"), "A" = c("0","1"), "B" = c("0",1))
+print(cptD)
+
+############ HYPOTHETICAL WORLD #############
+# Ch: Prob that Captain orders fire in the actual world given U
+cptCh <- matrix(c(.9,.1,.1,.9), nrow=2, ncol=2)
+dim(cptCh) <- c(2,2)
+dimnames(cptCh) <- list("Ch" = c("0", "1"), "U" =  c("0", "1"))
+print(cptCh)
+
+# Ah: Prob Rifleman Ah shoots in the actual world given Ch
+cptAh = matrix(c(1,0,0.2,0.8), ncol=2, nrow = 2)
+dim(cptAh) = c(2,2)
+dimnames(cptAh) = list("Ah" = c("0","1"), "Ch" = c("0","1"))
+print(cptAh)
+
+# Bh: Prob Rifleman Bh shoots in the actual world given Ch
+cptBh = matrix(c(1,0,0.2,0.8), ncol=2, nrow = 2)
+dim(cptBh) = c(2,2)
+dimnames(cptBh) = list("Bh" = c("0","1"), "Ch" = c("0","1"))
+print(cptBh)
+
+# Dh: Prob Prisoner dies in the actual world given Ah (1 = dies) and Bh
+# Question here: how do we know the probability p(Dh=1|Ah=0, Bh=0) = 0.1?
+cptDh = matrix(c(0.9,0.1,0,1,0,1,0,1), nrow = 2, ncol = 4)
+dim(cptDh) = c(2,2,2)
+dimnames(cptDh) = list("Dh" = c("0", "1"), "Ah" = c("0","1"), "Bh" = c("0",1))
+print(cptDh)
+
+
+# Fit the network with the Conditional Probability Tables
+netfit <- custom.fit(net,list(U=cptU, C=cptC, A=cptA, B=cptB, D=cptD, Ch=cptCh, Ah=cptAh, Bh=cptBh, Dh=cptDh))
+# Compile to grain to be able to set evidence 
+netcom <- compile(as.grain(netfit))
+
+# Calclate the probability of the Prisoner being dead given hypothetical Gurad A did not shoot
+# given that he is dead in the real world
+evidence = querygrain(setEvidence(netcom,nodes=c("D","Ah"),states=c("1","0")))
+evidence$Dh
+```
