@@ -90,7 +90,8 @@ sigmaN = 0.1
 
 xGrid = seq(-1,1,length = 100)
 
-posterior = posteriorGP(X=x, y=y, sigmaNoise=sigmaN, XStar=xGrid, k = SquaredExpKernel, sigmaF, ell)
+posterior = posteriorGP(X=x, y=y, sigmaNoise=sigmaN, 
+                        XStar=xGrid, k = SquaredExpKernel, sigmaF, ell)
 
 plot(x = xGrid, y = posterior$mean, type = "l", col = 3, ylim = c(-2,2), ylab = "f", xlab = "", main = "Posterior mean of f")
 lines(x = xGrid, y =posterior$mean +1.96*sqrt(diag(posterior$variance)), type = "l", col = 2)
@@ -109,7 +110,8 @@ Update your posterior from (2) with another observation: $(x, y) = (-0.6, -0.044
 x = c(0.4, -0.6)
 y = c(0.719, -0.044)
 
-posterior = posteriorGP(X=x, y=y, sigmaNoise=sigmaN, XStar=xGrid, k = SquaredExpKernel, sigmaF, ell)
+posterior = posteriorGP(X=x, y=y, sigmaNoise=sigmaN, XStar=xGrid, 
+                        k = SquaredExpKernel, sigmaF, ell)
 
 plot(x = xGrid, y = posterior$mean, type = "l", col = 3, ylim = c(-2,2), ylab = "f", xlab = "", main = "Posterior mean of f")
 lines(x = xGrid, y =posterior$mean +1.96*sqrt(diag(posterior$variance)), type = "l", col = 2)
@@ -129,7 +131,8 @@ Compute the posterior distribution of $f$ using all five data points in the tabl
 x = c(-1, -0.6, -0.2, 0.4, 0.8)
 y = c(0.768, -0.044, -0.94, 0.719, -0.664)
 
-posterior = posteriorGP(X=x, y=y, sigmaNoise=sigmaN, XStar=xGrid, k = SquaredExpKernel, sigmaF, ell)
+posterior = posteriorGP(X=x, y=y, sigmaNoise=sigmaN, XStar=xGrid, 
+                        k = SquaredExpKernel, sigmaF, ell)
 
 plot(x = xGrid, y = posterior$mean, type = "l", col = 3, ylim = c(-2,2), ylab = "f", xlab = "", main = "Posterior mean of f")
 lines(x = xGrid, y =posterior$mean +1.96*sqrt(diag(posterior$variance)), type = "l", col = 2)
@@ -146,7 +149,8 @@ Repeat the previous step, but this time with hyperparameters $\sigma_f = 1$ and 
 sigmaF = 1
 ell = 1
 
-posterior = posteriorGP(X=x, y=y, sigmaNoise=sigmaN, XStar=xGrid, k = SquaredExpKernel, sigmaF, ell)
+posterior = posteriorGP(X=x, y=y, sigmaNoise=sigmaN, XStar=xGrid, 
+                        k = SquaredExpKernel, sigmaF, ell)
 
 plot(x = xGrid, y = posterior$mean, type = "l", col = 3, ylim = c(-2,2), ylab = "f", xlab = "", main = "Posterior mean of f, with smoothing factor ell")
 lines(x = xGrid, y =posterior$mean +1.96*sqrt(diag(posterior$variance)), type = "l", col = 2)
@@ -163,7 +167,8 @@ In this exercise, you will work with the daily mean temperature in Stockholm (Tu
 Create the variable time which records the day number since the start of the dataset (i.e., `time` = $1$, $2$, . . ., $365 × 6 = 2190$). Also, create the variable day that records the day number since the start of each year (i.e., `day`= $1$, $2$, . . ., $365$, $1$, $2$, . . ., $365$). Estimating a GP on $2190$ observations can take some time on slower computers, so let us subsample the data and use only every fifth observation. This means that your time and day variables are now `time`= $1$, $6$, $11$, . . ., $2186$ and `day`= $1$, $6$, $11$, . . ., $361$, $1$, $6$, $11$, . . ., $361$.
 
 ```{r}
-data = read.csv("https://github.com/STIMALiU/AdvMLCourse/raw/master/GaussianProcess/Code/TempTullinge.csv", header=TRUE, sep=";")
+data = read.csv("https://github.com/STIMALiU/AdvMLCourse/raw/master/GaussianProcess/Code/TempTullinge.csv",
+                header=TRUE, sep=";")
 
 data$time = 1:nrow(data)
 data$day = rep(1:365, 6)
@@ -230,7 +235,8 @@ day = data_sub$day
 polyFit = lm(temp ~  time + I(time^2))
 sigmaNoise = var(polyFit$residuals)
 
-GPfit = gausspr(time,temp, kernel = SquaredExpKernel(sigmaF = 20, ell = 100), var = sigmaNoise, scaled = FALSE, variance.model = TRUE)
+GPfit = gausspr(time,temp, kernel = SquaredExpKernel(sigmaF = 20, ell = 100),
+                var = sigmaNoise, scaled = FALSE, variance.model = TRUE)
 meanPred = predict(GPfit, time)
 
 model2conf = predict(GPfit, time, type = "sdeviation")
@@ -248,7 +254,8 @@ Repeat the previous exercise, but now use Algorithm 2.1 on page 19 of Rasmussen 
 
 ```{r}
 sigmaNoise = sd(polyFit$residuals)
-posterior = posteriorGP(X=time, y=temp, sigmaNoise = sigmaNoise, XStar = time, k = SquaredExpKernel(20,100))
+posterior = posteriorGP(X=time, y=temp, sigmaNoise = sigmaNoise,
+                        XStar = time, k = SquaredExpKernel(20,100))
 meanPred = posterior$mean
 
 plot(time,temp, main = "Posterior mean and confidence interval", ylim = c(-20,30))
@@ -273,7 +280,8 @@ Superimpose the posterior mean from this model on the posterior mean from the mo
 
 ```{r}
 sigmaNoise = var(polyFit$residuals)
-GPfit = gausspr(day,temp, kernel = SquaredExpKernel(sigmaF = 20, ell = 100), var = sigmaNoise, scaled = FALSE, variance.model = TRUE)
+GPfit = gausspr(day,temp, kernel = SquaredExpKernel(sigmaF = 20, ell = 100),
+                var = sigmaNoise, scaled = FALSE, variance.model = TRUE)
 meanPredDays = predict(GPfit, day)
 
 model4conf = predict(GPfit, day, type = "sdeviation")
@@ -319,7 +327,11 @@ ExtendedSquaredExpKernel <- function(sigmaF,ell1, ell2, d){
   return(rval)
 }
 
-GPfit = gausspr(time,temp, kernel = ExtendedSquaredExpKernel(sigmaF = 20, ell1 = 1, ell2 = 100, d = 365 ), var = sigmaNoise, scaled = FALSE, variance.model = TRUE)
+GPfit = gausspr(time,temp, kernel = ExtendedSquaredExpKernel(sigmaF = 20,
+                                                             ell1 = 1,
+                                                             ell2 = 100,
+                                                             d = 365 ), 
+                var = sigmaNoise, scaled = FALSE, variance.model = TRUE)
 meanPredExtended = predict(GPfit, time)
 
 plot(time,temp, main = "Posterior mean and confidence interval", ylim = c(-20,30))
@@ -343,7 +355,8 @@ The extended periodic kernel is better at fitting the data because it can find c
 GP Classification with kernlab. Download the banknote fraud data:
 
 ```{r}
-data <- read.csv("https://github.com/STIMALiU/AdvMLCourse/raw/master/GaussianProcess/Code/banknoteFraud.csv", header=FALSE, sep=",")
+data <- read.csv("https://github.com/STIMALiU/AdvMLCourse/raw/master/GaussianProcess/Code/banknoteFraud.csv",
+                 header=FALSE, sep=",")
 names(data) <- c("varWave","skewWave","kurtWave","entropyWave","fraud")
 data[,5] <- as.factor(data[,5])
 ```
@@ -379,7 +392,8 @@ probabilities = predict(GPfitFraud, grid, type = "probabilities")
 
 # Plot the contour
 prob_matrix = matrix(probabilities[, 1], nrow = 100)
-contour(varWave_seq, skewWave_seq, prob_matrix, 10, col = "black", xlab = "varWave", ylab = "skewWave", main = 'Prob(Fraud) - Fraud is red')
+contour(varWave_seq, skewWave_seq, prob_matrix, 10, col = "black", 
+        xlab = "varWave", ylab = "skewWave", main = 'Prob(Fraud) - Fraud is red')
 points(trainingData[trainingData[,5] =='1',1],trainingData[trainingData[,5] =='1',2],col="red")
 points(trainingData[trainingData[,5] =='0',1],trainingData[trainingData[,5] =='0',2],col="blue")
 ```
