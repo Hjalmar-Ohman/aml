@@ -1,0 +1,55 @@
+---
+title: "oct2022"
+author: "Olof Swedberg"
+date: "2024-10-20"
+output: html_document
+---
+
+# 1 Bayesian Networks
+```{r}
+set.seed(12345) 
+library(bnlearn) 
+library(gRain)
+data("asia")
+data = asia
+
+dagT = model2network("[A][S][T|A][L|S][B|S][D|B:E][E|T:L][X|E]") # True Asian Network
+tenFit = bn.fit(dagT,data[1:10,], method = "bayes") # Fit on first ten
+
+# Fit as grain
+grain_fit = as.grain(tenFit)
+compiled_grain = compile(grain_fit)
+
+# B and E distribution
+for (i in 11:5000) {
+  z = NULL
+  for (j in c("A","S", "T", "L", "X", "D")) {
+    if (data[i,j] == "no"){
+      z = c(z,"no")
+    } else {
+      z = c(z, "yes")
+    }
+  }
+
+  obs_evidence = setEvidence(compiled_grain, nodes = c("A","S", "T", "L", "X", "D"),
+                             states = z) # Enter evidence
+  distrB = querygrain(obs_evidence, nodes = c("B"))$B #posterior distr.
+  data[i,"B"] = sample(c("no", "yes"),size = 1, prob = distrB)
+  
+  obs_evidence = setEvidence(compiled_grain, nodes = c("A","S", "T", "L", "X", "D"),
+                             states = z) # Enter evidence
+  distrE = querygrain(obs_evidence, nodes = c("E"))$E #posterior distr.
+  data[i,"E"] = sample(c("no", "yes"),size = 1, prob = distrE)
+}
+
+
+learnedFit = bn.fit(dagT,data, method = "bayes") # Learn with the learned network
+trueFit = bn.fit(dagT,asia, method = "bayes") # Learn with the true network
+
+tenFit$D
+learnedFit$D
+trueFit$D
+```
+
+As suspected, the distribution of D obtained from the 5000 cases with imputed values performs better than the one fitted by 10 cases.
+
