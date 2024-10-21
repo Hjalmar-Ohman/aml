@@ -364,6 +364,28 @@ Here, $\beta$ determines the probability that the agent will end perform another
 
 In this task, we will use eight goal positions for training and, then, validate the learned policy on the remaining eight possible goal positions. The training and validation goal positions are stored in the lists train goals and val goals in the code in the file RL Lab2 Colab.ipynb. The results provided in the file correspond to running the REINFORCE algorithm for $5000$ episodes with $\beta = 0$ and $\gamma = 0.95$. Each training episode uses a random goal position from train goals. The initial position for the episode is also chosen at random. When training is completed, the code validates the learned policy for the goal positions in val goals. This is done by with the help of the function vis prob, which shows the grid, goal position and learned policy. Note that each non-terminal tile has four values. These represent the action probabilities associated to the tile (state). Note also that each nonterminal tile has an arrow. This indicates the action with the largest probability for the tile (ties are broken at random). Finally, answer the following questions:
 
+```{r echo=FALSE, out.width="24%", fig.align="center"}
+# Load images and display in 4x4 grid
+knitr::include_graphics(c(
+  "/Users/olofswedberg/Desktop/Screenshot 2024-09-28 at 19.20.57.png",
+  "/Users/olofswedberg/Desktop/Screenshot 2024-09-28 at 19.23.33.png",
+  "/Users/olofswedberg/Desktop/Screenshot 2024-09-28 at 19.23.42.png",
+  "/Users/olofswedberg/Desktop/Screenshot 2024-09-28 at 19.23.51.png",
+  "/Users/olofswedberg/Desktop/Screenshot 2024-09-28 at 19.24.00.png",
+  "/Users/olofswedberg/Desktop/Screenshot 2024-09-28 at 19.24.09.png",
+  "/Users/olofswedberg/Desktop/Screenshot 2024-09-28 at 19.24.14.png",
+  "/Users/olofswedberg/Desktop/Screenshot 2024-09-28 at 19.24.19.png",
+  "/Users/olofswedberg/Desktop/Screenshot 2024-09-28 at 19.24.23.png",
+  "/Users/olofswedberg/Desktop/Screenshot 2024-09-28 at 19.24.26.png",
+  "/Users/olofswedberg/Desktop/Screenshot 2024-09-28 at 19.24.30.png",
+  "/Users/olofswedberg/Desktop/Screenshot 2024-09-28 at 19.24.36.png",
+  "/Users/olofswedberg/Desktop/Screenshot 2024-09-28 at 19.24.40.png",
+  "/Users/olofswedberg/Desktop/Screenshot 2024-09-28 at 19.24.43.png",
+  "/Users/olofswedberg/Desktop/Screenshot 2024-09-28 at 19.24.49.png",
+  "/Users/olofswedberg/Desktop/Screenshot 2024-09-28 at 19.24.53.png"
+))
+```
+
 #### Has the agent learned a good policy? Why / Why not ?
 
 Yes, by reading from the graphs were 5000 episodes have been executed, he arrows in each state point towards the goal position, indicating the agent has learned to find the goal.
@@ -375,6 +397,18 @@ Yes, for Q-learning to work in an environment with a random goal, the state need
 ## Environment E
 
 In this task, the goals for training are all from the top row of the grid. The validation goals are three positions from the rows below. To solve this task, simply study the code and results provided in the file RL Lab2 Colab.ipynb and answer the following questions:
+
+```{r echo=FALSE, out.width="24%", fig.align="center"}
+# Load images and display in 4x4 grid
+knitr::include_graphics(c(
+"/Users/olofswedberg/Desktop/Screenshot 2024-09-28 at 19.24.56.png",
+"/Users/olofswedberg/Desktop/Screenshot 2024-09-28 at 19.25.00.png",
+"/Users/olofswedberg/Desktop/Screenshot 2024-09-28 at 19.25.04.png",
+"/Users/olofswedberg/Desktop/Screenshot 2024-09-28 at 19.25.07.png",
+"/Users/olofswedberg/Desktop/Screenshot 2024-09-28 at 19.25.10.png",
+"/Users/olofswedberg/Desktop/Screenshot 2024-09-28 at 19.25.16.png"
+))
+```
 
 ### Has the agent learned a good policy? Why / Why not ?
 

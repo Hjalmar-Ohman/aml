@@ -93,7 +93,8 @@ xGrid = seq(-1,1,length = 100)
 posterior = posteriorGP(X=x, y=y, sigmaNoise=sigmaN, 
                         XStar=xGrid, k = SquaredExpKernel, sigmaF, ell)
 
-plot(x = xGrid, y = posterior$mean, type = "l", col = 3, ylim = c(-2,2), ylab = "f", xlab = "", main = "Posterior mean of f")
+plot(x = xGrid, y = posterior$mean, type = "l", col = 3, 
+     ylim = c(-2,2), ylab = "f", xlab = "", main = "Posterior mean of f")
 lines(x = xGrid, y =posterior$mean +1.96*sqrt(diag(posterior$variance)), type = "l", col = 2)
 lines(x = xGrid, y =posterior$mean -1.96*sqrt(diag(posterior$variance)), type = "l", col = 2)
 

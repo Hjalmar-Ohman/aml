@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2024.2.16)  4 OCT 2024 09:47
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2024.2.16)  21 OCT 2024 09:52
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -538,15 +538,15 @@ al/texlive/2023/texmf-dist/fonts/enc/dvips/lm/lm-ec.enc}{/usr/local/texlive/202
 fonts/enc/dvips/lm/lm-mathit.enc}{/usr/local/texlive/2023/texmf-dist/fonts/enc/
 dvips/lm/lm-rm.enc}{/usr/local/texlive/2023/texmf-dist/fonts/enc/dvips/lm/lm-ma
 thsy.enc}] [2]
-Underfull \vbox (badness 8113) detected at line 347
+Underfull \vbox (badness 8113) detected at line 348
  []
 
 [3]
-Underfull \vbox (badness 10000) detected at line 347
+Underfull \vbox (badness 10000) detected at line 348
  []
 
 
-Underfull \vbox (badness 10000) detected at line 347
+Underfull \vbox (badness 10000) detected at line 348
  []
 
 [4]
@@ -556,609 +556,406 @@ File: Olof_Swedberg_files/figure-latex/unnamed-chunk-4-1.pdf Graphic file (type
  pdf)
 <use Olof_Swedberg_files/figure-latex/unnamed-chunk-4-1.pdf>
 Package pdftex.def Info: Olof_Swedberg_files/figure-latex/unnamed-chunk-4-1.pdf
-  used on input line 375.
+  used on input line 376.
 (pdftex.def)             Requested size: 451.71394pt x 315.19595pt.
-[5 <./Olof_Swedberg_files/figure-latex/unnamed-chunk-4-1.pdf>]
-<Olof_Swedberg_files/figure-latex/unnamed-chunk-4-2.pdf, id=51, 451.6875pt x 31
+[5]
+<Olof_Swedberg_files/figure-latex/unnamed-chunk-4-2.pdf, id=43, 451.6875pt x 31
 5.1775pt>
 File: Olof_Swedberg_files/figure-latex/unnamed-chunk-4-2.pdf Graphic file (type
  pdf)
 <use Olof_Swedberg_files/figure-latex/unnamed-chunk-4-2.pdf>
 Package pdftex.def Info: Olof_Swedberg_files/figure-latex/unnamed-chunk-4-2.pdf
-  used on input line 388.
+  used on input line 389.
 (pdftex.def)             Requested size: 451.71394pt x 315.19595pt.
-<Olof_Swedberg_files/figure-latex/unnamed-chunk-4-3.pdf, id=52, 451.6875pt x 31
+<Olof_Swedberg_files/figure-latex/unnamed-chunk-4-3.pdf, id=44, 451.6875pt x 31
 5.1775pt>
 File: Olof_Swedberg_files/figure-latex/unnamed-chunk-4-3.pdf Graphic file (type
  pdf)
 <use Olof_Swedberg_files/figure-latex/unnamed-chunk-4-3.pdf>
 Package pdftex.def Info: Olof_Swedberg_files/figure-latex/unnamed-chunk-4-3.pdf
-  used on input line 389.
+  used on input line 390.
 (pdftex.def)             Requested size: 451.71394pt x 315.19595pt.
-<Olof_Swedberg_files/figure-latex/unnamed-chunk-4-4.pdf, id=53, 451.6875pt x 31
+<Olof_Swedberg_files/figure-latex/unnamed-chunk-4-4.pdf, id=45, 451.6875pt x 31
 5.1775pt>
 File: Olof_Swedberg_files/figure-latex/unnamed-chunk-4-4.pdf Graphic file (type
  pdf)
 <use Olof_Swedberg_files/figure-latex/unnamed-chunk-4-4.pdf>
 Package pdftex.def Info: Olof_Swedberg_files/figure-latex/unnamed-chunk-4-4.pdf
-  used on input line 390.
+  used on input line 391.
 (pdftex.def)             Requested size: 451.71394pt x 315.19595pt.
-<Olof_Swedberg_files/figure-latex/unnamed-chunk-4-5.pdf, id=54, 451.6875pt x 31
+<Olof_Swedberg_files/figure-latex/unnamed-chunk-4-5.pdf, id=46, 451.6875pt x 31
 5.1775pt>
 File: Olof_Swedberg_files/figure-latex/unnamed-chunk-4-5.pdf Graphic file (type
  pdf)
 <use Olof_Swedberg_files/figure-latex/unnamed-chunk-4-5.pdf>
 Package pdftex.def Info: Olof_Swedberg_files/figure-latex/unnamed-chunk-4-5.pdf
-  used on input line 391.
+  used on input line 392.
 (pdftex.def)             Requested size: 451.71394pt x 315.19595pt.
 
-Underfull \hbox (badness 10000) in paragraph at lines 388--392
+Underfull \hbox (badness 10000) in paragraph at lines 389--393
 [][]
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 388--392
+Underfull \hbox (badness 10000) in paragraph at lines 389--393
 []
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 388--392
+Underfull \hbox (badness 10000) in paragraph at lines 389--393
 []
  []
 
-[6 <./Olof_Swedberg_files/figure-latex/unnamed-chunk-4-2.pdf>] [7 <./Olof_Swedb
-erg_files/figure-latex/unnamed-chunk-4-3.pdf> <./Olof_Swedberg_files/figure-lat
-ex/unnamed-chunk-4-4.pdf>]
+[6 <./Olof_Swedberg_files/figure-latex/unnamed-chunk-4-1.pdf>] [7 <./Olof_Swedb
+erg_files/figure-latex/unnamed-chunk-4-2.pdf> <./Olof_Swedberg_files/figure-lat
+ex/unnamed-chunk-4-3.pdf>] [8 <./Olof_Swedberg_files/figure-latex/unnamed-chunk
+-4-4.pdf> <./Olof_Swedberg_files/figure-latex/unnamed-chunk-4-5.pdf>]
 
-LaTeX Warning: Command \texttimes invalid in math mode on input line 423.
+LaTeX Warning: Command \texttimes invalid in math mode on input line 424.
 
 
-LaTeX Warning: Command \texttimes invalid in math mode on input line 423.
+LaTeX Warning: Command \texttimes invalid in math mode on input line 424.
 
-[8 <./Olof_Swedberg_files/figure-latex/unnamed-chunk-4-5.pdf>]
-<Olof_Swedberg_files/figure-latex/unnamed-chunk-5-1.pdf, id=105, 451.6875pt x 3
+<Olof_Swedberg_files/figure-latex/unnamed-chunk-5-1.pdf, id=100, 451.6875pt x 3
 15.1775pt>
 File: Olof_Swedberg_files/figure-latex/unnamed-chunk-5-1.pdf Graphic file (type
  pdf)
 <use Olof_Swedberg_files/figure-latex/unnamed-chunk-5-1.pdf>
 Package pdftex.def Info: Olof_Swedberg_files/figure-latex/unnamed-chunk-5-1.pdf
-  used on input line 453.
+  used on input line 454.
 (pdftex.def)             Requested size: 451.71394pt x 315.19595pt.
-[9 <./Olof_Swedberg_files/figure-latex/unnamed-chunk-5-1.pdf>]
-<Olof_Swedberg_files/figure-latex/unnamed-chunk-5-2.pdf, id=118, 451.6875pt x 3
+[9]
+<Olof_Swedberg_files/figure-latex/unnamed-chunk-5-2.pdf, id=110, 451.6875pt x 3
 15.1775pt>
 File: Olof_Swedberg_files/figure-latex/unnamed-chunk-5-2.pdf Graphic file (type
  pdf)
 <use Olof_Swedberg_files/figure-latex/unnamed-chunk-5-2.pdf>
 Package pdftex.def Info: Olof_Swedberg_files/figure-latex/unnamed-chunk-5-2.pdf
-  used on input line 483.
+  used on input line 484.
 (pdftex.def)             Requested size: 451.71394pt x 315.19595pt.
-<Olof_Swedberg_files/figure-latex/unnamed-chunk-5-3.pdf, id=119, 438.63875pt x 
+<Olof_Swedberg_files/figure-latex/unnamed-chunk-5-3.pdf, id=111, 438.63875pt x 
 248.93pt>
 File: Olof_Swedberg_files/figure-latex/unnamed-chunk-5-3.pdf Graphic file (type
  pdf)
 <use Olof_Swedberg_files/figure-latex/unnamed-chunk-5-3.pdf>
 Package pdftex.def Info: Olof_Swedberg_files/figure-latex/unnamed-chunk-5-3.pdf
-  used on input line 484.
+  used on input line 485.
 (pdftex.def)             Requested size: 438.64435pt x 248.93317pt.
-<Olof_Swedberg_files/figure-latex/unnamed-chunk-5-4.pdf, id=120, 438.63875pt x 
+<Olof_Swedberg_files/figure-latex/unnamed-chunk-5-4.pdf, id=112, 438.63875pt x 
 248.93pt>
 File: Olof_Swedberg_files/figure-latex/unnamed-chunk-5-4.pdf Graphic file (type
  pdf)
 <use Olof_Swedberg_files/figure-latex/unnamed-chunk-5-4.pdf>
 Package pdftex.def Info: Olof_Swedberg_files/figure-latex/unnamed-chunk-5-4.pdf
-  used on input line 485.
+  used on input line 486.
 (pdftex.def)             Requested size: 438.64435pt x 248.93317pt.
-<Olof_Swedberg_files/figure-latex/unnamed-chunk-5-5.pdf, id=121, 451.6875pt x 3
+<Olof_Swedberg_files/figure-latex/unnamed-chunk-5-5.pdf, id=113, 451.6875pt x 3
 15.1775pt>
 File: Olof_Swedberg_files/figure-latex/unnamed-chunk-5-5.pdf Graphic file (type
  pdf)
 <use Olof_Swedberg_files/figure-latex/unnamed-chunk-5-5.pdf>
 Package pdftex.def Info: Olof_Swedberg_files/figure-latex/unnamed-chunk-5-5.pdf
-  used on input line 486.
+  used on input line 487.
 (pdftex.def)             Requested size: 451.71394pt x 315.19595pt.
-<Olof_Swedberg_files/figure-latex/unnamed-chunk-5-6.pdf, id=122, 438.63875pt x 
+<Olof_Swedberg_files/figure-latex/unnamed-chunk-5-6.pdf, id=114, 438.63875pt x 
 248.93pt>
 File: Olof_Swedberg_files/figure-latex/unnamed-chunk-5-6.pdf Graphic file (type
  pdf)
 <use Olof_Swedberg_files/figure-latex/unnamed-chunk-5-6.pdf>
 Package pdftex.def Info: Olof_Swedberg_files/figure-latex/unnamed-chunk-5-6.pdf
-  used on input line 487.
+  used on input line 488.
 (pdftex.def)             Requested size: 438.64435pt x 248.93317pt.
-<Olof_Swedberg_files/figure-latex/unnamed-chunk-5-7.pdf, id=123, 438.63875pt x 
+<Olof_Swedberg_files/figure-latex/unnamed-chunk-5-7.pdf, id=115, 438.63875pt x 
 248.93pt>
 File: Olof_Swedberg_files/figure-latex/unnamed-chunk-5-7.pdf Graphic file (type
  pdf)
 <use Olof_Swedberg_files/figure-latex/unnamed-chunk-5-7.pdf>
 Package pdftex.def Info: Olof_Swedberg_files/figure-latex/unnamed-chunk-5-7.pdf
-  used on input line 488.
+  used on input line 489.
 (pdftex.def)             Requested size: 438.64435pt x 248.93317pt.
-<Olof_Swedberg_files/figure-latex/unnamed-chunk-5-8.pdf, id=124, 451.6875pt x 3
+<Olof_Swedberg_files/figure-latex/unnamed-chunk-5-8.pdf, id=116, 451.6875pt x 3
 15.1775pt>
 File: Olof_Swedberg_files/figure-latex/unnamed-chunk-5-8.pdf Graphic file (type
  pdf)
 <use Olof_Swedberg_files/figure-latex/unnamed-chunk-5-8.pdf>
 Package pdftex.def Info: Olof_Swedberg_files/figure-latex/unnamed-chunk-5-8.pdf
-  used on input line 489.
+  used on input line 490.
 (pdftex.def)             Requested size: 451.71394pt x 315.19595pt.
-<Olof_Swedberg_files/figure-latex/unnamed-chunk-5-9.pdf, id=125, 438.63875pt x 
+<Olof_Swedberg_files/figure-latex/unnamed-chunk-5-9.pdf, id=117, 438.63875pt x 
 248.93pt>
 File: Olof_Swedberg_files/figure-latex/unnamed-chunk-5-9.pdf Graphic file (type
  pdf)
 <use Olof_Swedberg_files/figure-latex/unnamed-chunk-5-9.pdf>
 Package pdftex.def Info: Olof_Swedberg_files/figure-latex/unnamed-chunk-5-9.pdf
-  used on input line 490.
+  used on input line 491.
 (pdftex.def)             Requested size: 438.64435pt x 248.93317pt.
-<Olof_Swedberg_files/figure-latex/unnamed-chunk-5-10.pdf, id=126, 438.63875pt x
+<Olof_Swedberg_files/figure-latex/unnamed-chunk-5-10.pdf, id=118, 438.63875pt x
  248.93pt>
 File: Olof_Swedberg_files/figure-latex/unnamed-chunk-5-10.pdf Graphic file (typ
 e pdf)
 <use Olof_Swedberg_files/figure-latex/unnamed-chunk-5-10.pdf>
 Package pdftex.def Info: Olof_Swedberg_files/figure-latex/unnamed-chunk-5-10.pd
-f  used on input line 491.
+f  used on input line 492.
 (pdftex.def)             Requested size: 438.64435pt x 248.93317pt.
 
-Underfull \hbox (badness 10000) in paragraph at lines 483--492
+Underfull \hbox (badness 10000) in paragraph at lines 484--493
 [][]
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 483--492
+Underfull \hbox (badness 10000) in paragraph at lines 484--493
 []
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 483--492
+Underfull \hbox (badness 10000) in paragraph at lines 484--493
 []
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 483--492
+Underfull \hbox (badness 10000) in paragraph at lines 484--493
 []
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 483--492
+Underfull \hbox (badness 10000) in paragraph at lines 484--493
 []
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 483--492
+Underfull \hbox (badness 10000) in paragraph at lines 484--493
 []
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 483--492
+Underfull \hbox (badness 10000) in paragraph at lines 484--493
 []
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 483--492
+Underfull \hbox (badness 10000) in paragraph at lines 484--493
 []
  []
 
-[10 <./Olof_Swedberg_files/figure-latex/unnamed-chunk-5-2.pdf>] [11 <./Olof_Swe
-dberg_files/figure-latex/unnamed-chunk-5-3.pdf> <./Olof_Swedberg_files/figure-l
-atex/unnamed-chunk-5-4.pdf>] [12 <./Olof_Swedberg_files/figure-latex/unnamed-ch
-unk-5-5.pdf> <./Olof_Swedberg_files/figure-latex/unnamed-chunk-5-6.pdf>] [13 <.
-/Olof_Swedberg_files/figure-latex/unnamed-chunk-5-7.pdf> <./Olof_Swedberg_files
-/figure-latex/unnamed-chunk-5-8.pdf>]
-Underfull \vbox (badness 10000) detected at line 511
- []
-
-
-Overfull \vbox (1.60306pt too high) detected at line 511
- []
-
-[14 <./Olof_Swedberg_files/figure-latex/unnamed-chunk-5-9.pdf> <./Olof_Swedberg
-_files/figure-latex/unnamed-chunk-5-10.pdf>]
-<Olof_Swedberg_files/figure-latex/unnamed-chunk-5-11.pdf, id=215, 451.6875pt x 
+[10 <./Olof_Swedberg_files/figure-latex/unnamed-chunk-5-1.pdf>] [11 <./Olof_Swe
+dberg_files/figure-latex/unnamed-chunk-5-2.pdf> <./Olof_Swedberg_files/figure-l
+atex/unnamed-chunk-5-3.pdf>] [12 <./Olof_Swedberg_files/figure-latex/unnamed-ch
+unk-5-4.pdf> <./Olof_Swedberg_files/figure-latex/unnamed-chunk-5-5.pdf>] [13 <.
+/Olof_Swedberg_files/figure-latex/unnamed-chunk-5-6.pdf> <./Olof_Swedberg_files
+/figure-latex/unnamed-chunk-5-7.pdf>] [14 <./Olof_Swedberg_files/figure-latex/u
+nnamed-chunk-5-8.pdf> <./Olof_Swedberg_files/figure-latex/unnamed-chunk-5-9.pdf
+>]
+<Olof_Swedberg_files/figure-latex/unnamed-chunk-5-11.pdf, id=208, 451.6875pt x 
 315.1775pt>
 File: Olof_Swedberg_files/figure-latex/unnamed-chunk-5-11.pdf Graphic file (typ
 e pdf)
 <use Olof_Swedberg_files/figure-latex/unnamed-chunk-5-11.pdf>
 Package pdftex.def Info: Olof_Swedberg_files/figure-latex/unnamed-chunk-5-11.pd
-f  used on input line 513.
+f  used on input line 514.
 (pdftex.def)             Requested size: 451.71394pt x 315.19595pt.
-<Olof_Swedberg_files/figure-latex/unnamed-chunk-5-12.pdf, id=216, 438.63875pt x
+<Olof_Swedberg_files/figure-latex/unnamed-chunk-5-12.pdf, id=209, 438.63875pt x
  248.93pt>
 File: Olof_Swedberg_files/figure-latex/unnamed-chunk-5-12.pdf Graphic file (typ
 e pdf)
 <use Olof_Swedberg_files/figure-latex/unnamed-chunk-5-12.pdf>
 Package pdftex.def Info: Olof_Swedberg_files/figure-latex/unnamed-chunk-5-12.pd
-f  used on input line 514.
+f  used on input line 515.
 (pdftex.def)             Requested size: 438.64435pt x 248.93317pt.
-<Olof_Swedberg_files/figure-latex/unnamed-chunk-5-13.pdf, id=217, 438.63875pt x
+<Olof_Swedberg_files/figure-latex/unnamed-chunk-5-13.pdf, id=210, 438.63875pt x
  248.93pt>
 File: Olof_Swedberg_files/figure-latex/unnamed-chunk-5-13.pdf Graphic file (typ
 e pdf)
 <use Olof_Swedberg_files/figure-latex/unnamed-chunk-5-13.pdf>
 Package pdftex.def Info: Olof_Swedberg_files/figure-latex/unnamed-chunk-5-13.pd
-f  used on input line 515.
+f  used on input line 516.
 (pdftex.def)             Requested size: 438.64435pt x 248.93317pt.
-<Olof_Swedberg_files/figure-latex/unnamed-chunk-5-14.pdf, id=218, 451.6875pt x 
+<Olof_Swedberg_files/figure-latex/unnamed-chunk-5-14.pdf, id=211, 451.6875pt x 
 315.1775pt>
 File: Olof_Swedberg_files/figure-latex/unnamed-chunk-5-14.pdf Graphic file (typ
 e pdf)
 <use Olof_Swedberg_files/figure-latex/unnamed-chunk-5-14.pdf>
 Package pdftex.def Info: Olof_Swedberg_files/figure-latex/unnamed-chunk-5-14.pd
-f  used on input line 516.
+f  used on input line 517.
 (pdftex.def)             Requested size: 451.71394pt x 315.19595pt.
-<Olof_Swedberg_files/figure-latex/unnamed-chunk-5-15.pdf, id=219, 438.63875pt x
+<Olof_Swedberg_files/figure-latex/unnamed-chunk-5-15.pdf, id=212, 438.63875pt x
  251.94125pt>
 File: Olof_Swedberg_files/figure-latex/unnamed-chunk-5-15.pdf Graphic file (typ
 e pdf)
 <use Olof_Swedberg_files/figure-latex/unnamed-chunk-5-15.pdf>
 Package pdftex.def Info: Olof_Swedberg_files/figure-latex/unnamed-chunk-5-15.pd
-f  used on input line 517.
+f  used on input line 518.
 (pdftex.def)             Requested size: 438.63766pt x 251.94063pt.
-<Olof_Swedberg_files/figure-latex/unnamed-chunk-5-16.pdf, id=220, 438.63875pt x
+<Olof_Swedberg_files/figure-latex/unnamed-chunk-5-16.pdf, id=213, 438.63875pt x
  248.93pt>
 File: Olof_Swedberg_files/figure-latex/unnamed-chunk-5-16.pdf Graphic file (typ
 e pdf)
 <use Olof_Swedberg_files/figure-latex/unnamed-chunk-5-16.pdf>
 Package pdftex.def Info: Olof_Swedberg_files/figure-latex/unnamed-chunk-5-16.pd
-f  used on input line 518.
+f  used on input line 519.
 (pdftex.def)             Requested size: 438.64435pt x 248.93317pt.
-<Olof_Swedberg_files/figure-latex/unnamed-chunk-5-17.pdf, id=221, 451.6875pt x 
+<Olof_Swedberg_files/figure-latex/unnamed-chunk-5-17.pdf, id=214, 451.6875pt x 
 315.1775pt>
 File: Olof_Swedberg_files/figure-latex/unnamed-chunk-5-17.pdf Graphic file (typ
 e pdf)
 <use Olof_Swedberg_files/figure-latex/unnamed-chunk-5-17.pdf>
 Package pdftex.def Info: Olof_Swedberg_files/figure-latex/unnamed-chunk-5-17.pd
-f  used on input line 519.
+f  used on input line 520.
 (pdftex.def)             Requested size: 451.71394pt x 315.19595pt.
-<Olof_Swedberg_files/figure-latex/unnamed-chunk-5-18.pdf, id=222, 438.63875pt x
+<Olof_Swedberg_files/figure-latex/unnamed-chunk-5-18.pdf, id=215, 438.63875pt x
  248.93pt>
 File: Olof_Swedberg_files/figure-latex/unnamed-chunk-5-18.pdf Graphic file (typ
 e pdf)
 <use Olof_Swedberg_files/figure-latex/unnamed-chunk-5-18.pdf>
 Package pdftex.def Info: Olof_Swedberg_files/figure-latex/unnamed-chunk-5-18.pd
-f  used on input line 520.
+f  used on input line 521.
 (pdftex.def)             Requested size: 438.64435pt x 248.93317pt.
-<Olof_Swedberg_files/figure-latex/unnamed-chunk-5-19.pdf, id=223, 438.63875pt x
+<Olof_Swedberg_files/figure-latex/unnamed-chunk-5-19.pdf, id=216, 438.63875pt x
  248.93pt>
 File: Olof_Swedberg_files/figure-latex/unnamed-chunk-5-19.pdf Graphic file (typ
 e pdf)
 <use Olof_Swedberg_files/figure-latex/unnamed-chunk-5-19.pdf>
 Package pdftex.def Info: Olof_Swedberg_files/figure-latex/unnamed-chunk-5-19.pd
-f  used on input line 521.
+f  used on input line 522.
 (pdftex.def)             Requested size: 438.64435pt x 248.93317pt.
 
-Underfull \hbox (badness 10000) in paragraph at lines 513--522
+Underfull \hbox (badness 10000) in paragraph at lines 514--523
 [][]
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 513--522
+Underfull \hbox (badness 10000) in paragraph at lines 514--523
 []
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 513--522
+Underfull \hbox (badness 10000) in paragraph at lines 514--523
 []
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 513--522
+Underfull \hbox (badness 10000) in paragraph at lines 514--523
 []
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 513--522
+Underfull \hbox (badness 10000) in paragraph at lines 514--523
 []
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 513--522
+Underfull \hbox (badness 10000) in paragraph at lines 514--523
 []
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 513--522
+Underfull \hbox (badness 10000) in paragraph at lines 514--523
 []
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 513--522
+Underfull \hbox (badness 10000) in paragraph at lines 514--523
 []
  []
 
-[15 <./Olof_Swedberg_files/figure-latex/unnamed-chunk-5-11.pdf> <./Olof_Swedber
-g_files/figure-latex/unnamed-chunk-5-12.pdf>] [16 <./Olof_Swedberg_files/figure
--latex/unnamed-chunk-5-13.pdf> <./Olof_Swedberg_files/figure-latex/unnamed-chun
-k-5-14.pdf>] [17 <./Olof_Swedberg_files/figure-latex/unnamed-chunk-5-15.pdf> <.
-/Olof_Swedberg_files/figure-latex/unnamed-chunk-5-16.pdf>] [18 <./Olof_Swedberg
-_files/figure-latex/unnamed-chunk-5-17.pdf> <./Olof_Swedberg_files/figure-latex
-/unnamed-chunk-5-18.pdf>]
+[15 <./Olof_Swedberg_files/figure-latex/unnamed-chunk-5-10.pdf>] [16 <./Olof_Sw
+edberg_files/figure-latex/unnamed-chunk-5-11.pdf> <./Olof_Swedberg_files/figure
+-latex/unnamed-chunk-5-12.pdf>] [17 <./Olof_Swedberg_files/figure-latex/unnamed
+-chunk-5-13.pdf> <./Olof_Swedberg_files/figure-latex/unnamed-chunk-5-14.pdf>] [
+18 <./Olof_Swedberg_files/figure-latex/unnamed-chunk-5-15.pdf> <./Olof_Swedberg
+_files/figure-latex/unnamed-chunk-5-16.pdf>] [19 <./Olof_Swedberg_files/figure-
+latex/unnamed-chunk-5-17.pdf> <./Olof_Swedberg_files/figure-latex/unnamed-chunk
+-5-18.pdf>]
 
-LaTeX Warning: Command \texttimes invalid in math mode on input line 546.
+LaTeX Warning: Command \texttimes invalid in math mode on input line 547.
 
 
-LaTeX Warning: Command \texttimes invalid in math mode on input line 546.
+LaTeX Warning: Command \texttimes invalid in math mode on input line 547.
 
-[19 <./Olof_Swedberg_files/figure-latex/unnamed-chunk-5-19.pdf>]
-<Olof_Swedberg_files/figure-latex/unnamed-chunk-6-1.pdf, id=314, 451.6875pt x 3
+[20 <./Olof_Swedberg_files/figure-latex/unnamed-chunk-5-19.pdf>]
+<Olof_Swedberg_files/figure-latex/unnamed-chunk-6-1.pdf, id=318, 451.6875pt x 3
 15.1775pt>
 File: Olof_Swedberg_files/figure-latex/unnamed-chunk-6-1.pdf Graphic file (type
  pdf)
 <use Olof_Swedberg_files/figure-latex/unnamed-chunk-6-1.pdf>
 Package pdftex.def Info: Olof_Swedberg_files/figure-latex/unnamed-chunk-6-1.pdf
-  used on input line 571.
+  used on input line 572.
 (pdftex.def)             Requested size: 451.71394pt x 315.19595pt.
-<Olof_Swedberg_files/figure-latex/unnamed-chunk-6-2.pdf, id=315, 451.6875pt x 3
+<Olof_Swedberg_files/figure-latex/unnamed-chunk-6-2.pdf, id=319, 451.6875pt x 3
 15.1775pt>
 File: Olof_Swedberg_files/figure-latex/unnamed-chunk-6-2.pdf Graphic file (type
  pdf)
 <use Olof_Swedberg_files/figure-latex/unnamed-chunk-6-2.pdf>
 Package pdftex.def Info: Olof_Swedberg_files/figure-latex/unnamed-chunk-6-2.pdf
-  used on input line 586.
+  used on input line 587.
 (pdftex.def)             Requested size: 451.71394pt x 315.19595pt.
-<Olof_Swedberg_files/figure-latex/unnamed-chunk-6-3.pdf, id=316, 451.6875pt x 3
+<Olof_Swedberg_files/figure-latex/unnamed-chunk-6-3.pdf, id=320, 451.6875pt x 3
 15.1775pt>
 File: Olof_Swedberg_files/figure-latex/unnamed-chunk-6-3.pdf Graphic file (type
  pdf)
 <use Olof_Swedberg_files/figure-latex/unnamed-chunk-6-3.pdf>
 Package pdftex.def Info: Olof_Swedberg_files/figure-latex/unnamed-chunk-6-3.pdf
-  used on input line 587.
+  used on input line 588.
 (pdftex.def)             Requested size: 451.71394pt x 315.19595pt.
-<Olof_Swedberg_files/figure-latex/unnamed-chunk-6-4.pdf, id=317, 451.6875pt x 3
+<Olof_Swedberg_files/figure-latex/unnamed-chunk-6-4.pdf, id=321, 451.6875pt x 3
 15.1775pt>
 File: Olof_Swedberg_files/figure-latex/unnamed-chunk-6-4.pdf Graphic file (type
  pdf)
 <use Olof_Swedberg_files/figure-latex/unnamed-chunk-6-4.pdf>
 Package pdftex.def Info: Olof_Swedberg_files/figure-latex/unnamed-chunk-6-4.pdf
-  used on input line 588.
+  used on input line 589.
 (pdftex.def)             Requested size: 451.71394pt x 315.19595pt.
-<Olof_Swedberg_files/figure-latex/unnamed-chunk-6-5.pdf, id=318, 451.6875pt x 3
+<Olof_Swedberg_files/figure-latex/unnamed-chunk-6-5.pdf, id=322, 451.6875pt x 3
 15.1775pt>
 File: Olof_Swedberg_files/figure-latex/unnamed-chunk-6-5.pdf Graphic file (type
  pdf)
 <use Olof_Swedberg_files/figure-latex/unnamed-chunk-6-5.pdf>
 Package pdftex.def Info: Olof_Swedberg_files/figure-latex/unnamed-chunk-6-5.pdf
-  used on input line 589.
+  used on input line 590.
 (pdftex.def)             Requested size: 451.71394pt x 315.19595pt.
 
-Underfull \hbox (badness 10000) in paragraph at lines 586--590
+Underfull \hbox (badness 10000) in paragraph at lines 587--591
 [][]
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 586--590
+Underfull \hbox (badness 10000) in paragraph at lines 587--591
 []
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 586--590
+Underfull \hbox (badness 10000) in paragraph at lines 587--591
 []
  []
 
-[20 <./Olof_Swedberg_files/figure-latex/unnamed-chunk-6-1.pdf>] [21 <./Olof_Swe
+[21 <./Olof_Swedberg_files/figure-latex/unnamed-chunk-6-1.pdf>] [22 <./Olof_Swe
 dberg_files/figure-latex/unnamed-chunk-6-2.pdf> <./Olof_Swedberg_files/figure-l
-atex/unnamed-chunk-6-3.pdf>] [22 <./Olof_Swedberg_files/figure-latex/unnamed-ch
-unk-6-4.pdf> <./Olof_Swedberg_files/figure-latex/unnamed-chunk-6-5.pdf>]
-<../../../../../Desktop/Screenshot 2024-09-28 at 19.20.57.png, id=372, 416.5562
-4pt x 417.56pt>
-File: ../../../../../Desktop/Screenshot 2024-09-28 at 19.20.57.png Graphic file
- (type png)
-<use ../../../../../Desktop/Screenshot 2024-09-28 at 19.20.57.png>
-Package pdftex.def Info: ../../../../../Desktop/Screenshot 2024-09-28 at 19.20.
-57.png  used on input line 617.
-(pdftex.def)             Requested size: 112.73863pt x 113.0103pt.
-<../../../../../Desktop/Screenshot 2024-09-28 at 19.23.33.png, id=374, 416.5562
-4pt x 417.56pt>
-File: ../../../../../Desktop/Screenshot 2024-09-28 at 19.23.33.png Graphic file
- (type png)
-<use ../../../../../Desktop/Screenshot 2024-09-28 at 19.23.33.png>
-Package pdftex.def Info: ../../../../../Desktop/Screenshot 2024-09-28 at 19.23.
-33.png  used on input line 619.
-(pdftex.def)             Requested size: 112.73863pt x 113.0103pt.
-<../../../../../Desktop/Screenshot 2024-09-28 at 19.23.42.png, id=375, 416.5562
-4pt x 417.56pt>
-File: ../../../../../Desktop/Screenshot 2024-09-28 at 19.23.42.png Graphic file
- (type png)
-<use ../../../../../Desktop/Screenshot 2024-09-28 at 19.23.42.png>
-Package pdftex.def Info: ../../../../../Desktop/Screenshot 2024-09-28 at 19.23.
-42.png  used on input line 621.
-(pdftex.def)             Requested size: 112.73863pt x 113.0103pt.
-<../../../../../Desktop/Screenshot 2024-09-28 at 19.23.51.png, id=376, 416.5562
-4pt x 417.56pt>
-File: ../../../../../Desktop/Screenshot 2024-09-28 at 19.23.51.png Graphic file
- (type png)
-<use ../../../../../Desktop/Screenshot 2024-09-28 at 19.23.51.png>
-Package pdftex.def Info: ../../../../../Desktop/Screenshot 2024-09-28 at 19.23.
-51.png  used on input line 623.
-(pdftex.def)             Requested size: 112.73863pt x 113.0103pt.
-[23 <../../../../../Desktop/Screenshot 2024-09-28 at 19.20.57.png> <../../../..
-/../Desktop/Screenshot 2024-09-28 at 19.23.33.png> <../../../../../Desktop/Scre
-enshot 2024-09-28 at 19.23.42.png>]
-<../../../../../Desktop/Screenshot 2024-09-28 at 19.24.00.png, id=386, 416.5562
-4pt x 417.56pt>
-File: ../../../../../Desktop/Screenshot 2024-09-28 at 19.24.00.png Graphic file
- (type png)
-<use ../../../../../Desktop/Screenshot 2024-09-28 at 19.24.00.png>
-Package pdftex.def Info: ../../../../../Desktop/Screenshot 2024-09-28 at 19.24.
-00.png  used on input line 625.
-(pdftex.def)             Requested size: 112.73863pt x 113.0103pt.
-<../../../../../Desktop/Screenshot 2024-09-28 at 19.24.09.png, id=387, 416.5562
-4pt x 417.56pt>
-File: ../../../../../Desktop/Screenshot 2024-09-28 at 19.24.09.png Graphic file
- (type png)
-<use ../../../../../Desktop/Screenshot 2024-09-28 at 19.24.09.png>
-Package pdftex.def Info: ../../../../../Desktop/Screenshot 2024-09-28 at 19.24.
-09.png  used on input line 627.
-(pdftex.def)             Requested size: 112.73863pt x 113.0103pt.
-<../../../../../Desktop/Screenshot 2024-09-28 at 19.24.14.png, id=388, 416.5562
-4pt x 417.56pt>
-File: ../../../../../Desktop/Screenshot 2024-09-28 at 19.24.14.png Graphic file
- (type png)
-<use ../../../../../Desktop/Screenshot 2024-09-28 at 19.24.14.png>
-Package pdftex.def Info: ../../../../../Desktop/Screenshot 2024-09-28 at 19.24.
-14.png  used on input line 629.
-(pdftex.def)             Requested size: 112.73863pt x 113.0103pt.
-<../../../../../Desktop/Screenshot 2024-09-28 at 19.24.19.png, id=389, 416.5562
-4pt x 417.56pt>
-File: ../../../../../Desktop/Screenshot 2024-09-28 at 19.24.19.png Graphic file
- (type png)
-<use ../../../../../Desktop/Screenshot 2024-09-28 at 19.24.19.png>
-Package pdftex.def Info: ../../../../../Desktop/Screenshot 2024-09-28 at 19.24.
-19.png  used on input line 631.
-(pdftex.def)             Requested size: 112.73863pt x 113.0103pt.
-<../../../../../Desktop/Screenshot 2024-09-28 at 19.24.23.png, id=390, 416.5562
-4pt x 417.56pt>
-File: ../../../../../Desktop/Screenshot 2024-09-28 at 19.24.23.png Graphic file
- (type png)
-<use ../../../../../Desktop/Screenshot 2024-09-28 at 19.24.23.png>
-Package pdftex.def Info: ../../../../../Desktop/Screenshot 2024-09-28 at 19.24.
-23.png  used on input line 633.
-(pdftex.def)             Requested size: 112.73863pt x 113.0103pt.
-[24 <../../../../../Desktop/Screenshot 2024-09-28 at 19.23.51.png> <../../../..
-/../Desktop/Screenshot 2024-09-28 at 19.24.00.png> <../../../../../Desktop/Scre
-enshot 2024-09-28 at 19.24.09.png> <../../../../../Desktop/Screenshot 2024-09-2
-8 at 19.24.14.png> <../../../../../Desktop/Screenshot 2024-09-28 at 19.24.19.pn
-g>]
-<../../../../../Desktop/Screenshot 2024-09-28 at 19.24.26.png, id=400, 416.5562
-4pt x 417.56pt>
-File: ../../../../../Desktop/Screenshot 2024-09-28 at 19.24.26.png Graphic file
- (type png)
-<use ../../../../../Desktop/Screenshot 2024-09-28 at 19.24.26.png>
-Package pdftex.def Info: ../../../../../Desktop/Screenshot 2024-09-28 at 19.24.
-26.png  used on input line 635.
-(pdftex.def)             Requested size: 112.73863pt x 113.0103pt.
-<../../../../../Desktop/Screenshot 2024-09-28 at 19.24.30.png, id=401, 416.5562
-4pt x 417.56pt>
-File: ../../../../../Desktop/Screenshot 2024-09-28 at 19.24.30.png Graphic file
- (type png)
-<use ../../../../../Desktop/Screenshot 2024-09-28 at 19.24.30.png>
-Package pdftex.def Info: ../../../../../Desktop/Screenshot 2024-09-28 at 19.24.
-30.png  used on input line 637.
-(pdftex.def)             Requested size: 112.73863pt x 113.0103pt.
-<../../../../../Desktop/Screenshot 2024-09-28 at 19.24.36.png, id=402, 416.5562
-4pt x 417.56pt>
-File: ../../../../../Desktop/Screenshot 2024-09-28 at 19.24.36.png Graphic file
- (type png)
-<use ../../../../../Desktop/Screenshot 2024-09-28 at 19.24.36.png>
-Package pdftex.def Info: ../../../../../Desktop/Screenshot 2024-09-28 at 19.24.
-36.png  used on input line 639.
-(pdftex.def)             Requested size: 112.73863pt x 113.0103pt.
-<../../../../../Desktop/Screenshot 2024-09-28 at 19.24.40.png, id=403, 416.5562
-4pt x 417.56pt>
-File: ../../../../../Desktop/Screenshot 2024-09-28 at 19.24.40.png Graphic file
- (type png)
-<use ../../../../../Desktop/Screenshot 2024-09-28 at 19.24.40.png>
-Package pdftex.def Info: ../../../../../Desktop/Screenshot 2024-09-28 at 19.24.
-40.png  used on input line 641.
-(pdftex.def)             Requested size: 112.73863pt x 113.0103pt.
-<../../../../../Desktop/Screenshot 2024-09-28 at 19.24.43.png, id=404, 416.5562
-4pt x 417.56pt>
-File: ../../../../../Desktop/Screenshot 2024-09-28 at 19.24.43.png Graphic file
- (type png)
-<use ../../../../../Desktop/Screenshot 2024-09-28 at 19.24.43.png>
-Package pdftex.def Info: ../../../../../Desktop/Screenshot 2024-09-28 at 19.24.
-43.png  used on input line 643.
-(pdftex.def)             Requested size: 112.73863pt x 113.0103pt.
-[25 <../../../../../Desktop/Screenshot 2024-09-28 at 19.24.23.png> <../../../..
-/../Desktop/Screenshot 2024-09-28 at 19.24.26.png> <../../../../../Desktop/Scre
-enshot 2024-09-28 at 19.24.30.png> <../../../../../Desktop/Screenshot 2024-09-2
-8 at 19.24.36.png> <../../../../../Desktop/Screenshot 2024-09-28 at 19.24.40.pn
-g>]
-<../../../../../Desktop/Screenshot 2024-09-28 at 19.24.49.png, id=415, 416.5562
-4pt x 417.56pt>
-File: ../../../../../Desktop/Screenshot 2024-09-28 at 19.24.49.png Graphic file
- (type png)
-<use ../../../../../Desktop/Screenshot 2024-09-28 at 19.24.49.png>
-Package pdftex.def Info: ../../../../../Desktop/Screenshot 2024-09-28 at 19.24.
-49.png  used on input line 645.
-(pdftex.def)             Requested size: 112.73863pt x 113.0103pt.
-<../../../../../Desktop/Screenshot 2024-09-28 at 19.24.53.png, id=416, 416.5562
-4pt x 417.56pt>
-File: ../../../../../Desktop/Screenshot 2024-09-28 at 19.24.53.png Graphic file
- (type png)
-<use ../../../../../Desktop/Screenshot 2024-09-28 at 19.24.53.png>
-Package pdftex.def Info: ../../../../../Desktop/Screenshot 2024-09-28 at 19.24.
-53.png  used on input line 647.
-(pdftex.def)             Requested size: 112.73863pt x 113.0103pt.
-<../../../../../Desktop/Screenshot 2024-09-28 at 19.24.56.png, id=417, 416.5562
-4pt x 417.56pt>
-File: ../../../../../Desktop/Screenshot 2024-09-28 at 19.24.56.png Graphic file
- (type png)
-<use ../../../../../Desktop/Screenshot 2024-09-28 at 19.24.56.png>
-Package pdftex.def Info: ../../../../../Desktop/Screenshot 2024-09-28 at 19.24.
-56.png  used on input line 673.
-(pdftex.def)             Requested size: 112.73863pt x 113.0103pt.
-[26 <../../../../../Desktop/Screenshot 2024-09-28 at 19.24.43.png> <../../../..
-/../Desktop/Screenshot 2024-09-28 at 19.24.49.png> <../../../../../Desktop/Scre
-enshot 2024-09-28 at 19.24.53.png>]
-<../../../../../Desktop/Screenshot 2024-09-28 at 19.25.00.png, id=428, 416.5562
-4pt x 417.56pt>
-File: ../../../../../Desktop/Screenshot 2024-09-28 at 19.25.00.png Graphic file
- (type png)
-<use ../../../../../Desktop/Screenshot 2024-09-28 at 19.25.00.png>
-Package pdftex.def Info: ../../../../../Desktop/Screenshot 2024-09-28 at 19.25.
-00.png  used on input line 675.
-(pdftex.def)             Requested size: 112.73863pt x 113.0103pt.
-<../../../../../Desktop/Screenshot 2024-09-28 at 19.25.04.png, id=429, 416.5562
-4pt x 417.56pt>
-File: ../../../../../Desktop/Screenshot 2024-09-28 at 19.25.04.png Graphic file
- (type png)
-<use ../../../../../Desktop/Screenshot 2024-09-28 at 19.25.04.png>
-Package pdftex.def Info: ../../../../../Desktop/Screenshot 2024-09-28 at 19.25.
-04.png  used on input line 677.
-(pdftex.def)             Requested size: 112.73863pt x 113.0103pt.
-<../../../../../Desktop/Screenshot 2024-09-28 at 19.25.07.png, id=430, 416.5562
-4pt x 417.56pt>
-File: ../../../../../Desktop/Screenshot 2024-09-28 at 19.25.07.png Graphic file
- (type png)
-<use ../../../../../Desktop/Screenshot 2024-09-28 at 19.25.07.png>
-Package pdftex.def Info: ../../../../../Desktop/Screenshot 2024-09-28 at 19.25.
-07.png  used on input line 679.
-(pdftex.def)             Requested size: 112.73863pt x 113.0103pt.
-<../../../../../Desktop/Screenshot 2024-09-28 at 19.25.10.png, id=431, 416.5562
-4pt x 417.56pt>
-File: ../../../../../Desktop/Screenshot 2024-09-28 at 19.25.10.png Graphic file
- (type png)
-<use ../../../../../Desktop/Screenshot 2024-09-28 at 19.25.10.png>
-Package pdftex.def Info: ../../../../../Desktop/Screenshot 2024-09-28 at 19.25.
-10.png  used on input line 681.
-(pdftex.def)             Requested size: 112.73863pt x 113.0103pt.
-<../../../../../Desktop/Screenshot 2024-09-28 at 19.25.16.png, id=432, 416.5562
-4pt x 417.56pt>
-File: ../../../../../Desktop/Screenshot 2024-09-28 at 19.25.16.png Graphic file
- (type png)
-<use ../../../../../Desktop/Screenshot 2024-09-28 at 19.25.16.png>
-Package pdftex.def Info: ../../../../../Desktop/Screenshot 2024-09-28 at 19.25.
-16.png  used on input line 683.
-(pdftex.def)             Requested size: 112.73863pt x 113.0103pt.
-[27 <../../../../../Desktop/Screenshot 2024-09-28 at 19.24.56.png> <../../../..
-/../Desktop/Screenshot 2024-09-28 at 19.25.00.png> <../../../../../Desktop/Scre
-enshot 2024-09-28 at 19.25.04.png> <../../../../../Desktop/Screenshot 2024-09-2
-8 at 19.25.07.png> <../../../../../Desktop/Screenshot 2024-09-28 at 19.25.10.pn
-g>] [28 <../../../../../Desktop/Screenshot 2024-09-28 at 19.25.16.png>] (./Olof
-_Swedberg.aux) ) 
+atex/unnamed-chunk-6-3.pdf>] [23 <./Olof_Swedberg_files/figure-latex/unnamed-ch
+unk-6-4.pdf> <./Olof_Swedberg_files/figure-latex/unnamed-chunk-6-5.pdf>] [24] (
+./Olof_Swedberg.aux) ) 
 Here is how much of TeX's memory you used:
- 14586 strings out of 476025
- 250742 string characters out of 5790017
+ 14313 strings out of 476025
+ 235404 string characters out of 5790017
  1869388 words of memory out of 5000000
- 34568 multiletter control sequences out of 15000+600000
+ 34348 multiletter control sequences out of 15000+600000
  564935 words of font info for 133 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 77i,6n,81p,1010b,520s stack positions out of 10000i,1000n,20000p,200000b,200000s
-</usr/local/texlive/2023/texmf-dist/fonts/type1/public/lm/lmbx1
-0.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/lm/lmbx12.pfb></us
-r/local/texlive/2023/texmf-dist/fonts/type1/public/lm/lmmi10.pfb></usr/local/te
-xlive/2023/texmf-dist/fonts/type1/public/lm/lmmi7.pfb></usr/local/texlive/2023/
-texmf-dist/fonts/type1/public/lm/lmr10.pfb></usr/local/texlive/2023/texmf-dist/
-fonts/type1/public/lm/lmr12.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1
-/public/lm/lmr17.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/lm/
-lmsy10.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/lm/lmsy7.pfb>
-</usr/local/texlive/2023/texmf-dist/fonts/type1/public/lm/lmtk10.pfb></usr/loca
-l/texlive/2023/texmf-dist/fonts/type1/public/lm/lmtko10.pfb></usr/local/texlive
-/2023/texmf-dist/fonts/type1/public/lm/lmtt10.pfb></usr/local/texlive/2023/texm
-f-dist/fonts/type1/public/lm/lmtti10.pfb>
-Output written on Olof_Swedberg.pdf (28 pages, 2051947 bytes).
+ 77i,6n,81p,1010b,482s stack positions out of 10000i,1000n,20000p,200000b,200000s
+</usr/local/texlive/2023/texmf-dist/fonts/type1/public/lm
+/lmbx10.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/lm/lmbx12.pf
+b></usr/local/texlive/2023/texmf-dist/fonts/type1/public/lm/lmmi10.pfb></usr/lo
+cal/texlive/2023/texmf-dist/fonts/type1/public/lm/lmmi7.pfb></usr/local/texlive
+/2023/texmf-dist/fonts/type1/public/lm/lmr10.pfb></usr/local/texlive/2023/texmf
+-dist/fonts/type1/public/lm/lmr12.pfb></usr/local/texlive/2023/texmf-dist/fonts
+/type1/public/lm/lmr17.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/publ
+ic/lm/lmsy10.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/lm/lmsy
+7.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/lm/lmtk10.pfb></us
+r/local/texlive/2023/texmf-dist/fonts/type1/public/lm/lmtko10.pfb></usr/local/t
+exlive/2023/texmf-dist/fonts/type1/public/lm/lmtt10.pfb></usr/local/texlive/202
+3/texmf-dist/fonts/type1/public/lm/lmtti10.pfb>
+Output written on Olof_Swedberg.pdf (24 pages, 1311626 bytes).
 PDF statistics:
- 562 PDF objects out of 1000 (max. 8388607)
- 351 compressed objects within 4 object streams
- 45 named destinations out of 1000 (max. 500000)
- 29016 words of extra memory for PDF output out of 29859 (max. 10000000)
+ 499 PDF objects out of 1000 (max. 8388607)
+ 336 compressed objects within 4 object streams
+ 41 named destinations out of 1000 (max. 500000)
+ 28906 words of extra memory for PDF output out of 29859 (max. 10000000)
 
