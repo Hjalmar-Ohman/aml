@@ -1,0 +1,10 @@
+---
+title: "Hjalmar_oct2023"
+author: "Hjalmar Öhman"
+date: "2024-10-22"
+output: pdf_document
+---
+
+```{r}
+
+```

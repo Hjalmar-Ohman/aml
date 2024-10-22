@@ -1,0 +1,44 @@
+---
+title: "Solution"
+author: "Hjalmar Öhman"
+date: "2024-10-21"
+output: pdf_document
+---
+
+# 1
+```{r}
+rm(list=ls())
+library(bnlearn)
+library(gRain)
+set.seed(123)
+data("asia")
+id=1:10
+
+
+full_data=asia[id,]
+true_dag = model2network("[A][S][T|A][L|S][B|S][D|B:E][E|T:L][X|E]")
+full_fit = bn.fit(x = true_dag, data = full_data, method="bayes")
+full_fit$D
+full_grain = as.grain(full_fit)
+full_compile = compile(full_grain)
+
+miss_data=asia[-id,]
+miss_data[, "B"] = NULL
+miss_data[, "E"] = NULL
+
+
+for (i in 1:nrow(miss_data)) {
+  evidence = setEvidence(full_compile, colnames(miss_data), as.vector(as.matrix(miss_data[i, ])))
+  query = querygrain(evidence, c("B"))$B
+  miss_data[i,"B"] = sample(c("no","yes"),size=1,prob=query)
+  
+  query = querygrain(evidence, c("E"))$E
+  miss_data[i,"E"] = sample(c("no","yes"),size=1,prob=query)
+}
+
+inference_bn<-bn.fit(true_dag,rbind(full_data, miss_data),method="bayes") # Imputed parameters
+inference_bn$D
+
+true_fit<-bn.fit(true_dag,asia,method="bayes") # "True" Asia parameters
+true_fit$D
+```

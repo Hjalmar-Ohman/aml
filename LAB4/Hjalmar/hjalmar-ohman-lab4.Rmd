@@ -1,11 +1,9 @@
 ---
 title: "LAB4"
-author: "Hjalmar Öhman"
-date: "2024-10-10"
 output: pdf_document
 ---
 
-## 1. Implementing GP Regression
+## 4.1 Implementing GP Regression
 
 This first exercise will have you writing your own code for the Gaussian process regression model:
 
@@ -15,7 +13,7 @@ You must implement **Algorithm 2.1** on page 19 of Rasmussen and Williams' book.
 
 In the algorithm, the notation $A/b$ means the vector $x$ that solves the equation $Ax = b$ (see p. xvii in the book). This is implemented in R with the help of the function `solve`.
 
-### 1.1
+### 4.1.1
 
 Write your own code for simulating from the posterior distribution of $f$ using the squared exponential kernel. The function (name it `posteriorGP`) should return a vector with the posterior mean and variance of $f$, both evaluated at a set of x-values ($X^*$). You can assume that the prior mean of $f$ is zero for all $x$. The function should have the following inputs:
 
@@ -52,7 +50,7 @@ posteriorGP = function(x, y, XStar, sigmaNoise, k, ...){
 }
 ```
 
-### 1.2
+### 4.1.2
 
 Now, let the prior hyperparameters be $\sigma_f = 1$ and $\ell = 0.3$. Update this prior with a single observation: $(x, y) = (0.4, 0.719)$. Assume that $\sigma_n = 0.1$.
 
@@ -73,7 +71,7 @@ lines(XStar, posterior_f$mean - 1.96*sqrt(diag(posterior_f$variance)), col = "bl
 lines(XStar, posterior_f$mean + 1.96*sqrt(diag(posterior_f$variance)), col = "blue")
 ```
 
-### 1.3
+### 4.1.3
 
 Update your posterior from (2) with another observation: $(x, y) = (-0.6, -0.044)$.
 
@@ -96,7 +94,7 @@ lines(XStar, posterior_f$mean - 1.96*sqrt(diag(posterior_f$variance)), col = "bl
 lines(XStar, posterior_f$mean + 1.96*sqrt(diag(posterior_f$variance)), col = "blue")
 ```
 
-### 1.4
+### 4.1.4
 
 Compute the posterior distribution of $f$ using all the five data points in the table below (note that the two previous observations are included in the table).
 
@@ -121,7 +119,7 @@ lines(XStar, posterior_f$mean - 1.96*sqrt(diag(posterior_f$variance)), col = "bl
 lines(XStar, posterior_f$mean + 1.96*sqrt(diag(posterior_f$variance)), col = "blue")
 ```
 
-### 1.5
+### 4.1.5
 
 Repeat the previous step using the five data points in the table, but this time with hyperparameters $\sigma_f = 1$ and $\ell = 1$.
 
@@ -137,7 +135,7 @@ lines(XStar, posterior_f$mean + 1.96*sqrt(diag(posterior_f$variance)), col = "bl
 Q: Compare the results.\
 A: Gives a smoother graph since we increased the scale of the kernel, causing points further away to affect the given point more.
 
-## 2. GP Regression with kernlab
+## 4.2 GP Regression with kernlab
 
 In this exercise, you will work with the daily mean temperature in Stockholm (Tullinge) during the period January 1, 2010 - December 31, 2015. The leap day (February 29, 2012) has been removed to simplify the dataset.
 
@@ -152,7 +150,7 @@ data$day = ((data$time - 1) %% 365) + 1
 data = data[seq(1, nrow(data), by=5), ]
 ```
 
-## 2.1
+### 4.2.1
 
 Go through the file *KernLabDemo.R* available on the course website. You will need to understand it. Now, define your own square exponential kernel function (with parameters $\ell$ (ell) and $\sigma_f$ (sigmaf)), evaluate it in the point $x = 1$, $x' = 2$, and use the `kernelMatrix` function to compute the covariance matrix $K(X, X^*)$ for the input vectors $X = (1, 3, 4)^T$ and $X^* = (2, 3, 4)^T$.
 
@@ -184,7 +182,7 @@ kernelMatrix(kernel = SEkernel, x = X, y = Xstar) # So this is K(X,Xstar).
 # kernelMatrix(kernel = SquareExponential(1,2), x = X, y = Xstar) # Also works.
 ```
 
-## 2.2 Gaussian Process Regression Model
+### 4.2.2 Gaussian Process Regression Model
 
 Consider first the following model:
 
@@ -210,7 +208,7 @@ lines(time, time_meanPred+1.96*predict(GPfit,time, type="sdeviation"),col="blue"
 lines(time, time_meanPred-1.96*predict(GPfit,time, type="sdeviation"),col="blue")
 ```
 
-## 2.3 Algorithm 2.1
+### 4.2.3 Algorithm 2.1
 
 Repeat the previous exercise, but now use Algorithm 2.1 on page 19 of Rasmussen and Williams' book to compute the posterior mean and variance of $f$.
 
@@ -236,7 +234,7 @@ lines(time, predictions$mean+1.96*sqrt(diag(predictions$variance)),col="blue")
 lines(time, predictions$mean-1.96*sqrt(diag(predictions$variance)),col="blue")
 ```
 
-## 2.4 New Model Based on Day
+### 4.2.4 New Model Based on Day
 
 Consider now the following model:
 
@@ -265,7 +263,7 @@ Q: Compare the results of both models. What are the pros and cons of each model?
 
 A: The model with time as its input feature seem to have slight more variance than the one with day. Day values repeats itself, meaning that the 1st of January 2010 is the same value as 1st of January 2011. The model therefore gets multiple temperatures to train on for the same day value, while for the model with time, 1st of Jan each year is distinct.
 
-## 2.5 Extended Squared Exponential Kernel
+## 4.2.5 Extended Squared Exponential Kernel
 
 Implement the following periodic kernel (a.k.a. locally periodic kernel):
 
@@ -299,7 +297,7 @@ lines(time, periodic_meanPred, col = "green")
 Q: Compare the fit to the previous two models (with $\sigma_f = 20$ and $\ell = 100$). Discuss the results.
 A: The new model with a periodic kernel allows to capture periodic patterns, creating a model with higher variance.
 
-## 3. GP Classification with kernlab
+## 4.3 GP Classification with kernlab
 
 Choose 1000 observations as training data.
 
@@ -313,7 +311,7 @@ train_data = data[SelectTraining, ]
 test_data = data[-SelectTraining, ]
 ```
 
-## 3.1.
+### 4.3.1.
 
 Use the R package `kernlab` to fit a Gaussian process classification model for fraud on the training data. Use the default kernel and hyperparameters. Start using only the covariates `varWave` and `skewWave` in the model. Plot contours of the prediction probabilities over a suitable grid of values for `varWave` and `skewWave`. Overlay the training data for `fraud = 1` (as blue points) and `fraud = 0` (as red points). You can reuse code from the file *KernLabDemo.R* available on the course website. Compute the confusion matrix for the classifier and its accuracy.
 ```{r}
@@ -343,7 +341,7 @@ points(train_data[train_data[,5]==1,1],train_data[train_data[,5]==1,2],col="red"
 points(train_data[train_data[,5]==0,1],train_data[train_data[,5]==0,2],col="blue")
 ```
 
-## 3.2.
+### 4.3.2.
 
 Using the estimated model from 3.1, make predictions for the test set. Compute the accuracy.
 
@@ -355,7 +353,7 @@ cm
 sum(diag(cm))/sum(cm)
 ```
 
-## 3.3.
+### 4.3.3.
 
 Train a model using all four covariates. Make predictions on the test set and compare the accuracy to the model with only two covariates.
 ```{r}

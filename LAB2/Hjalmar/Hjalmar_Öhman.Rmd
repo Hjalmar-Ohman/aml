@@ -1,10 +1,13 @@
 ---
-title: "Hjalmar_Öhman"
+title: "LAB 2"
 output: pdf_document
-date: "2024-09-16"
 ---
 
-## 1
+## 2.1
+Build a hidden Markov model (HMM) for the scenario described below. 
+- The robot walks around a ring divided into 10 sectors. At any time, the robot is in one sector and can either stay or move to the next sector with equal probability. You don't have direct observations of the robot but can access a tracking device. The device inaccurately reports the robot's position in one of the sectors [i-2, i+2] with equal probability if the robot is in sector \(i\).
+- Note: The `emissionProbs` matrix should be of size [number of states]x[number of symbols] (not as stated in the documentation).
+
 ```{r}
 set.seed(1)
 library(HMM)
@@ -38,13 +41,15 @@ hmm_model = initHMM(States=states, Symbols=symbols, startProbs=start_probs,
 print(hmm_model)
 ```
 
-## 2
+## 2.2
+Simulate the HMM for 100 time steps.
 ```{r}
 simres = simHMM(hmm_model, 100)
 table(simres$states, simres$observation)
 ```
 
-## 3
+## 2.3
+Discard the hidden states from the sample obtained and use the remaining observations to compute the **filtered** and **smoothed** probability distributions for each of the 100 time points. Also compute the **most probable path**.
 ```{r}
 simobv = simres$observation
 alpha = exp(forward(hmm_model, simobv))
@@ -67,7 +72,9 @@ viterbi = viterbi(hmm_model, simobv)
 ```
 
 
-## 4
+## 2.4
+Compute the accuracy of the **filtered** and **smoothed** probability distributions, as well as of the **most probable path**. Compare with the true hidden states.
+
 ```{r}
 predict_filtered = apply(filtered, MARGIN = 2, FUN = which.max)
 predict_smoothed = apply(smoothed, MARGIN = 2, FUN = which.max)
@@ -86,7 +93,9 @@ cat(", Smoothed: ", calculate_accuracy(predict_smoothed, simres$states))
 cat(", Viterbi: ", calculate_accuracy(viterbi, simres$states))
 ```
 
-## 5
+## 2.5
+Repeat the previous exercise with different simulated samples. Explain why the smoothed distributions are generally more accurate than the filtered distributions and the most probable paths.
+
 ```{r}
 simres = simHMM(hmm_model, 100)
 
@@ -126,11 +135,14 @@ cat(", Smoothed: ", calculate_accuracy(predict_smoothed, simres$states))
 cat(", Viterbi: ", calculate_accuracy(viterbi, simres$states))
 ```
 
+Answer:
 Smoothed takes into account both past and future observation, while filtered only take into account past. Smoothed takes into account more observations than filtered.
 
 Smoothed is more accurate than Viterbi, due to Viterbi having the constraint of predicting a valid path. Viterbi might miss important alternative states that are highly probable, but not part of the most likely path.
 
-## 6
+## 2.6
+Is it always true that the more observations you receive, the better you can predict where the robot is?
+
 ```{r}
 library(entropy)
 
@@ -146,9 +158,12 @@ plot(1:100, filtered_entropy, type="l")
 
 ```
 
-It is not true that the later in time the better you know where the robot is. The entropy doesn't seem to be affected by the amount of observations, as seen in the graph.
+Answer: It is not true that the later in time the better you know where the robot is. The entropy doesn't seem to be affected by the amount of observations, as seen in the graph.
 
-## 7
+Since there is ambiguity in the observations, more observations will not necessarily improve accuracy. If the observations were of high quality, it is likely that more observations would lower the entropy. In the plot, it does not seem to increase or decrease, however there are some cases where the entropy is 0, indicating that the probability distribution is concentrated on a single state
+
+## 2.7
+For one of the samples of length 100, compute the probabilities of the hidden states for time step 101.
 
 ```{r}
 filtered_100 = filtered[, 100]

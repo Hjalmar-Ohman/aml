@@ -1,13 +1,20 @@
 ---
-title: "LAB3 Hjalmar Oehman"
-author: "Hjalmar Öhman"
-date: "2024-10-03"
+title: "LAB 3"
 output: pdf_document
 ---
+## 3.1
+- You are provided with a gridworld environment where an agent can move up, down, left, or right. The agent starts each episode at a specific location and receives rewards based on the environment's layout.
+- Implement the **Greedy** and **Epsilon-Greedy** policies in the functions `GreedyPolicy` and `EpsilonGreedyPolicy` respectively.
+- Implement the **Q-learning** algorithm in the function `q_learning`, which will update the Q-table based on the agent's actions and rewards.
+- Run 10000 episodes of Q-learning with \(\epsilon = 0.5\), \(\beta = 0\), \(\alpha = 0.1\), and \(\gamma = 0.95\). Visualize the results at various stages (after 10, 100, 1000, and 10000 episodes).
+- Answer the following questions:
+  1. What has the agent learned after the first 10 episodes?
+  2. Is the final greedy policy (after 10000 episodes) optimal for all states? Why or why not?
+  3. Do the learned values in the Q-table reflect the existence of multiple paths to the positive reward?
 
-## 2.1
 ```{r}
 rm(list = ls())
+
 # By Jose M. Peña and Joel Oskarsson.
 # For teaching purposes.
 # jose.m.pena@liu.se.
@@ -188,7 +195,10 @@ q_learning <- function(start_state, epsilon = 0.5, alpha = 0.1, gamma = 0.95,
 
 ```
 
-## 2.2
+## 3.2
+Environment A:
+- Set up a 5x7 grid with rewards at specific states and analyze the agent's learning process by visualizing its Q-table and policies at different stages of learning.
+
 ```{r}
 # Environment A (learning)
 set.seed(1234)
@@ -223,7 +233,10 @@ Q: Do the learned values in the Q-table reflect the fact that there are multiple
 could be done to make it happen ?
 A: No, it always tries to go below. We could either enforce a greater epsilon, or change start_state to be further up (e.g (1, 5))
 
-## 2.3
+## 3.3
+Environment B:
+- Investigate the effects of different values of \(\epsilon\) and \(\gamma\) by running 30000 episodes of Q-learning with various configurations.
+
 ```{r}
 # Environment B (the effect of epsilon and gamma)
 set.seed(1234)
@@ -284,7 +297,10 @@ for(j in c(0.5,0.75,0.95)){
 Q: Investigate how the $\epsilon$ and $\gamma$ parameters affect the learned policy
 A: A high $\gamma$ changes the action policy to be more prone going towards 10 over 5. A low $\epsilon$ leads to the agent not exploring certain states.
 
-## 2.4
+## 3.4
+Environment C:
+- Investigate how the \(\beta\) parameter (which controls the probability of slipping) affects the learned policy by running 10000 episodes with different values of \(\beta\).
+
 ``` {r}
 # Environment C (the effect of beta).
 set.seed(1234)
@@ -313,7 +329,10 @@ for(j in c(0,0.2,0.4,0.66)){
 Q: Investigate how the $\beta$ parameter affects the learned policy.
 A: Having a higher $\beta$ worsen the model. This is due to it becoming more difficult for the agent to understand the task. Choosing an optimal action can lead to a negative reward.
 
-## 2.6
+## 3.6
+Environment D:
+- Evaluate the agent's performance after training on eight goal positions and validating on the remaining eight. Answer questions regarding the learned policy's effectiveness.
+
 https://github.com/STIMALiU/AdvMLCourse/blob/master/ReinforcementLearning/RL_Lab2_Colab.ipynb
 
 Q: Has the agent learned a good policy? Why / Why not ?
@@ -324,6 +343,9 @@ A: In theory yes, if it got to explore all combinations of states and goals, but
 
 
 ## 2.7
+Environment E:
+- Analyze the agent's policy when trained on goals from the top row and validated on goals from the lower rows. Compare the results with Environment D.
+
 In this task, the goals for training are all from the top row of the grid.
 The validation goals are three positions from the rows below. 
 
