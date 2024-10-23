@@ -6,11 +6,6 @@ output: pdf_document
 - You are provided with a gridworld environment where an agent can move up, down, left, or right. The agent starts each episode at a specific location and receives rewards based on the environment's layout.
 - Implement the **Greedy** and **Epsilon-Greedy** policies in the functions `GreedyPolicy` and `EpsilonGreedyPolicy` respectively.
 - Implement the **Q-learning** algorithm in the function `q_learning`, which will update the Q-table based on the agent's actions and rewards.
-- Run 10000 episodes of Q-learning with \(\epsilon = 0.5\), \(\beta = 0\), \(\alpha = 0.1\), and \(\gamma = 0.95\). Visualize the results at various stages (after 10, 100, 1000, and 10000 episodes).
-- Answer the following questions:
-  1. What has the agent learned after the first 10 episodes?
-  2. Is the final greedy policy (after 10000 episodes) optimal for all states? Why or why not?
-  3. Do the learned values in the Q-table reflect the existence of multiple paths to the positive reward?
 
 ```{r}
 rm(list = ls())
@@ -72,7 +67,8 @@ vis_environment <- function(iterations=0, epsilon = 0.5, alpha = 0.1, gamma = 0.
           geom_text(aes(label = val5),size = 10) +
           geom_tile(fill = 'transparent', colour = 'black') + 
           ggtitle(paste("Q-table after ",iterations," iterations\n",
-                        "(epsilon = ",epsilon,", alpha = ",alpha,"gamma = ",gamma,", beta = ",beta,")")) +
+                        "(epsilon = ",epsilon,", alpha = ",
+                        alpha,"gamma = ",gamma,", beta = ",beta,")")) +
           theme(plot.title = element_text(hjust = 0.5)) +
           scale_x_continuous(breaks = c(1:W),labels = c(1:W)) +
           scale_y_continuous(breaks = c(1:H),labels = c(1:H)))
@@ -196,8 +192,7 @@ q_learning <- function(start_state, epsilon = 0.5, alpha = 0.1, gamma = 0.95,
 ```
 
 ## 3.2
-Environment A:
-- Set up a 5x7 grid with rewards at specific states and analyze the agent's learning process by visualizing its Q-table and policies at different stages of learning.
+- Run 10000 episodes of Q-learning with \(\epsilon = 0.5\), \(\beta = 0\), \(\alpha = 0.1\), and \(\gamma = 0.95\). Visualize the results at various stages (after 10, 100, 1000, and 10000 episodes).
 
 ```{r}
 # Environment A (learning)
