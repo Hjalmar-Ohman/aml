@@ -210,3 +210,72 @@ repeat{
 pi
 V
 ```
+
+### Gaussian processes
+
+```{r}
+# Preparing the data
+data = read.csv("https://github.com/STIMALiU/AdvMLCourse/raw/master/GaussianProcess/Code/TempTullinge.csv", header=TRUE, sep=";")
+
+time = seq(1,2190, 5)
+day = seq(1,365, 5)
+days = rep(day, 6)
+data_sampled = data[time,]
+temps = data_sampled$temp
+```
+
+```{r}
+#LM
+
+posteriorGP <- function(X, y, XStar, sigmaNoise, k, ...) {
+  n = length(X)
+  K <- k(X, X, ...)  # Compute the covariance matrix
+  kStar <- k(X, XStar, ...) # Compute covariance
+  
+  # Step 2 in algo
+  #--------------------
+  K_y <- K + sigmaNoise^2 * diag(length(X)) # Add noise variance to diagonal
+  L <- t(chol(K_y))   # Compute Cholesky decomposition, to get lower triangular L we take t()
+  alpha <- solve(t(L), solve(L, y))   # Solve for alpha
+  #---------------------
+  
+  # Step 4 in algo
+  #--------------------
+  fStar_mean <- t(kStar) %*% alpha   # Compute posterior mean
+  v <- solve(L, kStar)   # Compute v = solve(L, kStar)
+  #-------------------
+  
+  # Step 6 in algo
+  #-------------------
+  V_fStar <- k(XStar, XStar, ...) - t(v) %*% v # pred variance (cov matrix)
+  #-------------------
+  
+log_marg_likelihood = -(1/2)*t(y)%*%alpha - sum(log(diag(L))) - (n/2)*log(2*pi)
+  
+  return(list(mean = fStar_mean, variance = V_fStar, log_likelihood = log_marg_likelihood))
+}
+```
+
+```{r}
+
+
+
+quad_model = lm(temps~days + I(days^2), data = data_sampled)
+
+
+SEKernel <- function(x1,x2,params = c(0,0)){
+  n1 <- length(x1)
+  n2 <- length(x2)
+  K <- matrix(NA,n1,n2)
+  for (i in 1:n2){
+    K[,i] <- (params[1]^2)*exp(-0.5*( (x1-x2[i])/params[2])^2 )
+  }
+  return(K)
+}
+
+SEKernel(c(2, 185, 365), c(2, 185, 365), c(20,90))
+
+XStar <- seq(-1, 1, length.out = 100)
+
+posteriorGP(X=time, y=temp, XStar, var(quad_model$residuals), k = SEKernel)
+```

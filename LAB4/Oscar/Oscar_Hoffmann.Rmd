@@ -13,7 +13,7 @@ Libraries
 
 ```{r}
 library(kernlab)
-library(AtmRay)
+#library(AtmRay)
 rm(list =ls())
 ```
 
@@ -35,7 +35,7 @@ SquaredExpKernel <- function(x1,x2,sigmaF=1,ell=3){
 
 # Posterior GP Function
 posteriorGP <- function(X, y, XStar, sigmaNoise, k, ...) {
-  
+  n = length(X)
   K <- k(X, X, ...)  # Compute the covariance matrix
   kStar <- k(X, XStar, ...) # Compute covariance
   
@@ -57,8 +57,9 @@ posteriorGP <- function(X, y, XStar, sigmaNoise, k, ...) {
   V_fStar <- k(XStar, XStar, ...) - t(v) %*% v # pred variance (cov matrix)
   #-------------------
   
-  # Return posterior mean and variance
-  return(list(mean = fStar_mean, variance = V_fStar))
+log_marg_likelihood = -(1/2)*t(y)%*%alpha - sum(log(diag(L))) - (n/2)*log(2*pi)
+  
+  return(list(mean = fStar_mean, variance = V_fStar, log_likelihood = log_marg_likelihood))
 }
 
 ```
@@ -172,6 +173,21 @@ temps = data_sampled$temp
 ```
 
 ```{r}
+# if doing it without class (covariance)
+# SEKernel <- function(x1,x2,params = c(0,0)){
+#   n1 <- length(x1)
+#   n2 <- length(x2)
+#   K <- matrix(NA,n1,n2)
+#   for (i in 1:n2){
+#     K[,i] <- (params[1]^2)*exp(-0.5*( (x1-x2[i])/params[2])^2 )
+#   }
+#   return(K)
+# }
+# 
+# SEKernel(c(2, 185, 365), c(2, 185, 365), c(20,90))
+# The further apart two points x values, the less correlated their f values
+# time series data is not idd, peaking into fututre, use rolling window
+
 # Squared Exponential Kernel Function
 SEKernel = function(ell, sigmaF) {
   calc_K = function (X, XStar) {
