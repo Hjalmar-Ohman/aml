@@ -27,6 +27,11 @@ for (i in 1:10) {
 # Initialize the emission probability matrix with zeros
 emission_probs <- matrix(0, nrow = 10, ncol = 10)
 
+# the dim of the emission matrix is nr of states (rows) x nr of symbols (cols) 
+# symbols are the observations. they are based on the hidden states but dont reveal them
+# Emission Matrix: This matrix defines the probability of observing each symbol given a hidden state.
+
+
 # Fill in the emission probabilities
 for (i in 1:10) {
   # Sectors [i-2, i-1, i, i+1, i+2] with wrap-around
