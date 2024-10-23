@@ -1,4 +1,10 @@
-1.  Probabilistic Graphical Models (5 p)
+---
+output:
+  html_document: default
+  pdf_document: default
+---
+
+### Probabilistic Graphical Models (5 p)
 
 ```{r}
 # Load Required Libraries
@@ -95,4 +101,112 @@ result <- querygrain(setEvidence(netcom, nodes = c("D", "Ah"), states = c("1", "
 
 # Display the Result
 print(result)
+```
+
+### Hidden markov models
+
+```{r}
+library(HMM)
+rm(list = ls())
+
+# Define the hidden states and observation symbols
+states <- c("S1 C2", "S1 C1", "S2 C3", "S2 C2", "S2 C1", "S3 C2", "S3 C1", "S4 C1", "S5 C2", "S5 C1")
+symbols <- c("S1", "S2", "S3", "S4", "S5")
+
+# Initialize the initial state probabilities: the robot is equally likely to start in any sector
+start_probs <- c(0.2, 0, 0.2, 0, 0, 0.2, 0, 0.2, 0.2, 0)
+
+# Initialize the transition probability matrix with zeros
+trans_probs <- matrix(0, nrow = 10, ncol = 10)
+
+colnames(trans_probs) = states
+rownames(trans_probs) = states
+
+trans_probs["S1 C2", "S1 C1"] = 1
+trans_probs["S1 C1", "S1 C1"] = 0.5
+trans_probs["S1 C1", "S2 C3"] = 0.5
+trans_probs["S2 C3", "S2 C2"] = 1
+trans_probs["S2 C2", "S2 C1"] = 1
+trans_probs["S2 C1", "S2 C1"] = 0.5
+trans_probs["S2 C1", "S3 C2"] = 0.5
+trans_probs["S3 C2", "S3 C1"] = 1
+trans_probs["S3 C1", "S3 C1"] = 0.5
+trans_probs["S3 C1", "S4 C1"] = 0.5
+trans_probs["S4 C1", "S4 C1"] = 0.5
+trans_probs["S4 C1", "S5 C2"] = 0.5
+trans_probs["S5 C2", "S5 C1"] = 1
+trans_probs["S5 C1", "S5 C1"] = 0.5
+trans_probs["S5 C1", "S1 C2"] = 0.5
+
+#states <- c("S1 C2", "S1 C1", "S2 C3", "S2 C2", "S2 C1", "S3 C2", "S3 C1", "S4 C1", "S5 C2", "S5 C1")
+#symbols <- c("1", "2", "3", "4", "5")
+
+# Initialize the emission probability matrix with zeros
+emission_probs = matrix(c(
+  1/3,1/3,0,0,1/3,
+  1/3,1/3,0,0,1/3,
+  1/3,1/3,1/3,0,0,
+  1/3,1/3,1/3,0,0,
+  1/3,1/3,1/3,0,0,
+  0,1/3,1/3,1/3,0,
+  0,1/3,1/3,1/3,0,
+  0,0,1/3,1/3,1/3,
+  1/3,0,0,1/3,1/3,
+  1/3,0,0,1/3,1/3
+)
+, nrow = 10, ncol = 5, byrow = TRUE)
+
+colnames(emission_probs) = symbols
+rownames(emission_probs) = states
+
+emission_probs
+# Initialize the Hidden Markov Model
+hmm_model <- initHMM(
+  States = states,           # vector of states
+  Symbols = symbols,         # vector of observation symbols
+  startProbs = start_probs,  # Initial state probabilities
+  transProbs = trans_probs,  # Transition probabilities matrix
+  emissionProbs = emission_probs  # Emission probabilities matrix
+)
+
+set.seed(12345)
+simulation <- simHMM(hmm_model, length = 100)
+print(simulation)
+```
+
+### Reinforcement learning
+
+```{r}
+# S+ is all the states
+# S all the non-terminal states
+
+theta = 0.1
+gamma = 0.95
+V <- rep(0,10)
+pi <- rep(0,10)
+sectors = seq(1,10,1)
+r = rep(0,10)
+r[10] = 1 # reward for last state
+
+repeat{
+  delta = 0 
+  for(s in sectors-1){
+    v = V[s]
+    stay = r[s] + V[s]*gamma
+    move = r[s+1] + V[s+1]*gamma
+    V[s] = max(stay, move)
+    delta = max(delta, abs(v-V[s]))
+  }
+  if(delta < theta)break
+   
+}
+  for(s in sectors-1){
+    stay = r[s] + V[s]*gamma
+    move = r[s+1] + V[s+1]*gamma
+    pi[s] = which.max(c(stay, move))
+  }
+
+
+pi
+V
 ```
