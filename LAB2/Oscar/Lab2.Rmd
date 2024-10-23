@@ -25,6 +25,15 @@ start_probs <- rep(1/10, 10)  # A vector of 0.1's for each state
 # Initialize the transition probability matrix with zeros
 trans_probs <- matrix(0, nrow = 10, ncol = 10)
 
+# can also be done manually with:
+# trans_probs = matrix(c(X,X,X..), nrow=length(States), ncol=length(States), byrow = TRUE)
+
+# or by:
+
+# colnames(trans_probs) = states
+# rownames(trans_probs) = states
+# trans_probs["S1 C2", "S1 C1"] = 1
+
 # Fill in the transition probabilities
 for (i in 1:10) {
   # Stay in the current sector with probability 0.5
@@ -38,6 +47,10 @@ for (i in 1:10) {
 
 # Initialize the emission probability matrix with zeros
 emission_probs <- matrix(0, nrow = 10, ncol = 10)
+
+# the dim of the emission matrix is nr of states (rows) x nr of symbols(cols) 
+# symbols are the observations. they are based on the hidden states but don't reveal them
+# Emission Matrix: This matrix defines the probability of observing each symbol given a hidden state.
 
 # Fill in the emission probabilities
 for (i in 1:10) {
