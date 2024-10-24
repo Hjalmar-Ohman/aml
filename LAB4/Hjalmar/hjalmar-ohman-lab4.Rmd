@@ -30,7 +30,7 @@ SquaredExpKernel <- function(x1,x2,sigmaF=1,l=3){
   n2 <- length(x2)
   k <- matrix(NA,n1,n2)
   for (i in 1:n2){
-    k[,i] <- sigmaF^2*exp(-0.5*( (x1-x2[i])/l)^2 )
+    k[,i] <- sigmaF**2*exp(-0.5*( (x1-x2[i])/l)**2 )
   }
   return(k)
 }
@@ -143,7 +143,9 @@ Create the variable **time** which records the day number since the start of the
 
 ```{r}
 rm(list = ls())
-data = read.csv("https://github.com/STIMALiU/AdvMLCourse/raw/master/GaussianProcess/Code/TempTullinge.csv", header=TRUE, sep=";")
+data = read.csv(
+  "https://github.com/STIMALiU/AdvMLCourse/raw/master/GaussianProcess/Code/TempTullinge.csv",
+  header=TRUE, sep=";")
 
 data$time = 1:nrow(data)
 data$day = ((data$time - 1) %% 365) + 1
@@ -164,7 +166,7 @@ SquareExponential <- function(sigmaf, ell)
     n2 <- length(y)
     k <- matrix(NA,n1,n2)
     for (i in 1:n2){
-      k[,i] <- sigmaf^2*exp(-0.5*( (x-y[i])/ell)^2 )
+      k[,i] <- sigmaf**2*exp(-0.5*( (x-y[i])/ell)**2 )
     }
     return(k)
   }
@@ -200,7 +202,8 @@ polyFit = lm(temp~I(time) + I(time**2))
 sigmaNoise = sd(polyFit$residuals)
 plot(time, temp)
 
-GPfit = gausspr(time, temp, kernel = SquareExponential(ell = 100, sigmaf = 20), var = sigmaNoise^2, variance.model = TRUE,scaled=FALSE)
+GPfit = gausspr(time, temp, kernel = SquareExponential(ell = 100, sigmaf = 20),
+                var = sigmaNoise**2, variance.model = TRUE,scaled=FALSE)
 
 time_meanPred <- predict(GPfit, time)
 lines(time, time_meanPred, col="red", lwd = 2)
@@ -227,7 +230,8 @@ posteriorGP = function(x, y, XStar, sigmaNoise, k, ...){
   return(list(mean = predictive_mean, variance = predictive_variance))
 }
 
-predictions = posteriorGP(x = time, y = temp, XStar = time, sigmaNoise = sigmaNoise, k = SquareExponential(sigmaf = 20, ell = 100))
+predictions = posteriorGP(x = time, y = temp, XStar = time, sigmaNoise = sigmaNoise,
+                          k = SquareExponential(sigmaf = 20, ell = 100))
 plot(time, temp)
 lines(time, predictions$mean, col="red", lwd = 2)
 lines(time, predictions$mean+1.96*sqrt(diag(predictions$variance)),col="blue")
@@ -251,7 +255,8 @@ day = data$day
 polyFit = lm(temp~I(day) + I(day**2))
 sigmaNoise = sd(polyFit$residuals)
 
-GPfit = gausspr(day, temp, kernel = SquareExponential(ell = 100, sigmaf = 20), var = sigmaNoise^2, variance.model = TRUE,scaled=FALSE)
+GPfit = gausspr(day, temp, kernel = SquareExponential(ell = 100, sigmaf = 20),
+                var = sigmaNoise**2, variance.model = TRUE,scaled=FALSE)
 
 day_meanPred <- predict(GPfit, day)
 plot(time, temp)
@@ -263,7 +268,7 @@ Q: Compare the results of both models. What are the pros and cons of each model?
 
 A: The model with time as its input feature seem to have slight more variance than the one with day. Day values repeats itself, meaning that the 1st of January 2010 is the same value as 1st of January 2011. The model therefore gets multiple temperatures to train on for the same day value, while for the model with time, 1st of Jan each year is distinct.
 
-## 4.2.5 Extended Squared Exponential Kernel
+### 4.2.5 Extended Squared Exponential Kernel
 
 Implement the following periodic kernel (a.k.a. locally periodic kernel):
 
@@ -274,18 +279,28 @@ $$
 Note that we have two different length scales in the kernel. Intuitively, $\ell_1$ controls the correlation between two days in the same year, and $\ell_2$ controls the correlation between the same day in different years. Estimate the GP model using the time variable with this kernel and hyperparameters $\sigma_f = 20$, $\ell_1 = 1$, $\ell_2 = 100$, and $d = 365$. Use the `gausspr` function with the option `scaled=FALSE`, otherwise these $\sigma_f$, $\ell_1$, and $\ell_2$ values are not suitable.
 
 ```{r}
-periodic <- function(sigmaf, ell1, ell2, d) 
-{
-  rval <- function(x, y = NULL) {
-    factor1 = sigmaf^2*exp(-0.5*( (x-y)/ell2)^2 )
-    factor2 = exp((-2*sin(pi*abs(x-y)/d)^2)/(ell1^2))
-    return(factor1*factor2)
-  }
+periodic <- function(sigmaf, ell1, ell2, d) {
+    rval <- function(x1, y = NULL) {
+      n1 <- length(x1)
+      n2 <- length(y)
+      K <- matrix(NA,n1,n2)
+      for (i in 1:n1){
+        for (j in 1:n2){
+          r = sqrt(crossprod(x1[i]-y[j]))
+          factor1 = sigmaf**2*exp(-0.5*r**2/ell2**2)
+          factor2 = exp(-2*(sin(pi*r/d)**2)/ell1**2)
+          K[i,j] <- factor1*factor2
+        }
+      }
+      return(K)
+    }
+    
   class(rval) <- "kernel"
   return(rval)
 }
 
-GPfit <- gausspr(time, temp, kernel = periodic(sigmaf=20, ell1=1, ell2=100, d=365), var = sigmaNoise^2, variance.model = TRUE, scaled=FALSE)
+GPfit <- gausspr(time, temp, kernel = periodic(sigmaf=20, ell1=1, ell2=100, d=365),
+                 var = sigmaNoise**2, variance.model = TRUE, scaled=FALSE)
 
 periodic_meanPred = predict(GPfit, time)
 
@@ -294,7 +309,8 @@ lines(time, time_meanPred, col = "red")
 lines(time, day_meanPred, col = "blue")
 lines(time, periodic_meanPred, col = "green")
 ```
-Q: Compare the fit to the previous two models (with $\sigma_f = 20$ and $\ell = 100$). Discuss the results.
+
+Q: Compare the fit to the previous two models (with $\sigma_f = 20$ and $\ell = 100$). Discuss the results. 
 A: The new model with a periodic kernel allows to capture periodic patterns, creating a model with higher variance.
 
 ## 4.3 GP Classification with kernlab
@@ -303,7 +319,9 @@ Choose 1000 observations as training data.
 
 ```{r}
 rm(list = ls())
-data <- read.csv("https://github.com/STIMALiU/AdvMLCourse/raw/master/GaussianProcess/Code/banknoteFraud.csv", header=FALSE, sep=",")
+data <- read.csv(
+  "https://github.com/STIMALiU/AdvMLCourse/raw/master/GaussianProcess/Code/banknoteFraud.csv", 
+  header=FALSE, sep=",")
 names(data) <- c("varWave","skewWave","kurtWave","entropyWave","fraud")
 data[,5] <- as.factor(data[,5])
 set.seed(111); SelectTraining <- sample(1:dim(data)[1], size = 1000, replace = FALSE)
@@ -314,6 +332,7 @@ test_data = data[-SelectTraining, ]
 ### 4.3.1.
 
 Use the R package `kernlab` to fit a Gaussian process classification model for fraud on the training data. Use the default kernel and hyperparameters. Start using only the covariates `varWave` and `skewWave` in the model. Plot contours of the prediction probabilities over a suitable grid of values for `varWave` and `skewWave`. Overlay the training data for `fraud = 1` (as blue points) and `fraud = 0` (as red points). You can reuse code from the file *KernLabDemo.R* available on the course website. Compute the confusion matrix for the classifier and its accuracy.
+
 ```{r}
 library(kernlab)
 library(AtmRay)
@@ -336,7 +355,8 @@ names(gridPoints) <- names(train_data)[1:2]
 probPreds <- predict(GPfitFraud, gridPoints, type="probabilities")
 
 # Plotting for Prob(fraud)
-contour(x1,x2,matrix(probPreds[,1],100,byrow = TRUE), 20, xlab = "varWave", ylab = "skewWave", main = 'Prob(fraud)')
+contour(x1,x2,matrix(probPreds[,1],100,byrow = TRUE), 20, xlab = "varWave",
+        ylab = "skewWave", main = 'Prob(fraud)')
 points(train_data[train_data[,5]==1,1],train_data[train_data[,5]==1,2],col="red")
 points(train_data[train_data[,5]==0,1],train_data[train_data[,5]==0,2],col="blue")
 ```
@@ -356,6 +376,7 @@ sum(diag(cm))/sum(cm)
 ### 4.3.3.
 
 Train a model using all four covariates. Make predictions on the test set and compare the accuracy to the model with only two covariates.
+
 ```{r}
 GPfitFraud <- gausspr(fraud ~ ., data=train_data)
 
