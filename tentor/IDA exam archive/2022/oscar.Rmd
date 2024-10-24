@@ -1,0 +1,382 @@
+graphical models
+
+```{r}
+library(bnlearn)
+library(gRain)
+# Hda = 0.9
+# Ida = 0.8
+# infected?
+# TH is given by test
+# TP = 0.6
+# TN = 0.7
+# FP = 0.4
+# FN = 0.3
+# p(healthy in 3 days | healthy today = 0.5)
+# p(healthy in 3 days | negative test day 2)
+# p(healthy in 3 days | negative test day 2, negative test day 3)
+
+net <- model2network("[HD1][HD2|HD1][HD3|HD2][T1|HD1][T2|HD2][T3|HD3]")
+graphviz.plot(net)
+
+
+# 1. U: Court orders execution
+H1 <- c(0.5, 0.5)
+dim(H1) <- c(2)
+dimnames(H1) <- list(H1 = c("0", "1"))
+
+# 2. C: Captain orders fire | U
+cptC <- matrix(c(0.9, 0.1,  # C=0 | U=0 and U=1
+                 0.1, 0.9),
+               nrow = 2)
+dimnames(cptC) <- list(C = c("0", "1"), U = c("0", "1"))
+
+
+ T
+
+H I
+
+Hd1 Hd2 Hd3
+Id1 Id2 Id3
+
+BN = model2network("[Hda|TP]")
+plot(BN)
+```
+
+### HMM
+
+-   p(r \| r r ) = 0.75
+
+-   p(s \| s s ) = 0.75
+
+-   p(r \| s s ) = 0.25
+
+-   p(s \| r r ) = 0.25
+
+-   p(s \| r s ) = 0.5
+
+-   p(s \| s r ) = 0.5
+
+-   p(r \| r s ) = 0.5
+
+-   p(r \| s r ) = 0.5
+
+-   p(r \| s ) = 0.1
+
+-   p(s \| r ) = 0.1
+
+-   samp 10 obs
+
+```{r}
+
+
+library(HMM)
+states <- c("RR", "RS", "SS", "SR")
+symbols <- c("S", "R")
+
+start_probs <- rep(1/2, 2)
+
+trans_probs = matrix(c(.75,.25,0,0,
+                       0,0,.5,.5,
+                       0,0,.75,.25,
+                       .5,.5,0,0
+), nrow=length(states), ncol=length(states), byrow = TRUE)
+
+colnames(trans_probs) = states
+rownames(trans_probs) = states
+
+emission_probs = matrix(c(.1,.9,
+                          .9,.1,
+                          .9,.1,
+                          .1,.9
+), nrow=length(states), ncol=length(symbols), byrow = TRUE)
+
+
+# Initialize the Hidden Markov Model
+hmm_model <- initHMM(
+  States = states,           # vector of states
+  Symbols = symbols,         # vector of observation symbols
+  startProbs = start_probs,  # Initial state probabilities
+  transProbs = trans_probs,  # Transition probabilities matrix
+  emissionProbs = emission_probs  # Emission probabilities matrix
+)
+
+set.seed(12345)
+simulation <- simHMM(hmm_model, length = 10)
+simulation
+```
+
+### Reinforcement learning
+
+```{r}
+
+rm(list =ls())
+set.seed(1234)
+library(ggplot2)
+
+arrows <- c("^", ">", "v", "<")
+action_deltas <- list(c(1,0), # up
+                      c(0,1), # right
+                      c(-1,0), # down
+                      c(0,-1)) # left
+
+vis_environment <- function(iterations=0, epsilon = 0.5, alpha = 0.1, gamma = 0.95, beta = 0){
+
+  df <- expand.grid(x=1:H,y=1:W)
+  foo <- mapply(function(x,y) ifelse(reward_map[x,y] == 0,q_table[x,y,1],NA),df$x,df$y)
+  df$val1 <- as.vector(round(foo, 2))
+  foo <- mapply(function(x,y) ifelse(reward_map[x,y] == 0,q_table[x,y,2],NA),df$x,df$y)
+  df$val2 <- as.vector(round(foo, 2))
+  foo <- mapply(function(x,y) ifelse(reward_map[x,y] == 0,q_table[x,y,3],NA),df$x,df$y)
+  df$val3 <- as.vector(round(foo, 2))
+  foo <- mapply(function(x,y) ifelse(reward_map[x,y] == 0,q_table[x,y,4],NA),df$x,df$y)
+  df$val4 <- as.vector(round(foo, 2))
+  foo <- mapply(function(x,y) 
+    ifelse(reward_map[x,y] == 0,arrows[GreedyPolicy(x,y)],reward_map[x,y]),df$x,df$y)
+  df$val5 <- as.vector(foo)
+  foo <- mapply(function(x,y) ifelse(reward_map[x,y] == 0,max(q_table[x,y,]),
+                                     ifelse(reward_map[x,y]<0,NA,reward_map[x,y])),df$x,df$y)
+  df$val6 <- as.vector(foo)
+  
+  print(ggplot(df,aes(x = y,y = x)) +
+          scale_fill_gradient(low = "white", high = "green", na.value = "red", name = "") +
+          geom_tile(aes(fill=val6)) +
+          geom_text(aes(label = val1),size = 4,nudge_y = .35,na.rm = TRUE) +
+          geom_text(aes(label = val2),size = 4,nudge_x = .35,na.rm = TRUE) +
+          geom_text(aes(label = val3),size = 4,nudge_y = -.35,na.rm = TRUE) +
+          geom_text(aes(label = val4),size = 4,nudge_x = -.35,na.rm = TRUE) +
+          geom_text(aes(label = val5),size = 10) +
+          geom_tile(fill = 'transparent', colour = 'black') + 
+          ggtitle(paste("Q-table after ",iterations," iterations\n",
+                        "(epsilon = ",epsilon,", alpha = ",alpha,"gamma = ",gamma,", beta = ",beta,")")) +
+          theme(plot.title = element_text(hjust = 0.5)) +
+          scale_x_continuous(breaks = c(1:W),labels = c(1:W)) +
+          scale_y_continuous(breaks = c(1:H),labels = c(1:H)))
+}
+
+GreedyPolicy <- function(x, y){
+  # Get the Q-values for all actions at state (x, y)
+  q_values <- q_table[x, y, ]
+  
+  # Find the max Q-value
+  max_q <- max(q_values)
+  
+  # Identify all actions with maximum Q-value
+  max_actions <- which(q_values == max_q)
+  
+  # Check and resolve ties
+  if (length(max_actions) > 1) {
+    action <- sample(max_actions, 1)
+  } else {
+    action <- max_actions
+  }
+  return(action)
+}
+
+EpsilonGreedyPolicy <- function(x, y, epsilon){
+  # Generate a random numb
+  rand_num <- runif(1)
+  if (rand_num < epsilon){
+   #select a random action
+    action <- sample(1:4, 1)
+  } else {
+  # use the greedy policy
+    action <- GreedyPolicy(x, y)
+  }
+  return(action)
+}
+
+transition_model <- function(x, y, action, beta){
+  delta <- sample(-1:1, size = 1, prob = c(0.5*beta,1-beta,0.5*beta))
+  final_action <- ((action + delta + 3) %% 4) + 1
+  foo <- c(x,y) + unlist(action_deltas[final_action])
+  foo <- pmax(c(1,1),pmin(foo,c(H,W)))
+  return (foo)
+}
+
+q_learning <- function(start_state, epsilon = 0.5, alpha = 0.1, gamma = 0.95, beta = 0){
+  
+  # Perform one episode of Q-learning. The agent should move around in the 
+  # environment using the given transition model and update the Q-table.
+  # The episode ends when the agent reaches a terminal state.
+  # 
+  # Args:
+  #   start_state: array with two entries, describing the starting position of the agent.
+  #   epsilon (optional): probability of acting randomly.
+  #   alpha (optional): learning rate.
+  #   gamma (optional): discount factor.
+  #   beta (optional): slipping factor.
+  #   reward_map (global variable): a HxW array containing the reward given at each state.
+  #   q_table (global variable): a HxWx4 array containing Q-values for each state-action pair.
+  # 
+  # Returns:
+  #   reward: reward received in the episode.
+  #   correction: sum of the temporal difference correction terms over the episode.
+  #   q_table (global variable): Recall that R passes arguments by value. So, q_table being
+  #   a global variable can be modified with the superassigment operator <<-.
+  
+  # Initialize state
+  x <- start_state[1]
+  y <- start_state[2]
+  
+  # Initialize variables to track episode reward and TD corrections
+  episode_reward <- 0
+  episode_correction <- 0
+  
+  repeat{
+    # Choose an action A with epsilon-greedy policy
+    action <- EpsilonGreedyPolicy(x, y, epsilon)
+    
+    # Observe next state S' & reward R after taking action A
+    next_state <- transition_model(x, y, action, beta)
+    x_new <- next_state[1]
+    y_new <- next_state[2]
+    R <- reward_map[x_new, y_new]
+    
+    # Get current Q-value Q(S, A)
+    Q_SA <- q_table[x, y, action]
+    
+    # if R != 0 it means next state is terminal, this check if for when the terminal state
+    # is the first action and the end of the loop hasn't been reached
+    if (R != 0){
+      max_QSAprime <- 0
+    } else {
+      # Compute max Q(S', a') over all possible actions a'
+      max_QSAprime <- max(q_table[x_new, y_new, ])
+    }
+    
+    # Calc TD correction term
+    TD_correction <- R + gamma * max_QSAprime - Q_SA
+    episode_correction <- episode_correction + TD_correction
+    
+    # Update Q(S, A)
+    q_table[x, y, action] <<- Q_SA + alpha * TD_correction
+    
+    # Ep reward accumulated
+    episode_reward <- episode_reward + R
+    
+    # Next state
+    x <- x_new
+    y <- y_new
+    
+    # Check if the episode has ended (terminal state)
+    if (R != 0){
+      return (c(episode_reward, episode_correction))
+    }
+  }
+}
+```
+
+```{r}
+
+H <- 7
+W <- 8
+
+reward_map <- matrix(0, nrow = H, ncol = W)
+reward_map[1,] <- -1
+reward_map[7,] <- -1
+reward_map[4,5] <- 5
+reward_map[4,8] <- 10
+
+q_table <- array(0,dim = c(H,W,4))
+
+vis_environment()
+
+MovingAverage <- function(x, n){
+  
+  cx <- c(0,cumsum(x))
+  rsum <- (cx[(n+1):length(cx)] - cx[1:(length(cx) - n)]) / n
+  
+  return (rsum)
+}
+
+#############eps 0.5##########
+for(j in c(0.5,0.75,0.95)){
+  q_table <- array(0,dim = c(H,W,4))
+  reward <- NULL
+  correction <- NULL
+  
+  for(i in 1:31000){
+    # This is for epsilon = 0.5 standard
+    if(i<=30000){
+      foo <- q_learning(epsilon = 0.5, gamma = j, start_state = c(4,1))
+    }
+    else {
+    # Validation phase: do not update Q-table
+    foo <- q_learning(epsilon = epsilon_value, gamma = j, start_state = c(4,1))
+    # Prevent Q-table updates
+    q_table <<- q_table  # This line essentially "freezes" the table.
+  }
+    reward <- c(reward,foo[1])
+    correction <- c(correction,foo[2])
+  }
+  
+  vis_environment(i, epsilon = 0.5, gamma = j)
+  plot(MovingAverage(reward,100),type = "l")
+  plot(MovingAverage(correction,100),type = "l")
+  
+  validation_rewards <- reward[30001:31000]
+  average_validation_reward <- mean(validation_rewards)
+  print(average_validation_reward)
+}
+
+
+
+
+#############eps 0.25##########
+for(j in c(0.5,0.75,0.95)){
+  q_table <- array(0,dim = c(H,W,4))
+  reward <- NULL
+  correction <- NULL
+  
+  for(i in 1:31000){
+    # This is for epsilon = 0.25 standard
+     if(i<=30000){
+    foo <- q_learning(epsilon = 0.25, gamma = j, start_state = c(4,1))
+     }else {
+    # Validation phase: do not update Q-table
+    foo <- q_learning(epsilon = epsilon_value, gamma = j, start_state = c(4,1))
+    # Prevent Q-table updates
+    q_table <<- q_table  # This line essentially "freezes" the table.
+  }
+    reward <- c(reward,foo[1])
+    correction <- c(correction,foo[2])
+  }
+  
+  vis_environment(i, epsilon = 0.25, gamma = j)
+  plot(MovingAverage(reward,100),type = "l")
+  plot(MovingAverage(correction,100),type = "l")
+  
+  validation_rewards <- reward[30001:31000]
+average_validation_reward <- mean(validation_rewards)
+print(average_validation_reward)
+}
+
+#############eps 0.1##########
+for(j in c(0.5,0.75,0.95)){
+  q_table <- array(0,dim = c(H,W,4))
+  reward <- NULL
+  correction <- NULL
+  
+  for(i in 1:31000){
+    # This is epsilon 0.1 
+     if(i<=30000){
+    foo <- q_learning(epsilon = 0.1, gamma = j, start_state = c(4,1))
+     } else {
+    # Validation phase: do not update Q-table
+    foo <- q_learning(epsilon = epsilon_value, gamma = j, start_state = c(4,1))
+    # Prevent Q-table updates
+    q_table <<- q_table  # This line essentially "freezes" the table.
+  }
+    reward <- c(reward,foo[1])
+    correction <- c(correction,foo[2])
+  }
+  
+  vis_environment(i, epsilon = 0.1, gamma = j)
+  plot(MovingAverage(reward,100),type = "l")
+  plot(MovingAverage(correction,100),type = "l")
+  
+  validation_rewards <- reward[30001:31000]
+average_validation_reward <- mean(validation_rewards)
+print(average_validation_reward)
+}
+```
