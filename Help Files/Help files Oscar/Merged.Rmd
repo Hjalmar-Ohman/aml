@@ -884,7 +884,7 @@ data = read.csv("https://github.com/STIMALiU/AdvMLCourse/raw/master/GaussianProc
 
 time = seq(1,2190, 5)
 day = seq(1,365, 5)
-
+#days = rep(day, 6)
 data_sampled = data[time,]
 temps = data_sampled$temp
 ```
