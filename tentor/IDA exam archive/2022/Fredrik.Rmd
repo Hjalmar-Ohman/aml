@@ -93,22 +93,22 @@ querygrain(setEvidence(bn_comp,nodes=c("T2", "T3"),states=c("0", "0")),c("H3"))
 
 -   Weather forecast: reports rainy weather when the forecast is actually sunny and vice versa with probability 0.1
 
-+------------+------------+------------+------------+------------+
-| NEW -\>\   | RR         | RS         | SR         | SS         |
-| Old        |            |            |            |            |
-|            |            |            |            |            |
-| \|         |            |            |            |            |
-+============+============+============+============+============+
-| RR         | 0.75       | 0.25       | 0          | 0          |
-+------------+------------+------------+------------+------------+
-| RS         | 0          | 0          | 0.5        | 0.5        |
-+------------+------------+------------+------------+------------+
-| SR         | 0.5        | 0.5        | 0          | 0          |
-+------------+------------+------------+------------+------------+
-| SS         | 0          | 0          | 0.25       | 0.75       |
-+------------+------------+------------+------------+------------+
-|            |            |            |            |            |
-+------------+------------+------------+------------+------------+
++----------+----------+----------+----------+----------+
+| NEW -\>\ | RR       | RS       | SR       | SS       |
+| Old      |          |          |          |          |
+|          |          |          |          |          |
+| \|       |          |          |          |          |
++==========+==========+==========+==========+==========+
+| RR       | 0.75     | 0.25     | 0        | 0        |
++----------+----------+----------+----------+----------+
+| RS       | 0        | 0        | 0.5      | 0.5      |
++----------+----------+----------+----------+----------+
+| SR       | 0.5      | 0.5      | 0        | 0        |
++----------+----------+----------+----------+----------+
+| SS       | 0        | 0        | 0.25     | 0.75     |
++----------+----------+----------+----------+----------+
+|          |          |          |          |          |
++----------+----------+----------+----------+----------+
 
 ```{r}
 library(HMM)
@@ -399,4 +399,135 @@ avg_reward
 
 ```{r}
 
+```
+
+# 4
+
+## 4.1
+
+Matern function
+
+```{r}
+# Matern32  kernel
+k <- function(sigmaf = 1, ell = 1)  
+{   
+	rval <- function(x, y = NULL) 
+	{	r = sqrt(crossprod(x-y))
+		 return(sigmaf^2*(1+sqrt(3)*r/ell)*exp(-sqrt(3)*r/ell))   
+	}   
+	class(rval) <- "kernel"   
+	return(rval) 
+} 
+```
+
+```{r}
+library(kernlab)
+# f ∼ GP(0, k(x, x′ ))
+# σf2 = 1 and ` = 0.5.
+
+zGrid <- seq(0.01,1,by=0.01)
+
+kernel <- k(sigmaf = 1, ell = 0.5)
+m1 <- kernelMatrix(kernel = kernel, x = 0, y =zGrid)
+
+
+kernel <- k(sigmaf = sqrt(0.5), ell = 0.5)
+m2 <- kernelMatrix(kernel = kernel, x = 0, y =zGrid)
+
+
+plot(zGrid, m1, type = "l", col = "blue", ylim = c(0,1))
+lines(zGrid, m2, type = "l", col = "red")
+
+
+```
+
+We can see that the lower sigmaf (red line) returns a lower covariance value, this means that x-values will be less correlated resulting in a function f which is less smooth.\
+
+## 4.2
+
+```{r}
+library(kernlab)
+
+tempData <- read.csv("https://github.com/STIMALiU/AdvMLCourse/raw/master/GaussianProcess/Code/TempTullinge.csv", header=TRUE, sep=";")
+tempData <- cbind(tempData, time = 1:nrow(tempData))
+tempData <- cbind(tempData, day = ((tempData$time-1)%%365)+1)
+
+trainData <- subset(tempData, (time - 1)%%5 == 0)
+```
+
+**Algorithm 2.1 Cholesky**
+
+```{r}
+
+
+# Covariance function
+SquaredExpKernel <- function(x1,x2,sigmaF=1,l=3){
+  n1 <- length(x1)
+  n2 <- length(x2)
+  K <- matrix(NA,n1,n2)
+  for (i in 1:n2){
+    K[,i] <- sigmaF^2*exp(-0.5*( (x1-x2[i])/l)^2 )
+  }
+  return(K)
+}
+
+posteriorGP <- function(X, y, XStar, sigmaNoise, k, ...){
+  n <- length(X)
+  K <- k(X, X, ...)
+  kStar <- k(X,XStar, ...)
+  
+  #Cholesky 
+  L <- t(chol(K + sigmaNoise^2*diag(n)))
+
+  #alpha
+  alpha <- solve(t(L),solve(L,y))
+  
+  #Posterior mean = fStar
+  kStar <- k(X, XStar, ...)
+  fStar <- t(kStar)%*%alpha
+
+  #Posterior variance
+  v <- solve(L,kStar)
+  variance <- k(XStar, XStar, ...) - t(v)%*%v
+  
+  #Marginal log-likelihood log p(y|X)
+  
+  #log_marg_likelihood <- -(1/2)*t(y)%*%alpha - sum(log(diag(L))) - (n/2)*log(2*pi)
+  log_marg_likelihood <- -0.5*(t(y)%*%alpha)-sum(log(diag(L)))-(n/2)*log(2*pi)
+  
+  return(list(mean =fStar, variance =variance, mll = log_marg_likelihood))
+}
+
+
+```
+
+```{r}
+# 
+# sigmaF <- seq(0,10,1)
+# #ell <- seq(1, 100, 10)
+# ell <- c(1,seq(10,100,10))
+
+sigmaF <- c(0.1, 0.5, 1, 5, 10, 50, 100)
+ell <- c(0.1, 0.5, 1, 5, 10, 50, 100)
+
+marginal_log <- matrix(NA, ncol = length(sigmaF), nrow = length(ell))
+dim(marginal_log) <- c(length(sigmaF), length(ell))
+dimnames(marginal_log) <- list("sigmaF" = sigmaF, "ell" = ell)
+
+
+#Estimating sigmaNoise from fitting a two degree polynomial to data
+polyFit <- lm(trainData$temp ~  trainData$time + I(trainData$time^2))
+sigmaNoise <- sd(polyFit$residuals)
+
+
+for (i in 1:length(sigmaF)){
+  for (j in 1:length(ell)){
+    foo <- posteriorGP(trainData$time, trainData$temp, trainData$time
+                         , sigmaNoise, SquaredExpKernel, sigmaF[i], ell[j])
+    marginal_log[i,j] <- foo$mll
+  }
+}
+
+marginal_log
+which(marginal_log == max(marginal_log), arr.ind = TRUE)
 ```
