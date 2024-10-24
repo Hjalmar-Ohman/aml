@@ -302,7 +302,7 @@ for(j in c(0.5,0.75,0.95)){
     }
     else {
     # Validation phase: do not update Q-table
-    foo <- q_learning(epsilon = epsilon_value, gamma = j, start_state = c(4,1))
+    foo <- q_learning(epsilon = 0.5, gamma = j, start_state = c(4,1))
     # Prevent Q-table updates
     q_table <<- q_table  # This line essentially "freezes" the table.
   }
@@ -334,7 +334,7 @@ for(j in c(0.5,0.75,0.95)){
     foo <- q_learning(epsilon = 0.25, gamma = j, start_state = c(4,1))
      }else {
     # Validation phase: do not update Q-table
-    foo <- q_learning(epsilon = epsilon_value, gamma = j, start_state = c(4,1))
+    foo <- q_learning(epsilon = 0.25, gamma = j, start_state = c(4,1))
     # Prevent Q-table updates
     q_table <<- q_table  # This line essentially "freezes" the table.
   }
@@ -363,7 +363,7 @@ for(j in c(0.5,0.75,0.95)){
     foo <- q_learning(epsilon = 0.1, gamma = j, start_state = c(4,1))
      } else {
     # Validation phase: do not update Q-table
-    foo <- q_learning(epsilon = epsilon_value, gamma = j, start_state = c(4,1))
+    foo <- q_learning(epsilon = 0.1, gamma = j, start_state = c(4,1))
     # Prevent Q-table updates
     q_table <<- q_table  # This line essentially "freezes" the table.
   }
@@ -380,3 +380,5 @@ average_validation_reward <- mean(validation_rewards)
 print(average_validation_reward)
 }
 ```
+
+# eps 0.5 gamma 0.95
