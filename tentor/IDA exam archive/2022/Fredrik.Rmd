@@ -1,0 +1,400 @@
+---
+title: "TDDE15-Lab 1"
+author: "Fredrik Ramberg"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+# 1
+
+-   Healthy –\> healthy: 0.9
+
+-   Infected -\> infected: 0.8
+
+-   p(Test = pos \| infected ) = 0.6
+
+-   p(Test = negative \| healthy) = 0.7
+
+Question: p(healthy in three days\| negative test third day)
+
+```{r}
+library(bnlearn)
+library(gRain)
+
+dag = model2network("[H1][H2|H1][H3|H2][T1|H1][T2|H2][T3|H3]")
+graphviz.plot(dag)
+
+# 1 if healthy
+H1 <- c(0.5, 0.5)
+dim(H1) <- c(2)
+dimnames(H1) <- list(c("0", "1"))
+
+
+#####  New
+# Old
+H2 <- matrix(c(0.8, 0.2,
+               0.1, 0.9), nrow = 2, ncol = 2)
+dim(H2) <- c(2,2)
+dimnames(H2) <- list("H2" = c("0", "1"), "H1" = c("0", "1"))
+
+H3 <- matrix(c(0.8, 0.2,
+               0.1, 0.9), nrow = 2, ncol = 2)
+dim(H3) <- c(2,2)
+dimnames(H3) <- list("H3" = c("0", "1"), "H2" = c("0", "1"))
+
+# 1 if testing positive
+T1 <- matrix(c(0.4, 0.6,
+               0.7, 0.3), nrow = 2, ncol = 2)
+dim(T1) <- c(2,2)
+dimnames(T1) <- list("T1" = c("0", "1"), "H1" = c("0", "1"))
+
+T2 <- matrix(c(0.4, 0.6,
+               0.7, 0.3), nrow = 2, ncol = 2)
+dim(T2) <- c(2,2)
+dimnames(T2) <- list("T2" = c("0", "1"), "H2" = c("0", "1"))
+
+T3 <- matrix(c(0.4, 0.6,
+               0.7, 0.3), nrow = 2, ncol = 2)
+dim(T3) <- c(2,2)
+dimnames(T3) <- list("T3" = c("0", "1"), "H3" = c("0", "1"))
+
+bn <- custom.fit(dag, list(H1=H1, H2=H2, H3=H3, T1=T1, T2=T2, T3=T3))
+
+bn_comp <- compile(as.grain(bn))
+```
+
+```{r}
+nodes <- c("T2")#, "T3")
+states <- c("0")#, "0")
+
+querygrain(bn_comp, c("H3"))
+querygrain(setEvidence(bn_comp,nodes=c("T2"),states=c("0")),c("H3"))
+querygrain(setEvidence(bn_comp,nodes=c("T2", "T3"),states=c("0", "0")),c("H3"))
+
+```
+
+-   The probability that she is healthy after 3 days is 58.5%
+
+-   The probability that she is healthy after three days given a negative test on the second day is 68%
+
+-   The probability that she is healthy after three days given negative test on the second and third day is 79%.
+
+# 2
+
+-   p(rainy today \| rainy last two days) = 0.75
+
+    -   ((p(sunny today \| rainy last two days) = 0.25))
+
+-   p( rainy today\| 1 rainy and 1 sunny) = 0.5
+
+    -   ((p( sunny today\| 1 rainy and 1 sunny) = 0.5))
+
+-   Weather forecast: reports rainy weather when the forecast is actually sunny and vice versa with probability 0.1
+
++-------------+-------------+-------------+-------------+-------------+
+| NEW -\>\    | RR          | RS          | SR          | SS          |
+| Old         |             |             |             |             |
+|             |             |             |             |             |
+| \|          |             |             |             |             |
++=============+=============+=============+=============+=============+
+| RR          | 0.75        | 0.25        | 0           | 0           |
++-------------+-------------+-------------+-------------+-------------+
+| RS          | 0           | 0           | 0.5         | 0.5         |
++-------------+-------------+-------------+-------------+-------------+
+| SR          | 0.5         | 0.5         | 0           | 0           |
++-------------+-------------+-------------+-------------+-------------+
+| SS          | 0           | 0           | 0.25        | 0.75        |
++-------------+-------------+-------------+-------------+-------------+
+|             |             |             |             |             |
++-------------+-------------+-------------+-------------+-------------+
+
+```{r}
+library(HMM)
+transProbs <- c()
+
+#First letter is one day ago, second letter is today
+states <- c("RR", "RS", "SR", "SS")
+symbols <- c("R", "S")
+
+######## Symbols
+# States
+emissionProbs <- matrix(c(0.9, 0.1,
+                          0.1,0.9,
+                          0.9, 0.1,
+                          0.1,0.9), ncol=2, byrow = TRUE)
+colnames(emissionProbs) <- symbols
+rownames(emissionProbs) <- states
+
+
+###   Old
+# New
+transProbs <- matrix(c(0.75, 0.25, 0, 0,
+                        0, 0, 0.5, 0.5,
+                        0.5, 0.5, 0, 0,
+                        0, 0, 0.25, 0.75), 
+                        nrow = 4, ncol = 4, byrow = TRUE)
+colnames(transProbs) <- states
+rownames(transProbs) <- states
+
+emissionProbs
+transProbs
+
+hmm <- initHMM(states,symbols, transProbs = transProbs, emissionProbs = emissionProbs)
+
+set.seed(1234)
+sim <- simHMM(hmm, 10)
+sim
+
+```
+
+# 3
+
+**From lab 3:**
+
+```{r}
+library(ggplot2)
+arrows <- c("^", ">", "v", "<")
+action_deltas <- list(c(1,0), # up
+                      c(0,1), # right
+                      c(-1,0), # down
+                      c(0,-1)) # left
+
+vis_environment <- function(iterations=0, epsilon = 0.5, alpha = 0.1, gamma = 0.95, beta = 0){
+  
+  # Visualize an environment with rewards. 
+  # Q-values for all actions are displayed on the edges of each tile.
+  # The (greedy) policy for each state is also displayed.
+  # 
+  # Args:
+  #   iterations, epsilon, alpha, gamma, beta (optional): for the figure title.
+  #   reward_map (global variable): a HxW array containing the reward given at each state.
+  #   q_table (global variable): a HxWx4 array containing Q-values for each state-action pair.
+  #   H, W (global variables): environment dimensions.
+  
+  df <- expand.grid(x=1:H,y=1:W)
+  foo <- mapply(function(x,y) ifelse(reward_map[x,y] == 0,q_table[x,y,1],NA),df$x,df$y)
+  df$val1 <- as.vector(round(foo, 2))
+  foo <- mapply(function(x,y) ifelse(reward_map[x,y] == 0,q_table[x,y,2],NA),df$x,df$y)
+  df$val2 <- as.vector(round(foo, 2))
+  foo <- mapply(function(x,y) ifelse(reward_map[x,y] == 0,q_table[x,y,3],NA),df$x,df$y)
+  df$val3 <- as.vector(round(foo, 2))
+  foo <- mapply(function(x,y) ifelse(reward_map[x,y] == 0,q_table[x,y,4],NA),df$x,df$y)
+  df$val4 <- as.vector(round(foo, 2))
+  foo <- mapply(function(x,y) 
+    ifelse(reward_map[x,y] == 0,arrows[GreedyPolicy(x,y)],reward_map[x,y]),df$x,df$y)
+  df$val5 <- as.vector(foo)
+  foo <- mapply(function(x,y) ifelse(reward_map[x,y] == 0,max(q_table[x,y,]),
+                                     ifelse(reward_map[x,y]<0,NA,reward_map[x,y])),df$x,df$y)
+  df$val6 <- as.vector(foo)
+  
+  print(ggplot(df,aes(x = y,y = x)) +
+          scale_fill_gradient(low = "white", high = "green", na.value = "red", name = "") +
+          geom_tile(aes(fill=val6)) +
+          geom_text(aes(label = val1),size = 4,nudge_y = .35,na.rm = TRUE) +
+          geom_text(aes(label = val2),size = 4,nudge_x = .35,na.rm = TRUE) +
+          geom_text(aes(label = val3),size = 4,nudge_y = -.35,na.rm = TRUE) +
+          geom_text(aes(label = val4),size = 4,nudge_x = -.35,na.rm = TRUE) +
+          geom_text(aes(label = val5),size = 10) +
+          geom_tile(fill = 'transparent', colour = 'black') + 
+          ggtitle(paste("Q-table after ",iterations," iterations\n",
+                        "(epsilon = ",epsilon,", alpha = ",alpha,"gamma = ",gamma,", beta = ",beta,")")) +
+          theme(plot.title = element_text(hjust = 0.5)) +
+          scale_x_continuous(breaks = c(1:W),labels = c(1:W)) +
+          scale_y_continuous(breaks = c(1:H),labels = c(1:H)))
+  
+}
+```
+
+```{r}
+GreedyPolicy <- function(x, y){
+  
+  # Get a greedy action for state (x,y) from q_table.
+  #
+  # Args:
+  #   x, y: state coordinates.
+  #   q_table (global variable): a HxWx4 array containing Q-values for each state-action pair.
+  # 
+  # Returns:
+  #   An action, i.e. integer in {1,2,3,4}.
+  
+  # Your code here.
+  max <- c(which(q_table[x,y,] == max(q_table[x,y,])))
+  if(length(max) > 1) {
+    max <- sample(max, size = 1)
+  }
+  
+  return (max)
+  
+  # max <- which.max(q_table[x,y,])#which(q_table[x,y,] == max(q_table[x,y,]))
+  # 
+  # return (max)#sample(max, size = 1))
+  
+}
+
+EpsilonGreedyPolicy <- function(x, y, epsilon){
+  
+  # Get an epsilon-greedy action for state (x,y) from q_table.
+  #
+  # Args:
+  #   x, y: state coordinates.
+  #   epsilon: probability of acting randomly.
+  # 
+  # Returns:
+  #   An action, i.e. integer in {1,2,3,4}.
+  
+  # Your code here.
+  
+  max <- GreedyPolicy(x,y)
+  
+  epsilon_prob <- runif(1)
+  if (epsilon_prob <= epsilon){
+    max <-sample(1:4,1)
+  }
+  
+  return(max)
+  # If i want to put in a validity constraint
+  # repeat{
+  #   new_state <- c(x,y) + unlist(action_deltas[max])
+  #   xn <- new_state[1]
+  #   yn <- new_state[2]
+  #   if(!(yn < 1 || xn < 1 || yn > W || xn > H)){
+  #     return(max)
+  #   }
+  # }
+
+}
+
+transition_model <- function(x, y, action, beta){
+  
+  # Computes the new state after given action is taken. The agent will follow the action 
+  # with probability (1-beta) and slip to the right or left with probability beta/2 each.
+  # 
+  # Args:
+  #   x, y: state coordinates.
+  #   action: which action the agent takes (in {1,2,3,4}).
+  #   beta: probability of the agent slipping to the side when trying to move.
+  #   H, W (global variables): environment dimensions.
+  # 
+  # Returns:
+  #   The new state after the action has been taken.
+  
+  delta <- sample(-1:1, size = 1, prob = c(0.5*beta,1-beta,0.5*beta))
+  final_action <- ((action + delta + 3) %% 4) + 1
+  foo <- c(x,y) + unlist(action_deltas[final_action])
+  foo <- pmax(c(1,1),pmin(foo,c(H,W)))
+  
+  return (foo)
+}
+
+
+q_learning <- function(start_state, epsilon = 0.5, alpha = 0.1, gamma = 0.95, 
+                       beta = 0, test = FALSE){
+  
+  # Perform one episode of Q-learning. The agent should move around in the 
+  # environment using the given transition model and update the Q-table.
+  # The episode ends when the agent reaches a terminal state.
+  # 
+  # Args:
+  #   start_state: array with two entries, describing the starting position of the agent.
+  #   epsilon (optional): probability of acting randomly.
+  #   alpha (optional): learning rate.
+  #   gamma (optional): discount factor.
+  #   beta (optional): slipping factor.
+  #   reward_map (global variable): a HxW array containing the reward given at each state.
+  #   q_table (global variable): a HxWx4 array containing Q-values for each state-action pair.
+  # 
+  # Returns:
+  #   reward: reward received in the episode.
+  #   correction: sum of the temporal difference correction terms over the episode.
+  #   q_table (global variable): Recall that R passes arguments by value. So, q_table being
+  #   a global variable can be modified with the superassigment operator <<-.
+  
+  # Your code here.
+  
+  # h <- sample(1:nrow(reward_map), size=1)
+  # w <- sample(1:ncol(reward_map), size=1)
+  # state <- c(h,w)
+  
+  # if (test)
+  #   epsilon = 0
+  state <- start_state
+  episode_correction <- 0
+  tot_reward <- 0
+  repeat{
+    # Follow policy, execute action, get reward.
+    action <- EpsilonGreedyPolicy(x = state[1], y = state[2], epsilon = epsilon)
+    next_state <- transition_model(x = state[1], y = state[2], action, beta)
+    reward <- reward_map[next_state[1], next_state[2]]
+    
+    if (!test){
+      temp_diff <- alpha*(reward + gamma * max(q_table[next_state[1], next_state[2],]) - q_table[state[1], state[2], action])
+    q_table[state[1], state[2], action] <<- q_table[state[1], state[2], action] + temp_diff
+    
+    episode_correction <- episode_correction + temp_diff
+    }
+    tot_reward <- tot_reward + reward
+    # Q-table update.
+  
+    if(reward!=0)
+      # End episode.
+      return (c(tot_reward,episode_correction))
+    state <- next_state
+  }
+}
+```
+
+```{r fig.height = 7}
+
+# Environment B (the effect of epsilon and gamma)
+
+H <- 7
+W <- 8
+
+
+reward_map <- matrix(0, nrow = H, ncol = W)
+reward_map[1,] <- -1
+reward_map[7,] <- -1
+reward_map[4,5] <- 5
+reward_map[4,8] <- 10
+
+MovingAverage <- function(x, n){
+  
+  cx <- c(0,cumsum(x))
+  rsum <- (cx[(n+1):length(cx)] - cx[1:(length(cx) - n)]) / n
+  
+  return (rsum)
+}
+
+epsilons <- c(0.1, 0.25, 0.5)
+gammas <- c(0.5, 0.75, 0.95)
+
+avg_reward <- matrix(NA, ncol = length(epsilons), nrow = length(gammas), dimnames = list("epsilon" = epsilons, "gamma" = gammas))
+
+for (e in 1: length(epsilons)){
+  for (g in 1: length(gammas)){
+    q_table <- array(0,dim = c(H,W,4))
+    for(i in 1:30000){
+      foo <- q_learning(epsilon = epsilons[e], gamma = gammas[g], start_state = c(4,1))
+      # reward <- c(reward,foo[1])
+      # correction <- c(correction,foo[2])
+    }
+    reward <- 0
+    for ( i in 1:1000){
+       foo <- q_learning(epsilon = epsilons[e],test = TRUE, gamma = gammas[g], start_state = c(4,1))
+       reward <- reward + foo[1]
+    }
+    avg_reward[e, g] <- reward/1000
+    
+  }
+}
+
+avg_reward
+
+#q_learning(test = TRUE, gamma = gammas[1], start_state = c(4,1))
+```
+
+```{r}
+
+```
