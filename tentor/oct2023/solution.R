@@ -50,7 +50,7 @@ querygrain(setEvidence(netcom,nodes=c("D","Ah"),states=c("1","0")),c("Dh"))
 # HMMs
 
 library(HMM)
-
+set.seed(1)
 States=c("Z=1.C=2","Z=1.C=1","Z=2.C=3","Z=2.C=2","Z=2.C=1","Z=3.C=2","Z=3.C=1","Z=4.C=1","Z=5.C=2","Z=5.C=1")
 Symbols=c("1","2","3","4","5")
 transProbs=matrix(c(0,1,0,0,0,0,0,0,0,0,

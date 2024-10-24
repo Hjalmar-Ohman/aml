@@ -14,24 +14,24 @@ library(HMM)
 
 states = 1:10
 symbols = 1:10
-start_probs = rep(0.1, 10)
+start_probs = rep(1/length(states), length(states))
 
 # Define the transition probabilities
-trans_probs = matrix(0, nrow=10, ncol=10)
-for (i in 1:9) {
+trans_probs = matrix(0, nrow=length(states), ncol=length(states))
+for (i in 1:(length(states)-1)) {
   trans_probs[i, i] = 0.5  # Stay in the same sector
   trans_probs[i, i+1] = 0.5  # Move to the next sector
 }
-# Sector 10 transitions to Sector 1
-trans_probs[10, 10] = 0.5
-trans_probs[10, 1] = 0.5
+# Last Sector transitions to Sector 1
+trans_probs[length(states), length(states)] = 0.5
+trans_probs[length(states), 1] = 0.5
 
 # Define the emission probabilities
-emission_probs = matrix(0, nrow=10, ncol=10)
-for (i in 1:10) {
+emission_probs = matrix(0, nrow=length(states), ncol=length(symbols))
+for (i in 1:length(states)) {
   # Get the sectors in the range [i-2, i+2]
-  sectors = c((i-2):(i+2)) %% 10 # (%%10 transforms -1 to 9)
-  sectors[sectors == 0] = 10  # (10%%10 transfroms 10 to 0, which is incorrect.)
+  sectors = c((i-2):(i+2)) %% length(symbols) # (-1%%10 transforms -1 to 9)
+  sectors[sectors == 0] = length(symbols)  # (10%%10 transfroms 10 to 0, which is incorrect.)
   
   emission_probs[i, sectors] = 1/5  # Equal probability for the 5 neighboring sectors
 }
