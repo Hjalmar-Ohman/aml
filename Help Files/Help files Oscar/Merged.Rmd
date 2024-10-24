@@ -100,6 +100,7 @@ classify_with_model <- function(compiled_model, mb_or_S, nodes) {
     # Set evidence for the current row
     evidence <- setEvidence(object = compiled_model, 
                             nodes = nodes, 
+                  # do this if for loop states = as.character(test[i, nodes])
                             states = as.character(unlist(row[mb_or_S]))
                             )
     
@@ -108,7 +109,10 @@ classify_with_model <- function(compiled_model, mb_or_S, nodes) {
     
     # Classify based on the probability of "yes"
     ifelse(query["yes"] > 0.5, "yes", "no")
-  }
+    
+    # To sample for imputing
+    # rest[i, "S"] <- sample(c("no", "yes"), size = 1, prob = postS)
+    }
   )
 }
 
@@ -190,7 +194,7 @@ start_probs <- rep(1/10, 10)  # A vector of 0.1's for each state
 trans_probs <- matrix(0, nrow = 10, ncol = 10)
 
 # can also be done manually with:
-# trans_probs = matrix(c(X,X,X..), nrow=length(States), ncol=length(States), byrow = TRUE)
+# trans_probs = matrix(c(X,X,X..), nrow=length(states), ncol=length(states), byrow = TRUE)
 
 # or by:
 

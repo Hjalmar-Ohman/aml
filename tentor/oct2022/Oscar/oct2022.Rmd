@@ -1,0 +1,70 @@
+---
+---
+---
+
+# October 2022
+
+## 1. Baysian networks
+
+```{r}
+
+
+library(bnlearn)
+library(gRain)
+data("asia")
+true_dag <- model2network("[A][S][T|A][L|S][B|S][D|B:E][E|T:L][X|E]") # True Asia DAG
+
+#Only 10 first observations
+train=asia[1:10,]
+rest = asia[11:5000,]
+model_params = bn.fit(true_dag, data = train)
+
+
+# i)
+# Exact inference, transform into gRain objects
+model_grain = as.grain(model_params)
+model_compiled = compile(model_grain)
+
+nodes = colnames(rest)[-5:6]
+
+for (row in rest) {
+  
+}
+# ii)
+# iii)
+# iv)
+
+
+# Convert test to a data frame to utilize apply
+test = as.data.frame(train)
+
+# Define the nodes (excluding S)
+nodes = colnames(train)[-2]
+
+# Function to classify using a given compiled model
+classify_with_model <- function(compiled_model, mb_or_S, nodes) {
+  #The function here is applied over whole dataframe, 1 means rows, 2 is cols
+  apply(test, 1, function(row) {
+    # Set evidence for the current row
+    evidence <- setEvidence(object = compiled_model, 
+                            nodes = nodes, 
+                            states = as.character(unlist(row[mb_or_S]))
+                            )
+    
+    # Query the posterior probability of S
+    query <- querygrain(evidence, nodes = "S")$S
+    
+    # Classify based on the probability of "yes"
+    ifelse(query["yes"] > 0.5, "yes", "no")
+  }
+  )
+}
+
+# Get predictions for the learned model + cm
+pred_model <- classify_with_model(model_compiled, -2, nodes)
+table(pred_model, test$S)
+
+# Get predictions for the true DAG model
+pred_true_dag <- classify_with_model(true_dag_compiled, -2, nodes)
+table(pred_true_dag, test$S)
+```
