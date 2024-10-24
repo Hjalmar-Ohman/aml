@@ -302,7 +302,7 @@ for(j in c(0.5,0.75,0.95)){
     }
     else {
     # Validation phase: do not update Q-table
-    foo <- q_learning(epsilon = 0.5, gamma = j, start_state = c(4,1))
+    foo <- q_learning(epsilon = 0, gamma = j, start_state = c(4,1))
     # Prevent Q-table updates
     q_table <<- q_table  # This line essentially "freezes" the table.
   }
@@ -334,7 +334,7 @@ for(j in c(0.5,0.75,0.95)){
     foo <- q_learning(epsilon = 0.25, gamma = j, start_state = c(4,1))
      }else {
     # Validation phase: do not update Q-table
-    foo <- q_learning(epsilon = 0.25, gamma = j, start_state = c(4,1))
+    foo <- q_learning(epsilon = 0, gamma = j, start_state = c(4,1))
     # Prevent Q-table updates
     q_table <<- q_table  # This line essentially "freezes" the table.
   }
@@ -363,7 +363,7 @@ for(j in c(0.5,0.75,0.95)){
     foo <- q_learning(epsilon = 0.1, gamma = j, start_state = c(4,1))
      } else {
     # Validation phase: do not update Q-table
-    foo <- q_learning(epsilon = 0.1, gamma = j, start_state = c(4,1))
+    foo <- q_learning(epsilon = 0, gamma = j, start_state = c(4,1))
     # Prevent Q-table updates
     q_table <<- q_table  # This line essentially "freezes" the table.
   }
@@ -382,3 +382,105 @@ print(average_validation_reward)
 ```
 
 # eps 0.5 gamma 0.95
+
+### 4. Gaussian processes
+
+```{r}
+library(kernlab)
+```
+
+```{r}
+# Matern32  kernel
+k <- function(sigmaf = 1, ell = 1)  
+{   
+	rval <- function(x, y = NULL) 
+	{	r = sqrt(crossprod(x-y))
+		 return(sigmaf^2*(1+sqrt(3)*r/ell)*exp(-sqrt(3)*r/ell))   
+	}   
+	class(rval) <- "kernel"   
+	return(rval) 
+} 
+```
+
+```{r}
+
+
+SigmaFsq = 1
+ell = 0.5
+kernel = k(SigmaFsq, ell)
+zGrid = seq(0.01,1,by=0.01)
+
+
+SigmaFsq2 = 0.5
+ell = 0.5
+kernel2 = k(SigmaFsq2, ell)
+zGrid = seq(0.01,1,by=0.01)
+plot(zGrid, kernelMatrix(kernel2, 0, zGrid), ylim = c(0,1))
+points(zGrid,kernelMatrix(kernel, 0, zGrid))
+
+
+```
+
+```{}
+```
+
+```{r}
+
+# Posterior GP Function
+posteriorGP <- function(X, y, XStar, sigmaNoise, k, ...) {
+  n = length(X)
+  K <- k(X, X, ...)  # Compute the covariance matrix
+  kStar <- k(X, XStar, ...) # Compute covariance
+  
+  # Step 2 in algo
+  #--------------------
+  K_y <- K + sigmaNoise^2 * diag(length(X)) # Add noise variance to diagonal
+  L <- t(chol(K_y))   # Compute Cholesky decomposition, to get lower triangular L we take t()
+  alpha <- solve(t(L), solve(L, y))   # Solve for alpha
+  #---------------------
+  
+  # Step 4 in algo
+  #--------------------
+  fStar_mean <- t(kStar) %*% alpha   # Compute posterior mean
+  v <- solve(L, kStar)   # Compute v = solve(L, kStar)
+  #-------------------
+  
+  # Step 6 in algo
+  #-------------------
+  V_fStar <- k(XStar, XStar, ...) - t(v) %*% v # pred variance (cov matrix)
+  #-------------------
+  
+log_marg_likelihood = -(1/2)*t(y)%*%alpha - sum(log(diag(L))) - (n/2)*log(2*pi)
+  
+  return(list(mean = fStar_mean, variance = V_fStar, log_likelihood = log_marg_likelihood))
+}
+
+```
+
+```{r}
+# Preparing the data
+data = read.csv("https://github.com/STIMALiU/AdvMLCourse/raw/master/GaussianProcess/Code/TempTullinge.csv", header=TRUE, sep=";")
+
+time = seq(1,2190, 5)
+day = seq(1,365, 5)
+
+data_sampled = data[time,]
+temps = data_sampled$temp
+
+```
+
+```{r}
+kern <- function(sigmaf = 1, ell = 1)  
+{   
+	rval <- function(x, y = NULL) 
+	{	r = sqrt(crossprod(x-y))
+		 return(sigmaf^2*(1+sqrt(3)*r/ell)*exp(-sqrt(3)*r/ell))   
+	}   
+	class(rval) <- "kernel"   
+	return(rval) 
+} 
+
+quad_model = lm(temps~time + I(time^2), data = data_sampled)
+sigmaNoise = sqrt(var(quad_model$residuals))
+res = posteriorGP(time, temps, time, sigmaNoise, k = kern (ell = 100, sigmaF = 20))
+```
