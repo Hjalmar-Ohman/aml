@@ -246,3 +246,115 @@ for (alpha_i in c(0.001, 0.01, 0.1)) {
 ```
 Q: Report and analyze the results that you obtain.
 A: Q-values are updated by larger amounts as alpha increases.
+
+### 4.1
+
+```{r}
+rm(list = ls())
+set.seed(1)
+
+X<-seq(0,10,.1)
+
+Yfun<-function(x){
+  return (x*(sin(x)+sin(3*x))+rnorm(length(x),0,2))
+}
+
+plot(X,Yfun(X),xlim=c(0,10),ylim=c(-15,15))
+
+
+## My code
+SquareExponential <- function(sigmaf, ell)
+{
+  rval <- function(x, y = NULL) {
+    n1 <- length(x)
+    n2 <- length(y)
+    k <- matrix(NA,n1,n2)
+    for (i in 1:n2){
+      k[,i] <- sigmaf**2*exp(-0.5*( (x-y[i])/ell)**2 )
+    }
+    return(k)
+  }
+  class(rval) <- "kernel"
+  return(rval)
+}
+Y = Yfun(X)
+sigmaNoise = 2
+```
+
+```{r}
+for (ell in seq(0.1, 1, length.out = 10)) {
+  plot(X,Yfun(X),xlim=c(0,10),ylim=c(-15,15), main = paste("ell = ", ell))
+  GPfit = gausspr(X, Y, kernel = SquareExponential(ell = ell, sigmaf = 0.5),
+  var = sigmaNoise**2, variance.model = TRUE,scaled=FALSE)
+  meanPred <- predict(GPfit, X)
+  lines(X, meanPred, col="red", lwd = 2)
+  lines(X, meanPred+1.96*(predict(GPfit,X, type="sdeviation")+sigmaNoise),col="blue")
+  lines(X, meanPred-1.96*(predict(GPfit,X, type="sdeviation")+sigmaNoise),col="blue")
+}
+```
+
+Q: Choose the value of l that you deem appropriate by visual inspection
+A: l = 0.4 looks the best.
+
+```{r}
+
+for (ell in seq(0.3, 0.8, length.out = 3)) {
+  for (sigmaf in seq(1,10, length.out = 3)) {
+    plot(X,Y,xlim=c(0,10),ylim=c(-15,15), main = paste("ell = ", ell, "sigmaF = ", sigmaf))
+    GPfit = gausspr(X, Y, kernel = SquareExponential(ell = ell, sigmaf = sigmaf),
+    var = sigmaNoise**2, variance.model = TRUE,scaled=FALSE)
+    meanPred <- predict(GPfit, X)
+    lines(X, meanPred, col="red", lwd = 2)
+    lines(X, meanPred+1.96*predict(GPfit,X, type="sdeviation"),col="blue")
+    lines(X, meanPred-1.96*predict(GPfit,X, type="sdeviation"),col="blue")
+  }
+}
+```
+Q: Now, you are free to choose the values for both $\sigma_f$ and l by visual inspection. Motivate your choices.
+A: Generally high $\sigma_f$ and l gives a good fit. For example, $\sigma_f$ = 100 and l = 1.
+
+### 4.2
+```{r}
+rm(list=ls())
+
+X<-seq(0,10,2)
+Yfun<-function(x){
+  return (x*(sin(x)+sin(3*x))+rnorm(length(x),0,.2))
+}
+plot(X,Yfun(X),xlim=c(0,10),ylim=c(-15,15))
+
+## My code
+SquareExponential <- function(sigmaf, ell)
+{
+  rval <- function(x, y = NULL) {
+    n1 <- length(x)
+    n2 <- length(y)
+    k <- matrix(NA,n1,n2)
+    for (i in 1:n2){
+      k[,i] <- sigmaf**2*exp(-0.5*( (x-y[i])/ell)**2 )
+    }
+    return(k)
+  }
+  class(rval) <- "kernel"
+  return(rval)
+}
+
+X_grid = seq(0,10,.1)
+sigmaNoise = 0.2
+
+for (i in 1:4) {
+  Y = Yfun(X)
+  GPfit = gausspr(X, Y, kernel = SquareExponential(ell = 0.5, sigmaf = 1.5),
+  var = sigmaNoise**2, variance.model = TRUE,scaled=FALSE)
+  meanPred <- predict(GPfit, X_grid)
+  
+  plot(X,Yfun(X),xlim=c(0,10),ylim=c(-15,15))
+  lines(X_grid, meanPred, col="red", lwd = 2)
+  lines(X_grid, meanPred+1.96*predict(GPfit,X_grid, type="sdeviation"),col="blue")
+  lines(X_grid, meanPred-1.96*predict(GPfit,X_grid, type="sdeviation"),col="blue")
+  
+  x_max_diff = 0.1*which.max(meanPred+1.96*predict(GPfit,X_grid, type="sdeviation") - (meanPred-1.96*predict(GPfit,X_grid, type="sdeviation")))
+  X = c(X, x_max_diff)
+}
+
+```

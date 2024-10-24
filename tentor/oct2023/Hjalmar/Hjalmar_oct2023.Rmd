@@ -154,5 +154,51 @@ value_iteration()
 
 ### 4
 ```{r}
+rm(list=ls())
+set.seed(1)
 
+SquareExponential <- function(sigmaf, ell)
+{
+  rval <- function(x, y = NULL) {
+    n1 <- length(x)
+    n2 <- length(y)
+    k <- matrix(NA,n1,n2)
+    for (i in 1:n2){
+      k[,i] <- sigmaf**2*exp(-0.5*( (x-y[i])/ell)**2 )
+    }
+    return(k)
+  }
+  class(rval) <- "kernel"
+  return(rval)
+}
+
+periodic <- function(sigmaf, ell1, ell2, d) {
+    rval <- function(x1, y = NULL) {
+      n1 <- length(x1)
+      n2 <- length(y)
+      K <- matrix(NA,n1,n2)
+      for (i in 1:n1){
+        for (j in 1:n2){
+          r = sqrt(crossprod(x1[i]-y[j]))
+          factor1 = sigmaf**2*exp(-0.5*r**2/ell2**2)
+          factor2 = exp(-2*(sin(pi*r/d)**2)/ell1**2)
+          K[i,j] <- factor1*factor2
+        }
+      }
+      return(K)
+    }
+    
+  class(rval) <- "kernel"
+  return(rval)
+} 
+
+square_kernel = SquareExponential(sigmaf = 20, ell = 100)
+periodic_kernel = periodic(sigmaf = 20, ell1 = 1, ell2 = 100, d =365)
+
+X = c(1, 182, 365)
+
+square_kernel(X, X)
+periodic_kernel(X, X)
 ```
+Q: Discuss the results.
+A: We see that points further apart have a lower kernel-value.
