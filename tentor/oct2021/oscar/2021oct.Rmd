@@ -205,7 +205,7 @@ transition_model <- function(x, y, action, beta){
   return (foo)
 }
 
-q_learning <- function(start_state, epsilon = 0.5, alpha = 0.1, gamma = 0.95, beta = 0){
+q_learning <- function(start_state, epsilon = 0.5, alpha = 0.1, gamma = 0.95, beta = 0, train){
   
   # Perform one episode of Q-learning. The agent should move around in the 
   # environment using the given transition model and update the Q-table.
@@ -258,10 +258,10 @@ q_learning <- function(start_state, epsilon = 0.5, alpha = 0.1, gamma = 0.95, be
     
     # Calc TD correction term
     TD_correction <- R + gamma * max_QSAprime - Q_SA
-    episode_correction <- episode_correction + TD_correction
+    episode_correction <- episode_correction + TD_correction*train
     
     # Update Q(S, A)
-    q_table[x, y, action] <<- Q_SA + alpha * TD_correction
+    q_table[x, y, action] <<- Q_SA + alpha * TD_correction*train
     
     # Ep reward accumulated
     episode_reward <- episode_reward + R
@@ -301,64 +301,25 @@ MovingAverage <- function(x, n){
   return (rsum)
 }
 
-
+mreward = NULL
 #----------epsilon = 0.5 ---------------------#  
-for(j in c(0.5,0.75,0.95)){
+for(i in c(0.1, 0.25, 0.5)){
+  for(j in c(0.5,0.75,0.95)){
   q_table <- array(0,dim = c(H,W,4))
   reward <- NULL
   correction <- NULL
-   for(i in 1:31000){
-    # This is for epsilon = 0.5 standard
-    foo <- q_learning(gamma = j, start_state = c(4,1))
-    reward <- c(reward,foo[1])
-    correction <- c(correction,foo[2])
-  }
-  
-  vis_environment(i, gamma = j)
-  plot(MovingAverage(reward,100),type = "l")
-  plot(MovingAverage(correction,100),type = "l")
-}
-  
-
-  
-# ------------epsilon = 0.25 -------------------#  
-for(j in c(0.5,0.75,0.95)){
-  q_table <- array(0,dim = c(H,W,4))
-  reward <- NULL
-  correction <- NULL
-  
-  for(i in 1:31000){
-    
-    if(i <=30000){
-    foo <- q_learning(epsilon = 0.25, gamma = j, start_state = c(4,1))
+   for(k in 1:31000){
+    if(k <=30000){
+    foo <- q_learning(epsilon = i, gamma = j, start_state = c(4,1), train = 1)
+    } else {
+    foo <- q_learning(epsilon = i, gamma = j, start_state = c(4,1), train =0)
     }
-    
     reward <- c(reward,foo[1])
-    correction <- c(correction,foo[2])
   }
   
-  vis_environment(epsilon = 0.25, i, gamma = j)
-  plot(MovingAverage(reward,100),type = "l")
-  plot(MovingAverage(correction,100),type = "l")
+  vis_environment(k, gamma = j, epsilon = i)
+  mreward <- c(mreward,mean(reward))
+}
 }
 
-
-
-# ------------epsilon = 0.1 -------------------#  
-for(j in c(0.5,0.75,0.95)){
-  q_table <- array(0,dim = c(H,W,4))
-  reward <- NULL
-  correction <- NULL
-  
-  for(i in 1:31000){
-    # This is epsilon 0.1 
-    foo <- q_learning(epsilon = 0.1, gamma = j, start_state = c(4,1))
-    reward <- c(reward,foo[1])
-    correction <- c(correction,foo[2])
-  }
-  
-  vis_environment(i, epsilon = 0.1, gamma = j)
-  plot(MovingAverage(reward,100),type = "l")
-  plot(MovingAverage(correction,100),type = "l")
-}
 ```

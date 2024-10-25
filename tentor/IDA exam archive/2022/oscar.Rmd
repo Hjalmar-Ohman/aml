@@ -421,7 +421,7 @@ points(zGrid,kernelMatrix(kernel, 0, zGrid))
 
 ```
 
-```{}
+```         
 ```
 
 ```{r}
