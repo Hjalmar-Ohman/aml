@@ -350,5 +350,61 @@ for(g in c(0.5, 0.75, 0.95)) {
     vis_environment(mean(rewards), gamma = g, epsilon = e)
   }
 }
-
 ```
+
+### 4
+```{r}
+# Covariance function
+SquaredExpKernel <- function(x1, x2, sigmaF = 1, l = 3) {
+  n1 <- length(x1)
+  n2 <- length(x2)
+  k <- matrix(NA, n1, n2)
+  for (i in 1:n2) {
+    k[, i] <- sigmaF ** 2 * exp(-0.5 * ((x1 - x2[i]) / l) ** 2)
+  }
+  return(k)
+}
+
+posteriorGP = function(x, y, XStar, sigmaNoise, k, ...) {
+  K = k(x, x, ...)
+  L = t(chol(K + diag(sigmaNoise ** 2, length(x))))
+  alpha = solve(t(L), solve(L, y))
+  kStar = k(x, XStar, ...)
+  predictive_mean = t(kStar) %*% alpha
+  v = solve(L, kStar)
+  predictive_variance = k(XStar, XStar, ...) - t(v) %*% v
+  return(list(mean = predictive_mean, variance = predictive_variance))
+}
+
+sigmaF = 1
+x = c(-1.0, -0.6, -0.2, 0.4, 0.8)
+y = c(0.768, -0.044, -0.940, 0.719, -0.664)
+XStar = seq(-1, 1, 0.1)
+
+for (l in c(0.3, 1)) {
+  for (sigmaNoise in c(0.1, 1)) {
+    posterior_f = posteriorGP(x, y, XStar, sigmaNoise, k = SquaredExpKernel, sigmaF, l)
+    plot(XStar,
+         posterior_f$mean,
+         type = "l",
+         ylim = c(-3, 3),
+         main = paste("sigmaNoise = ", sigmaNoise, ". l = ", l))
+    lines(XStar, posterior_f$mean - 1.96 * sqrt(diag(posterior_f$variance)), col = "blue")
+    lines(XStar, posterior_f$mean + 1.96 * sqrt(diag(posterior_f$variance)), col = "blue")
+    lines(
+      XStar,
+      posterior_f$mean - 1.96 * sqrt(diag(posterior_f$variance)) - sigmaNoise,
+      lwd = 2,
+      col = "blue"
+    )
+    lines(
+      XStar,
+      posterior_f$mean + 1.96 * sqrt(diag(posterior_f$variance)) + sigmaNoise,
+      lwd = 2,
+      col = "blue"
+    )
+  }
+}
+```
+Q: Use the plots to draw conclusions about the role of $\sigma_n$.
+A: A higher $\sigma_n$ increases uncertainty and moves our predictions towards the prior of f(x) = 0.

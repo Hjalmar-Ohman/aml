@@ -202,3 +202,36 @@ periodic_kernel(X, X)
 ```
 Q: Discuss the results.
 A: We see that points further apart have a lower kernel-value.
+
+```{r}
+data = read.csv(
+"https://github.com/STIMALiU/AdvMLCourse/raw/master/GaussianProcess/Code/TempTullinge.csv",
+header=TRUE, sep=";")
+data$time = 1:nrow(data)
+data$day = ((data$time - 1) %% 365) + 1
+data = data[seq(1, nrow(data), by=5), ]
+
+posteriorGP <- function(X,y,k,sigmaNoise,xStar){
+  n <- length(y)
+  L <- t(chol(k(X,X)+((sigmaNoise^2)*diag(n))))
+  a <- solve(t(L),solve(L,y))
+  kStar <- k(X,xStar)
+  mu <- t(kStar)%*%a
+  v <- solve(L,kStar)
+  var <- k(xStar,xStar)-(t(v)%*%v)
+  logmar <- -0.5*(t(y)%*%a)-sum(log(diag(L)))-(n/2)*log(2*pi)
+  return(list("mu"=mu,"var"=var,"logmar"=logmar))
+}
+
+temp = data$temp
+time = data$time
+
+
+xStar = seq(-1, 1, 0.1)
+polyFit = lm(temp~I(time) + I(time**2))
+sigmaNoise = sd(polyFit$residuals)
+
+posteriorGP(time, temp, k=SquareExponential(sigmaf = 20, ell = 1000), sigmaNoise, xStar)$logmar
+posteriorGP(time, temp, k=periodic(sigmaf = 20, ell1 = 1, ell2 = 1000, d =365), sigmaNoise, xStar)$logmar
+
+```

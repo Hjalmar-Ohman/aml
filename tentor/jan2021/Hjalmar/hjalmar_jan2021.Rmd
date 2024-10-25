@@ -1,56 +1,123 @@
-# BNs.
+### 2
 
+```{r}
+rm(list = ls())
+set.seed(1)
 library(bnlearn)
 library(gRain)
-set.seed(12345)
+net = model2network("[Z0][X0|Z0][Z1|Z0][X1|Z1][Z2|Z1][X2|Z2][Z3|Z2]")
+graphviz.plot(net)
+states = 1:10
+symbols = 1:10
 
-data("asia")
-net<-model2network("[A][S][T|A][L|S][B|S][D|B:E][E|T:L][X|E]")
-net<-bn.fit(net,asia,method="bayes")
+cptZ0 = rep(.1, 10)
+dim(cptZ0) = c(10)
+dimnames(cptZ0) = list(c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10"))
 
-mydata<-matrix(NA,1000,8)
-for(i in 1:1000){
-  a<-sample(1:2,1,prob=net$A$prob)
-  s<-sample(1:2,1,prob=net$S$prob)
-  t<-sample(1:2,1,prob=net$T$prob[,a])
-  
-  l<-sample(1:2,1,prob=net$L$prob[,s])
-  b<-sample(1:2,1,prob=net$B$prob[,s])
-  
-  e<-sample(1:2,1,prob=net$E$prob[,l,t])
-  d<-sample(1:2,1,prob=net$D$prob[,b,e])
-  
-  x<-sample(1:2,1,prob=net$X$prob[,e])
-  
-  mydata[i,]<-c(a,s,t,l,b,d,e,x)
+# Define the transition probabilities
+cptZ1 = matrix(0, nrow = length(states), ncol = length(states))
+for (i in 1:(length(states) - 1)) {
+  cptZ1[i, i] = 0.5 # Stay in the same sector
+  cptZ1[i, i + 1] = 0.5 # Move to the next sector
 }
+# Last Sector transitions to Sector 1
+cptZ1[length(states), length(states)] = 0.5
+cptZ1[length(states), 1] = 0.5
+dim(cptZ1) = c(10, 10)
+dimnames(cptZ1) = list(
+  "Z1" = c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10"),
+  "Z0"  = c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10")
+)
 
-foo<-mydata[which(mydata[,6]==2),2]
-table(foo)/length(foo)
+# Define the transition probabilities
+cptZ2 = matrix(0, nrow = length(states), ncol = length(states))
+for (i in 1:(length(states) - 1)) {
+  cptZ2[i, i] = 0.5 # Stay in the same sector
+  cptZ2[i, i + 1] = 0.5 # Move to the next sector
+}
+# Last Sector transitions to Sector 1
+cptZ2[length(states), length(states)] = 0.5
+cptZ2[length(states), 1] = 0.5
+dim(cptZ2) = c(10, 10)
+dimnames(cptZ2) = list(
+  "Z2" = c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10"),
+  "Z1"  = c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10")
+)
 
-net<-as.grain(net)
-net<-compile(net)
-net<-setEvidence(net,nodes=c("D"),states=c("yes"))
-querygrain(net,c("S"))
+# Define the transition probabilities
+cptZ3 = matrix(0, nrow = length(states), ncol = length(states))
+for (i in 1:(length(states) - 1)) {
+  cptZ3[i, i] = 0.5 # Stay in the same sector
+  cptZ3[i, i + 1] = 0.5 # Move to the next sector
+}
+# Last Sector transitions to Sector 1
+cptZ3[length(states), length(states)] = 0.5
+cptZ3[length(states), 1] = 0.5
+dim(cptZ3) = c(10, 10)
+dimnames(cptZ3) = list(
+  "Z3" = c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10"),
+  "Z2"  = c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10")
+)
 
-# HMMs.
 
-library(HMM)
-library(entropy)
-set.seed(567)
-States=1:3 # healthy, sick1, sick2
-Symbols=1:2 #healthy, sick
-transProbs=matrix(c(.9,.1,0,
-                    0,.8,.2,
-                    .2,0,.8), nrow=length(States), ncol=length(States), byrow = TRUE)
-emissionProbs=matrix(c(.6,.4,
-                       .4,.7,
-                       .3,.7), nrow=length(States), ncol=length(Symbols), byrow = TRUE)
-startProbs=c(.5,.5,0)
-hmm=initHMM(States,Symbols,startProbs,transProbs,emissionProbs)
-simHMM(hmm,100)
+# Define the emission probabilities
+cptX0 = matrix(0, nrow = length(states), ncol = length(symbols))
+for (i in 1:length(states)) {
+  # Get the sectors in the range [i-2, i+2]
+  sectors = c((i - 2):(i + 2)) %% length(symbols) # (-1%%10 transforms -1 to 9)
+  sectors[sectors == 0] = length(symbols) # (10%%10 transfroms 10 to 0, which is incorrect.)
+  cptX0[i, sectors] = 1 / 5
+  # Equal probability for the 5 neighboring sectors
+}
+dim(cptX0) = c(10, 10)
+dimnames(cptX0) = list(
+  "X0" = c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10"),
+  "Z0"  = c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10")
+)
 
-# RL.
+# Define the emission probabilities
+cptX1 = matrix(0, nrow = length(states), ncol = length(symbols))
+for (i in 1:length(states)) {
+  # Get the sectors in the range [i-2, i+2]
+  sectors = c((i - 2):(i + 2)) %% length(symbols) # (-1%%10 transforms -1 to 9)
+  sectors[sectors == 0] = length(symbols) # (10%%10 transfroms 10 to 0, which is incorrect.)
+  cptX1[i, sectors] = 1 / 5
+  # Equal probability for the 5 neighboring sectors
+}
+dim(cptX1) = c(10, 10)
+dimnames(cptX1) = list(
+  "X1" = c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10"),
+  "Z1"  = c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10")
+)
+
+# Define the emission probabilities
+cptX2 = matrix(0, nrow = length(states), ncol = length(symbols))
+for (i in 1:length(states)) {
+  # Get the sectors in the range [i-2, i+2]
+  sectors = c((i - 2):(i + 2)) %% length(symbols) # (-1%%10 transforms -1 to 9)
+  sectors[sectors == 0] = length(symbols) # (10%%10 transfroms 10 to 0, which is incorrect.)
+  cptX2[i, sectors] = 1 / 5
+  # Equal probability for the 5 neighboring sectors
+}
+dim(cptX2) = c(10, 10)
+dimnames(cptX2) = list(
+  "X2" = c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10"),
+  "Z2"  = c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10")
+)
+
+net = model2network("[Z0][X0|Z0][Z1|Z0][X1|Z1][Z2|Z1][X2|Z2][Z3|Z2]")
+fit = custom.fit(net, list(Z0 = cptZ0, X0 = cptX0, Z1 = cptZ1, X1 = cptX1, Z2 = cptZ2, X2 = cptX2, Z3 = cptZ3))
+fit = compile(as.grain(fit))
+which.max(querygrain(setEvidence(fit, c("X0", "X2"), c("1", "3")))$Z0)
+which.max(querygrain(setEvidence(fit, c("X0", "X2"), c("1", "3")))$Z1)
+which.max(querygrain(setEvidence(fit, c("X0", "X2"), c("1", "3")))$Z2)
+which.max(querygrain(setEvidence(fit, c("X0", "X2"), c("1", "3")))$Z3)
+```
+
+## 3
+
+```{r}
+
 library(ggplot2)
 
 arrows <- c("^", ">", "v", "<")
@@ -72,19 +139,19 @@ vis_environment <- function(iterations=0, epsilon = 0.5, alpha = 0.1, gamma = 0.
   #   H, W (global variables): environment dimensions.
   
   df <- expand.grid(x=1:H,y=1:W)
-  foo <- mapply(function(x,y) ifelse(reward_map[x,y] == 0,q_table[x,y,1],NA),df$x,df$y)
+  foo <- mapply(function(x,y) ifelse(reward_map[x,y] == -1,q_table[x,y,1],NA),df$x,df$y)
   df$val1 <- as.vector(round(foo, 2))
-  foo <- mapply(function(x,y) ifelse(reward_map[x,y] == 0,q_table[x,y,2],NA),df$x,df$y)
+  foo <- mapply(function(x,y) ifelse(reward_map[x,y] == -1,q_table[x,y,2],NA),df$x,df$y)
   df$val2 <- as.vector(round(foo, 2))
-  foo <- mapply(function(x,y) ifelse(reward_map[x,y] == 0,q_table[x,y,3],NA),df$x,df$y)
+  foo <- mapply(function(x,y) ifelse(reward_map[x,y] == -1,q_table[x,y,3],NA),df$x,df$y)
   df$val3 <- as.vector(round(foo, 2))
-  foo <- mapply(function(x,y) ifelse(reward_map[x,y] == 0,q_table[x,y,4],NA),df$x,df$y)
+  foo <- mapply(function(x,y) ifelse(reward_map[x,y] == -1,q_table[x,y,4],NA),df$x,df$y)
   df$val4 <- as.vector(round(foo, 2))
   foo <- mapply(function(x,y) 
-    ifelse(reward_map[x,y] == 0,arrows[GreedyPolicy(x,y)],reward_map[x,y]),df$x,df$y)
+    ifelse(reward_map[x,y] == -1,arrows[GreedyPolicy(x,y)],reward_map[x,y]),df$x,df$y)
   df$val5 <- as.vector(foo)
-  foo <- mapply(function(x,y) ifelse(reward_map[x,y] == 0,max(q_table[x,y,]),
-                                     ifelse(reward_map[x,y]<0,NA,reward_map[x,y])),df$x,df$y)
+  foo <- mapply(function(x,y) ifelse(reward_map[x,y] == -1,max(q_table[x,y,]),
+                                     ifelse(reward_map[x,y]<-1,NA,reward_map[x,y])),df$x,df$y)
   df$val6 <- as.vector(foo)
   
   print(ggplot(df,aes(x = y,y = x)) +
@@ -204,57 +271,31 @@ q_learning <- function(start_state, epsilon = 0.5, alpha = 0.1, gamma = 0.95,
   
 }
 
-#####################################################################################################
-# Q-Learning Environments
-#####################################################################################################
+```
 
-# Environment B (the effect of epsilon and gamma)
-
-H <- 7
-W <- 8
-
-reward_map <- matrix(0, nrow = H, ncol = W)
-reward_map[1,] <- -1
-reward_map[7,] <- -1
-reward_map[4,5] <- 5
-reward_map[4,8] <- 10
-
-q_table <- array(0,dim = c(H,W,4))
-
+```{r}
+# Environment C (the effect of beta).
+set.seed(1234)
+H <- 3
+W <- 6
+reward_map <- matrix(-1, nrow = H, ncol = W)
+reward_map[1, 2:5] <- -10
+reward_map[1, 6] <- 10
+q_table <- array(0, dim = c(H, W, 4))
 vis_environment()
 
-mreward <- NULL
 
-for(i in c(0.1,0.25,0.5)){
-  for(j in c(0.5,0.75,0.95)){
-    q_table <- array(0,dim = c(H,W,4))
-    reward <- NULL
-    
-    for(k in 1:30000){
-      q_learning(epsilon = i, gamma = j, start_state = c(4,1), tr = 1) # training
-    }
-    
-    for(k in 1:1000){
-      foo <- q_learning(epsilon = i, gamma = j, start_state = c(4,1), tr = 0) # validation
-      reward <- c(reward,foo[1])
-    }
-    
-    vis_environment(k, epsilon = i, gamma = j)
-    mreward <- c(mreward,mean(reward))
-  }
+for (j in c(0, 0.2, 0.4, 0.66)) {
+  q_table <- array(0, dim = c(H, W, 4))
+  for (i in 1:10000)
+    foo <- q_learning(gamma = 0.6,
+                      beta = j,
+                      start_state = c(1, 1))
+  vis_environment(i, gamma = 0.6, beta = j)
 }
+```
 
-mreward
+### 4
+```{r}
 
-# GPs.
-
-# ell=1 is too smooth, and sigmaNoise=1 implies that the points are not trustworthy as
-# function values. So, the GP does not really try to go through them and the probability
-# bands are wide. Setting sigmaNoise=.1 reduces the probability bands drastically, as the
-# points are now trustworthy. However, the GP is still too smooth to fit the data well.
-
-# ell=0.3 is quite flexible and, thus, the GP goes through the points with sigmaNoise=0.1.
-# However, with sigmaNoise=1, the GP does not see any reason to go through the points, since
-# they are very noisy versions of the function values. Hence the probability bands are wide too.
-
-# See also p. 21 in the book by Rasmussen and Williams.
+```
