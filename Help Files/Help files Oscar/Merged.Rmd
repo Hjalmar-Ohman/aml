@@ -62,13 +62,6 @@ Learn a BN from 80% of the Asia dataset. Use the BN learned to classify the rema
 ```{r}
 rm(list = ls())
 data("asia")
-
-#divide into 80% train and 20% test
-n=dim(asia)[1]
-set.seed(12345)
-id=sample(1:n, floor(n*0.8))
-train=asia[id,]
-test=asia[-id,]
 ```
 
 ```{r}

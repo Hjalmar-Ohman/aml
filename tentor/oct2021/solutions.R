@@ -51,7 +51,6 @@ hmm=initHMM(States,Symbols,startProbs,transProbs,emissionProbs)
 simHMM(hmm,100)
 
 # RL.
-
 library(ggplot2)
 
 arrows <- c("^", ">", "v", "<")
