@@ -318,4 +318,102 @@ for(alpha in alphas){
 # q values have not converged
 
 
+##################### 4 GP ######################################
+# Squared Exponential Kernel Function
+SquaredExpKernel <- function(x1,x2,sigmaF=1,ell=3){
+  n1 <- length(x1)
+  n2 <- length(x2)
+  K <- matrix(NA,n1,n2)
+  for (i in 1:n2){
+    K[,i] <- sigmaF^2*exp(-0.5*( (x1-x2[i])/ell)^2 )
+  }
+  return(K)
+}
 
+# Posterior GP Function
+posteriorGP <- function(X, y, XStar, sigmaNoise, k, ...) {
+  n = length(X)
+  K <- k(X, X, ...)  # Compute the covariance matrix
+  kStar <- k(X, XStar, ...) # Compute covariance
+  K_y <- K + sigmaNoise^2 * diag(length(X)) # Add noise variance to diagonal
+  L <- t(chol(K_y))   # Compute Cholesky decomposition, to get lower triangular L we take t()
+  alpha <- solve(t(L), solve(L, y))   # Solve for alpha
+  fStar_mean <- t(kStar) %*% alpha   # Compute posterior mean
+  v <- solve(L, kStar)   # Compute v = solve(L, kStar)
+  V_fStar <- k(XStar, XStar, ...) - t(v) %*% v # pred variance (cov matrix)
+  log_marg_likelihood = -(1/2)*t(y)%*%alpha - sum(log(diag(L))) - (n/2)*log(2*pi)
+  return(list(mean = fStar_mean, variance = V_fStar, log_likelihood = log_marg_likelihood))
+}
+
+
+# Plotting Function
+plotGP <- function(XStar, res, X_train, y_train, title) {
+  pos_mean <- res$mean
+  pos_var <- diag(res$variance)
+  lower_bound <- pos_mean - 1.96 * sqrt(pos_var + sigmaNoise^2)
+  upper_bound <- pos_mean + 1.96 * sqrt(pos_var + sigmaNoise^2)
+  plot(XStar, pos_mean, type = "l", lwd = 2,
+       ylim = range(c(lower_bound, upper_bound, y_train)),
+       ylab = "f(x)", xlab = "x", main = title)
+  lines(XStar, lower_bound, lty = 2)
+  lines(XStar, upper_bound, lty = 2)
+  points(X_train, y_train, pch = 19, col = "red")
+}
+
+
+
+X<-seq(0,10,.1)
+Yfun<-function(x){
+  return (x*(sin(x)+sin(3*x))+rnorm(length(x),0,2))
+}
+plot(X,Yfun(X),xlim=c(0,10),ylim=c(-15,15))
+
+Xdata = X
+Ydata = Yfun(X)
+
+Xgrid = seq(0,10,.1)
+# Hyperparameters
+sigmaF <- 1.5      # sigma_f
+ell <- 0.5       # length-scale l
+sigmaNoise <- 2  # sigma_n
+
+
+# Call posteriorGP
+res <- posteriorGP(X=Xdata, y=Ydata, XStar=Xgrid, sigmaNoise, k = SquaredExpKernel, sigmaF = sigmaF, ell = ell)
+plotGP(Xgrid, res, Xdata, Ydata, "Posterior Mean and 95% Probability Bands")
+
+##### 4.2####
+X<-seq(0,10,2)
+Yfun<-function(x){
+  return (x*(sin(x)+sin(3*x))+rnorm(length(x),0,.2))
+}
+plot(X,Yfun(X),xlim=c(0,10),ylim=c(-15,15))
+
+
+
+
+
+
+for (i in 1:4) {
+  
+  Xdata = X
+  Ydata = Yfun(X)
+  
+  Xgrid = seq(0,10,.1)
+  # Hyperparameters
+  sigmaF <- 1.5      # sigma_f
+  ell <- 0.5       # length-scale l
+  sigmaNoise <- 2  # sigma_n
+  # Call posteriorGP
+  res <- posteriorGP(X=Xdata, y=Ydata, XStar=Xgrid, sigmaNoise, k = SquaredExpKernel, sigmaF = sigmaF, ell = ell)
+  pos_mean <- res$mean
+  pos_var <- diag(res$variance)
+  lower_bound <- pos_mean - 1.96 * sqrt(pos_var + sigmaNoise^2)
+  upper_bound <- pos_mean + 1.96 * sqrt(pos_var + sigmaNoise^2)
+  
+  foo = 0.1*which.max(upper_bound - lower_bound)
+    
+  plotGP(Xgrid, res, Xdata, Ydata, "Posterior Mean and 95% Probability Bands")
+  
+  X = c(X, foo)
+}

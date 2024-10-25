@@ -2,6 +2,7 @@
 
 library(bnlearn)
 library(gRain)
+set.seed(12345)
 
 data("asia")
 net<-model2network("[A][S][T|A][L|S][B|S][D|B:E][E|T:L][X|E]")
