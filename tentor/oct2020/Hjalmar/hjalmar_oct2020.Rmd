@@ -1,0 +1,462 @@
+### 1
+
+```{r}
+rm(list = ls())
+library(bnlearn)
+library(gRain)
+
+dag = model2network("[C][D|C][A|C][Y|A:C]")
+graphviz.plot(dag)
+
+nondecreasing = function(p1, p2, p3, p4){
+  return(p1>=p2 && p3 >=p4)
+}
+
+nonincreasing = function(p1, p2, p3, p4){
+  return(p1<=p2 && p3 <=p4)
+  }
+
+isMonotone = function(p1, p2, p3, p4){
+  return(nondecreasing(p1, p2, p3, p4) || nonincreasing(p1, p2, p3, p4))
+}
+
+C_monotone = c()
+D_monotone = c()
+for (i in 1:1000) {
+  p = runif(1) #P(C = 2)
+  cptC = matrix(c(1 - p, p), nrow = 1, ncol = 2)
+  dim(cptC) = 2
+  dimnames(cptC) = list(c("C1", "C2"))
+  
+  p_c1 = runif(1) #P(D=2|C=1)
+  p_c2 = runif(1) #P(D=2|C=2)
+  cptD = matrix(c(1 - p_c1, p_c1, 1 - p_c2, p_c2), nrow = 2, ncol = 2)
+  dim(cptD) = c(2, 2)
+  dimnames(cptD) = list("D" = c("D1", "D2"), "C" = c("C1", "C2"))
+  
+  p_c1 = runif(1) #P(A=2|C=1)
+  p_c2 = runif(1) #P(A=2|C=2)
+  cptA = matrix(c(1 - p_c1, p_c1, 1 - p_c2, p_c2), nrow = 2, ncol = 2)
+  dim(cptA) = c(2, 2)
+  dimnames(cptA) = list("A" = c("A1", "A2"), "C" = c("C1", "C2"))
+  
+  p_a1_c1 = runif(1) #P(Y=2|A=1, C=1)
+  p_a2_c1 = runif(1) #P(Y=2|A=2, C=1)
+  p_a1_c2 = runif(1) #P(Y=2|A=1, C=2)
+  p_a2_c2 = runif(1) #P(Y=2|A=2, C=2)
+  cptY = matrix(
+    c(
+      1 - p_a1_c1,
+      p_a1_c1,
+      1 - p_a2_c1,
+      p_a2_c1,
+      1 - p_a1_c2,
+      p_a1_c2,
+      1 - p_a2_c2,
+      p_a2_c2
+    ),
+    nrow = 2,
+    ncol = 4
+  )
+  dim(cptY) = c(2, 2, 2)
+  dimnames(cptY) = list(
+    "Y" = c("Y1", "Y2"),
+    "A" = c("A1", "A2"),
+    "C" = c("C1", "C2")
+  )
+  
+  fit = custom.fit(dag, list(C = cptC, D = cptD, A = cptA, Y = cptY))
+  comfit = compile(as.grain(fit))
+  
+  ## Monotone in C
+  # P(Y = 2|A = 2, C = 2)
+  p1 = querygrain(setEvidence(comfit, c("A", "C"), c("2", "2")), "Y")$Y[2]
+  # P(Y = 2|A = 2, C = 1)
+  p2 = querygrain(setEvidence(comfit, c("A", "C"), c("2", "1")), "Y")$Y[2]
+  # P(Y = 2|A = 1, C = 2)
+  p3 = querygrain(setEvidence(comfit, c("A", "C"), c("1", "2")), "Y")$Y[2]
+  # P(Y = 2|A = 1, C = 1)
+  p4 = querygrain(setEvidence(comfit, c("A", "C"), c("1", "1")), "Y")$Y[2]
+  C_monotone = c(C_monotone, isMonotone(p1, p2, p3, p4))
+
+  ## Monotone in D
+  # P(Y = 2|A = 2, D = 2)
+  p1 = querygrain(setEvidence(comfit, c("A", "D"), c("2", "2")), "Y")$Y[2]
+  # P(Y = 2|A = 2, D = 1)
+  p2 = querygrain(setEvidence(comfit, c("A", "D"), c("2", "1")), "Y")$Y[2]
+  # P(Y = 2|A = 1, D = 2)
+  p3 = querygrain(setEvidence(comfit, c("A", "D"), c("1", "2")), "Y")$Y[2]
+  # P(Y = 2|A = 1, D = 1)
+  p4 = querygrain(setEvidence(comfit, c("A", "D"), c("1", "1")), "Y")$Y[2]
+  D_monotone = c(D_monotone, isMonotone(p1, p2, p3, p4))
+}
+
+mean(D_monotone)
+```
+
+### 2
+
+```{r}
+rm(list = ls())
+library(ggplot2)
+
+arrows <- c("^", ">", "v", "<")
+action_deltas <- list(c(1,0), # up
+                      c(0,1), # right
+                      c(-1,0), # down
+                      c(0,-1)) # left
+
+vis_environment <- function(iterations=0, epsilon = 0.5, alpha = 0.1, gamma = 0.95, beta = 0){
+  
+  # Visualize an environment with rewards. 
+  # Q-values for all actions are displayed on the edges of each tile.
+  # The (greedy) policy for each state is also displayed.
+  # 
+  # Args:
+  #   iterations, epsilon, alpha, gamma, beta (optional): for the figure title.
+  #   reward_map (global variable): a HxW array containing the reward given at each state.
+  #   q_table (global variable): a HxWx4 array containing Q-values for each state-action pair.
+  #   H, W (global variables): environment dimensions.
+  
+  df <- expand.grid(x=1:H,y=1:W)
+  foo <- mapply(function(x,y) ifelse(reward_map[x,y] == 0,q_table[x,y,1],NA),df$x,df$y)
+  df$val1 <- as.vector(round(foo, 2))
+  foo <- mapply(function(x,y) ifelse(reward_map[x,y] == 0,q_table[x,y,2],NA),df$x,df$y)
+  df$val2 <- as.vector(round(foo, 2))
+  foo <- mapply(function(x,y) ifelse(reward_map[x,y] == 0,q_table[x,y,3],NA),df$x,df$y)
+  df$val3 <- as.vector(round(foo, 2))
+  foo <- mapply(function(x,y) ifelse(reward_map[x,y] == 0,q_table[x,y,4],NA),df$x,df$y)
+  df$val4 <- as.vector(round(foo, 2))
+  foo <- mapply(function(x,y) 
+    ifelse(reward_map[x,y] == 0,arrows[GreedyPolicy(x,y)],reward_map[x,y]),df$x,df$y)
+  df$val5 <- as.vector(foo)
+  foo <- mapply(function(x,y) ifelse(reward_map[x,y] == 0,max(q_table[x,y,]),
+                                     ifelse(reward_map[x,y]<0,NA,reward_map[x,y])),df$x,df$y)
+  df$val6 <- as.vector(foo)
+  
+  print(ggplot(df,aes(x = y,y = x)) +
+          scale_fill_gradient(low = "white", high = "green", na.value = "red", name = "") +
+          geom_tile(aes(fill=val6)) +
+          geom_text(aes(label = val1),size = 4,nudge_y = .35,na.rm = TRUE) +
+          geom_text(aes(label = val2),size = 4,nudge_x = .35,na.rm = TRUE) +
+          geom_text(aes(label = val3),size = 4,nudge_y = -.35,na.rm = TRUE) +
+          geom_text(aes(label = val4),size = 4,nudge_x = -.35,na.rm = TRUE) +
+          geom_text(aes(label = val5),size = 10) +
+          geom_tile(fill = 'transparent', colour = 'black') + 
+          ggtitle(paste("Q-table after ",iterations," iterations\n",
+                        "(epsilon = ",epsilon,", alpha = ",alpha,"gamma = ",gamma,", beta = ",beta,")")) +
+          theme(plot.title = element_text(hjust = 0.5)) +
+          scale_x_continuous(breaks = c(1:W),labels = c(1:W)) +
+          scale_y_continuous(breaks = c(1:H),labels = c(1:H)))
+  
+}
+
+GreedyPolicy <- function(x, y){
+  
+  # Get a greedy action for state (x,y) from q_table.
+  #
+  # Args:
+  #   x, y: state coordinates.
+  #   q_table (global variable): a HxWx4 array containing Q-values for each state-action pair.
+  # 
+  # Returns:
+  #   An action, i.e. integer in {1,2,3,4}.
+  
+  foo <- which(q_table[x,y,] == max(q_table[x,y,]))
+  return (ifelse(length(foo)>1,sample(foo, size = 1),foo))
+  
+}
+
+EpsilonGreedyPolicy <- function(x, y, epsilon){
+  
+  # Get an epsilon-greedy action for state (x,y) from q_table.
+  #
+  # Args:
+  #   x, y: state coordinates.
+  #   epsilon: probability of acting randomly.
+  # 
+  # Returns:
+  #   An action, i.e. integer in {1,2,3,4}.
+  
+  foo <- sample(0:1,size = 1,prob = c(epsilon,1-epsilon))
+  return (ifelse(foo == 1,GreedyPolicy(x,y),sample(1:4,size = 1)))
+  
+}
+
+transition_model <- function(x, y, action, beta){
+  
+  # Computes the new state after given action is taken. The agent will follow the action 
+  # with probability (1-beta) and slip to the right or left with probability beta/2 each.
+  # 
+  # Args:
+  #   x, y: state coordinates.
+  #   action: which action the agent takes (in {1,2,3,4}).
+  #   beta: probability of the agent slipping to the side when trying to move.
+  #   H, W (global variables): environment dimensions.
+  # 
+  # Returns:
+  #   The new state after the action has been taken.
+  
+  delta <- sample(-1:1, size = 1, prob = c(0.5*beta,1-beta,0.5*beta))
+  final_action <- ((action + delta + 3) %% 4) + 1
+  foo <- c(x,y) + unlist(action_deltas[final_action])
+  foo <- pmax(c(1,1),pmin(foo,c(H,W)))
+  
+  return (foo)
+}
+
+q_learning <- function(start_state, epsilon = 0.5, alpha = 0.1, gamma = 0.95, 
+                       beta = 0, tr = 1){
+  
+  # Perform one episode of Q-learning. The agent should move around in the 
+  # environment using the given transition model and update the Q-table.
+  # The episode ends when the agent reaches a terminal state.
+  # 
+  # Args:
+  #   start_state: array with two entries, describing the starting position of the agent.
+  #   epsilon (optional): probability of acting greedily.
+  #   alpha (optional): learning rate.
+  #   gamma (optional): discount factor.
+  #   beta (optional): slipping factor.
+  #   reward_map (global variable): a HxW array containing the reward given at each state.
+  #   q_table (global variable): a HxWx4 array containing Q-values for each state-action pair.
+  # 
+  # Returns:
+  #   reward: reward received in the episode.
+  #   correction: sum of the temporal difference correction terms over the episode.
+  #   q_table (global variable): Recall that R passes arguments by value. So, q_table being
+  #   a global variable can be modified with the superassigment operator <<-.
+  
+  cur_pos <- start_state
+  episode_correction <- 0
+  
+  repeat{
+    # Follow policy, execute action, get reward.
+    action <- EpsilonGreedyPolicy(cur_pos[1], cur_pos[2], epsilon*tr)
+    new_pos <- transition_model(cur_pos[1], cur_pos[2], action, beta)
+    reward <- reward_map[new_pos[1], new_pos[2]]
+    
+    # Q-table update.
+    old_q <- q_table[cur_pos[1], cur_pos[2], action]
+    correction <- ifelse(reward==0, -1, reward) + gamma*max(q_table[new_pos[1], new_pos[2], ]) - old_q
+    q_table[cur_pos[1], cur_pos[2], action] <<- old_q + alpha*correction*tr
+    
+    cur_pos <- new_pos
+    episode_correction <- episode_correction + correction*tr
+    
+    if(reward!=0)
+      # End episode.
+      return (c(reward,episode_correction))
+  }
+  
+}
+
+SARSA <- function(start_state, epsilon = 0.5, alpha = 0.1, gamma = 0.95, 
+                       beta = 0, tr = 1){
+  cur_pos <- start_state
+  episode_correction <- 0
+  cur_action = EpsilonGreedyPolicy(cur_pos[1], cur_pos[2], epsilon*tr)
+  repeat{
+    # Follow policy, execute action, get reward.
+    new_pos <- transition_model(cur_pos[1], cur_pos[2], cur_action, beta)
+    reward <- reward_map[new_pos[1], new_pos[2]]
+    new_action <- EpsilonGreedyPolicy(new_pos[1], new_pos[2], epsilon*tr)
+    
+    # Q-table update.
+    old_q <- q_table[cur_pos[1], cur_pos[2], cur_action]
+    new_q = q_table[new_pos[1], new_pos[2], new_action]
+    correction <- ifelse(reward==0, -1, reward) + gamma*new_q - old_q
+    q_table[cur_pos[1], cur_pos[2], cur_action] <<- old_q + alpha*correction*tr
+    
+    cur_pos <- new_pos
+    cur_action = new_action
+    episode_correction <- episode_correction + correction*tr
+    
+    if(reward!=0)
+      # End episode.
+      return (c(reward,episode_correction))
+  }
+  
+}
+
+MovingAverage <- function(x, n) {
+  cx <- c(0, cumsum(x))
+  rsum <- (cx[(n + 1):length(cx)] - cx[1:(length(cx) - n)]) / n
+  return (rsum)
+}
+
+set.seed(1234)
+H <- 3
+W <- 6
+reward_map <- matrix(0, nrow = H, ncol = W)
+reward_map[1,2:5] <- -10
+reward_map[1,6] <- 10
+```
+
+```{r}
+rewards = c()
+q_table <- array(0, dim = c(H, W, 4))
+for (i in 1:5000) {
+  foo <- q_learning(
+    gamma = 1,
+    epsilon = 0.5,
+    beta = 0,
+    start_state = c(1, 1)
+  )
+  rewards = c(rewards, foo[1])
+}
+
+vis_environment(5000)
+plot(MovingAverage(rewards, 100), type = "l")
+
+rewards = c()
+q_table <- array(0, dim = c(H, W, 4))
+for (i in 1:5000) {
+  foo <- SARSA(
+    gamma = 1,
+    epsilon = 0.5,
+    beta = 0,
+    start_state = c(1, 1)
+  )
+  rewards = c(rewards, foo[1])
+}
+
+vis_environment(5000)
+plot(MovingAverage(rewards, 100), type = "l")
+
+```
+Q: Which algorithm performs best and why ?
+A: Q-learning will sometimes go into -10 due to epsilon. SARSA performs better as it has learnt that the subsequent action will sometimes be changed due to epsilon - causing it to go along the top of the grid.
+
+```{r}
+rewards = c()
+q_table <- array(0, dim = c(H, W, 4))
+for (i in 1:5000) {
+  foo <- q_learning(
+    gamma = 1,
+    epsilon = 0.5,
+    beta = 0,
+    start_state = c(1, 1)
+  )
+}
+
+for (i in 1:5000) {
+  foo <- q_learning(
+    gamma = 1,
+    epsilon = 0.5,
+    beta = 0,
+    start_state = c(1, 1),
+    tr = 0
+  )
+  rewards = c(rewards, foo[1])
+}
+
+vis_environment(5000)
+plot(MovingAverage(rewards, 100), type = "l")
+
+q_table <- array(0, dim = c(H, W, 4))
+for (i in 1:5000) {
+  foo <- SARSA(gamma = 1, epsilon = 0.5, beta = 0, start_state = c(1, 1))
+}
+
+rewards = c()
+for (i in 1:5000) {
+  foo <- SARSA(gamma = 1,epsilon = 0.5,beta = 0,start_state = c(1, 1),tr = 0)
+  rewards = c(rewards, foo[1])
+}
+
+vis_environment(5000)
+plot(MovingAverage(rewards, 100), type = "l")
+```
+Q: Which algorithm performs best in the test phase and why
+A: Q-learning because its trained to act greedily without epsilon, which is the case now.
+
+### 3
+```{r}
+rm(list = ls())
+
+## Lab code:
+# Covariance function
+SquaredExpKernel <- function(x1, x2, sigmaF = 1, l = 3) {
+  n1 <- length(x1)
+  n2 <- length(x2)
+  k <- matrix(NA, n1, n2)
+  for (i in 1:n2) {
+    k[, i] <- sigmaF ** 2 * exp(-0.5 * ((x1 - x2[i]) / l) ** 2)
+  }
+  return(k)
+}
+posteriorGP = function(x, y, XStar, sigmaNoise, k, ...) {
+  K = k(x, x, ...)
+  L = t(chol(K + diag(sigmaNoise ** 2, length(x))))
+  alpha = solve(t(L), solve(L, y))
+  kStar = k(x, XStar, ...)
+  predictive_mean = t(kStar) %*% alpha
+  v = solve(L, kStar)
+  predictive_variance = k(XStar, XStar, ...) - t(v) %*% v
+  return(list(mean = predictive_mean, variance = predictive_variance))
+}
+sigmaF = 1
+l = 0.3
+x = c(-1.0, -0.6, -0.2, 0.4, 0.8)
+y = c(0.768, -0.044, -0.940, 0.719, -0.664)
+sigmaNoise = 0
+XStar = seq(-1, 1, 0.01)
+posterior_f = posteriorGP(x, y, XStar, sigmaNoise, k = SquaredExpKernel, sigmaF, l)
+plot(XStar,
+     posterior_f$mean,
+     type = "l",
+     ylim = c(-2.1, 2.1))
+points(x, y)
+
+## Exam code:
+lines(XStar, posterior_f$variance[which(XStar == 0),], col = "green")
+abline(h=0)
+abline(v=-1)
+abline(v=-0.6)
+abline(v=-0.2)
+abline(v=0.4)
+abline(v=0.8)
+```
+
+```{r}
+library(kernlab)
+rm(list = ls())
+data = read.csv(
+"https://github.com/STIMALiU/AdvMLCourse/raw/master/GaussianProcess/Code/TempTullinge.csv",
+header=TRUE, sep=";")
+data$time = 1:nrow(data)
+data$day = ((data$time - 1) %% 365) + 1
+data = data[seq(1, nrow(data), by=5), ]
+
+SquareExponential <- function(sigmaf, ell)
+{
+  rval <- function(x, y = NULL) {
+    n1 <- length(x)
+    n2 <- length(y)
+    k <- matrix(NA, n1, n2)
+    for (i in 1:n2) {
+      k[, i] <- sigmaf ** 2 * exp(-0.5 * ((x - y[i]) / ell) ** 2)
+    }
+    return(k)
+  }
+  class(rval) <- "kernel"
+  return(rval)
+}
+
+posteriorGP <- function(X,y,k,sigmaNoise){
+  n <- length(y)
+  L <- t(chol(k(X,X)+((sigmaNoise^2)*diag(n))))
+  a <- solve(t(L),solve(L,y))
+  logmar <- -0.5*(t(y)%*%a)-sum(log(diag(L)))-(n/2)*log(2*pi)
+  return(logmar)
+}
+
+temp = data$temp
+time = data$time
+
+foo<-optim(par = 0.1, fn = posteriorGP, X=scale(time),y=scale(temp), k=SquareExponential(sigmaf = 20, ell = 100), method="L-BFGS-B", control=list(fnscale=-1))
+
+foo$value
+foo$par
+```
