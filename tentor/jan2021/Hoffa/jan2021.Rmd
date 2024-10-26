@@ -1,0 +1,14 @@
+## 1. Graphical models
+
+```{r}
+library(bnlearn)
+data("lizards")
+
+dag = model2network("[Species][Diameter|Species][Height|Species]")
+graphviz.plot(dag, shape = "ellipse")
+
+ci.test("Height", "Diameter", "Species", test = "mi", data = lizards)
+ci.test("Height", "Diameter", "Species", test = "x2", data = lizards)
+
+
+```
