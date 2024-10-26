@@ -321,5 +321,119 @@ for(i in c(0.1, 0.25, 0.5)){
   mreward <- c(mreward,mean(reward))
 }
 }
+```
+
+## Gaussian processes
+
+```{r}
+library(kernlab)
+
+# Squared Exponential Kernel Function
+SquaredExpKernel <- function(x1,x2,sigmaF=1,ell=3){
+  n1 <- length(x1)
+  n2 <- length(x2)
+  K <- matrix(NA,n1,n2)
+  for (i in 1:n2){
+    K[,i] <- sigmaF^2*exp(-0.5*( (x1-x2[i])/ell)^2 )
+  }
+  return(K)
+}
+
+# Posterior GP Function
+posteriorGP <- function(X, y, XStar, sigmaNoise, k, ...) {
+  n = length(X)
+  K <- k(X, X, ...)  # Compute the covariance matrix
+  kStar <- k(X, XStar, ...) # Compute covariance
+  
+  # Step 2 in algo
+  #--------------------
+  K_y <- K + sigmaNoise^2 * diag(length(X)) # Add noise variance to diagonal
+  L <- t(chol(K_y))   # Compute Cholesky decomposition, to get lower triangular L we take t()
+  alpha <- solve(t(L), solve(L, y))   # Solve for alpha
+  #---------------------
+  
+  # Step 4 in algo
+  #--------------------
+  fStar_mean <- t(kStar) %*% alpha   # Compute posterior mean
+  v <- solve(L, kStar)   # Compute v = solve(L, kStar)
+  #-------------------
+  
+  # Step 6 in algo
+  #-------------------
+  V_fStar <- k(XStar, XStar, ...) - t(v) %*% v # pred variance (cov matrix)
+  #-------------------
+  
+log_marg_likelihood = -(1/2)*t(y)%*%alpha - sum(log(diag(L))) - (n/2)*log(2*pi)
+  
+  return(list(mean = fStar_mean, variance = V_fStar, log_likelihood = log_marg_likelihood))
+}
+
 
 ```
+
+```{r}
+# Plotting Function
+plotGP <- function(XStar, res, X_train, y_train, title) {
+  
+  # Extract posterior mean and variance
+  pos_mean <- res$mean
+  pos_var <- diag(res$variance)
+
+  # Compute 95% confidence intervals
+  lower_bound <- pos_mean - 1.96 * sqrt(pos_var)
+  upper_bound <- pos_mean + 1.96 * sqrt(pos_var)
+  
+  # Plot the posterior mean and 95% probability bands
+  plot(XStar, pos_mean, type = "l", lwd = 2,
+    ylim = range(c(lower_bound, upper_bound, y_train)),
+    ylab = "f(x)", xlab = "x", main = title)
+  
+  # Add the confidence intervals
+  lines(XStar, lower_bound, lty = 2)
+  lines(XStar, upper_bound, lty = 2)
+  # Plot the training data points
+  points(X_train, y_train, pch = 19, col = "red")
+}
+```
+
+```{r}
+# Hyperparameters
+sigmaF <- 1        # sigma_f
+ell <- c(0.3,1)       # length-scale l
+sigmaNoise <- c(0.1,1)  # sigma_n
+
+# Test inputs over the interval [-1, 1]
+XStar <- seq(-1, 1, length.out = 100)
+X <- c(-1.0, -0.6, -0.2, 0.4, 0.8)
+y <- c(0.768, -0.044, -0.940, 0.719, -0.664)
+
+# SigmaNoise = 0.1, ell = 0.3
+res <- posteriorGP(X, y, XStar, sigmaNoise[1], k = SquaredExpKernel, sigmaF = sigmaF, ell = ell[1])
+plotGP(XStar, res, X, y, "SigmaNoise = 0.1, ell = 0.3")
+
+# SigmaNoise = 1, ell = 0.3
+res <- posteriorGP(X, y, XStar, sigmaNoise[2], k = SquaredExpKernel, sigmaF = sigmaF, ell = ell[1])
+plotGP(XStar, res, X, y, "SigmaNoise = 1, ell = 0.3")
+
+# SigmaNoise = 0.1, ell = 1
+res <- posteriorGP(X, y, XStar, sigmaNoise[1], k = SquaredExpKernel, sigmaF = sigmaF, ell = ell[2])
+plotGP(XStar, res, X, y, "SigmaNoise = 0.1, ell = 1")
+
+# SigmaNoise = 1, ell = 1
+res <- posteriorGP(X, y, XStar, sigmaNoise[2], k = SquaredExpKernel, sigmaF = sigmaF, ell = ell[2])
+plotGP(XStar, res, X, y, "SigmaNoise = 1, ell = 1")
+```
+
+ell=1 is too smooth, and sigmaNoise=1 implies that the points are not trustworthy as
+
+function values. So, the GP does not really try to go through them and the probability
+
+bands are wide. Setting sigmaNoise=.1 reduces the probability bands drastically, as the
+
+points are now trustworthy. However, the GP is still too smooth to fit the data well.
+
+ell=0.3 is quite flexible and, thus, the GP goes through the points with sigmaNoise=0.1.
+
+However, with sigmaNoise=1, the GP does not see any reason to go through the points, since
+
+they are very noisy versions of the function values. Hence the probability bands are wide too.
