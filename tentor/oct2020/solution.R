@@ -336,6 +336,7 @@ abline(v=0.4)
 abline(v=0.8)
 abline(v=0)
 
+
 foo <- SEKernel(xGrid,0)
 plot(xGrid,foo)
 
