@@ -9,89 +9,96 @@ dag = model2network("[C][D|C][A|C][Y|A:C]")
 graphviz.plot(dag)
 
 nondecreasing = function(p1, p2, p3, p4){
-  return(p1>=p2 && p3 >=p4)
+  return(p1>=p2 & p3 >=p4)
 }
 
 nonincreasing = function(p1, p2, p3, p4){
-  return(p1<=p2 && p3 <=p4)
+  return(p1<=p2 & p3 <=p4)
   }
 
 isMonotone = function(p1, p2, p3, p4){
-  return(nondecreasing(p1, p2, p3, p4) || nonincreasing(p1, p2, p3, p4))
+  return(nondecreasing(p1, p2, p3, p4) | nonincreasing(p1, p2, p3, p4))
 }
 
 C_monotone = c()
 D_monotone = c()
 for (i in 1:1000) {
-  p = runif(1) #P(C = 2)
+  p = runif(1) #P(C = 1)
   cptC = matrix(c(1 - p, p), nrow = 1, ncol = 2)
   dim(cptC) = 2
-  dimnames(cptC) = list(c("C1", "C2"))
+  dimnames(cptC) = list(c("C0", "C1"))
   
-  p_c1 = runif(1) #P(D=2|C=1)
-  p_c2 = runif(1) #P(D=2|C=2)
-  cptD = matrix(c(1 - p_c1, p_c1, 1 - p_c2, p_c2), nrow = 2, ncol = 2)
+  p_c0 = runif(1) #P(D=1|C=0)
+  p_c1 = runif(1) #P(D=1|C=1)
+  cptD = matrix(c(1 - p_c0, p_c0, 1 - p_c1, p_c1), nrow = 2, ncol = 2)
   dim(cptD) = c(2, 2)
-  dimnames(cptD) = list("D" = c("D1", "D2"), "C" = c("C1", "C2"))
+  dimnames(cptD) = list("D" = c("D0", "D1"), "C" = c("C0", "C1"))
   
-  p_c1 = runif(1) #P(A=2|C=1)
-  p_c2 = runif(1) #P(A=2|C=2)
-  cptA = matrix(c(1 - p_c1, p_c1, 1 - p_c2, p_c2), nrow = 2, ncol = 2)
+  p_c0 = runif(1) #P(A=1|C=0)
+  p_c1 = runif(1) #P(A=1|C=1)
+  cptA = matrix(c(1 - p_c0, p_c0, 1 - p_c1, p_c1), nrow = 2, ncol = 2)
   dim(cptA) = c(2, 2)
-  dimnames(cptA) = list("A" = c("A1", "A2"), "C" = c("C1", "C2"))
+  dimnames(cptA) = list("A" = c("A0", "A1"), "C" = c("C0", "C1"))
   
-  p_a1_c1 = runif(1) #P(Y=2|A=1, C=1)
-  p_a2_c1 = runif(1) #P(Y=2|A=2, C=1)
-  p_a1_c2 = runif(1) #P(Y=2|A=1, C=2)
-  p_a2_c2 = runif(1) #P(Y=2|A=2, C=2)
+  p_a0_c0 = runif(1) #P(Y=1|A=0, C=0)
+  p_a1_c0 = runif(1) #P(Y=1|A=1, C=0)
+  p_a0_c1 = runif(1) #P(Y=1|A=0, C=1)
+  p_a1_c1 = runif(1) #P(Y=1|A=1, C=1)
   cptY = matrix(
     c(
+      1 - p_a0_c0,
+      p_a0_c0,
+      1 - p_a1_c0,
+      p_a1_c0,
+      1 - p_a0_c1,
+      p_a0_c1,
       1 - p_a1_c1,
-      p_a1_c1,
-      1 - p_a2_c1,
-      p_a2_c1,
-      1 - p_a1_c2,
-      p_a1_c2,
-      1 - p_a2_c2,
-      p_a2_c2
+      p_a1_c1
     ),
     nrow = 2,
     ncol = 4
   )
   dim(cptY) = c(2, 2, 2)
   dimnames(cptY) = list(
-    "Y" = c("Y1", "Y2"),
-    "A" = c("A1", "A2"),
-    "C" = c("C1", "C2")
+    "Y" = c("Y0", "Y1"),
+    "A" = c("A0", "A1"),
+    "C" = c("C0", "C1")
   )
+  
   
   fit = custom.fit(dag, list(C = cptC, D = cptD, A = cptA, Y = cptY))
   comfit = compile(as.grain(fit))
-  
+
   ## Monotone in C
-  # P(Y = 2|A = 2, C = 2)
-  p1 = querygrain(setEvidence(comfit, c("A", "C"), c("2", "2")), "Y")$Y[2]
-  # P(Y = 2|A = 2, C = 1)
-  p2 = querygrain(setEvidence(comfit, c("A", "C"), c("2", "1")), "Y")$Y[2]
-  # P(Y = 2|A = 1, C = 2)
-  p3 = querygrain(setEvidence(comfit, c("A", "C"), c("1", "2")), "Y")$Y[2]
-  # P(Y = 2|A = 1, C = 1)
-  p4 = querygrain(setEvidence(comfit, c("A", "C"), c("1", "1")), "Y")$Y[2]
+  # P(Y = 1|A = 1, C = 1)
+  p1 = querygrain(setEvidence(comfit, nodes = c("A", "C"), states = c("A1", "C1")), nodes = c("Y"))$Y[2]
+  # P(Y = 1|A = 1, C = 0)
+  p2 = querygrain(setEvidence(comfit, nodes = c("A", "C"), states = c("A1", "C0")), nodes = c("Y"))$Y[2]
+  # P(Y = 1|A = 0, C = 1)
+  p3 = querygrain(setEvidence(comfit, nodes = c("A", "C"), states = c("A0", "C1")), nodes = c("Y"))$Y[2]
+  # P(Y = 1|A = 0, C = 0)
+  p4 = querygrain(setEvidence(comfit, nodes = c("A", "C"), states = c("A0", "C0")), nodes = c("Y"))$Y[2]
   C_monotone = c(C_monotone, isMonotone(p1, p2, p3, p4))
 
   ## Monotone in D
-  # P(Y = 2|A = 2, D = 2)
-  p1 = querygrain(setEvidence(comfit, c("A", "D"), c("2", "2")), "Y")$Y[2]
-  # P(Y = 2|A = 2, D = 1)
-  p2 = querygrain(setEvidence(comfit, c("A", "D"), c("2", "1")), "Y")$Y[2]
-  # P(Y = 2|A = 1, D = 2)
-  p3 = querygrain(setEvidence(comfit, c("A", "D"), c("1", "2")), "Y")$Y[2]
-  # P(Y = 2|A = 1, D = 1)
-  p4 = querygrain(setEvidence(comfit, c("A", "D"), c("1", "1")), "Y")$Y[2]
-  D_monotone = c(D_monotone, isMonotone(p1, p2, p3, p4))
+  # P(Y = 1|A = 1, D = 1)
+  p1_D = querygrain(setEvidence(comfit, nodes = c("A", "D"), states = c("A1", "D1")), nodes = c("Y"))$Y[2]
+  # P(Y = 1|A = 1, D = 0)
+  p2_D = querygrain(setEvidence(comfit, nodes = c("A", "D"), states = c("A1", "D0")), nodes = c("Y"))$Y[2]
+  # P(Y = 1|A = 0, D = 1)
+  p3_D = querygrain(setEvidence(comfit, nodes = c("A", "D"), states = c("A0", "D1")), nodes = c("Y"))$Y[2]
+  # P(Y = 1|A = 0, D = 0)
+  p4_D = querygrain(setEvidence(comfit, nodes = c("A", "D"), states = c("A0", "D0")), nodes = c("Y"))$Y[2]
+  D_monotone = c(D_monotone, isMonotone(p1_D, p2_D, p3_D, p4_D))
 }
 
-mean(D_monotone)
+monotone = cbind(C_monotone,D_monotone)
+
+# i) Monotone in C but not in D
+sum(monotone[, 1] == TRUE & monotone[, 2] == FALSE)
+
+# ii) Monotone in D but not in C
+sum(monotone[,1] == FALSE & monotone[,2] == TRUE)
 ```
 
 ### 2

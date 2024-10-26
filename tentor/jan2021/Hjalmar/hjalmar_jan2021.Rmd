@@ -1,3 +1,8 @@
+### 1
+```{r}
+
+```
+
 ### 2
 
 ```{r}
@@ -139,19 +144,19 @@ vis_environment <- function(iterations=0, epsilon = 0.5, alpha = 0.1, gamma = 0.
   #   H, W (global variables): environment dimensions.
   
   df <- expand.grid(x=1:H,y=1:W)
-  foo <- mapply(function(x,y) ifelse(reward_map[x,y] == -1,q_table[x,y,1],NA),df$x,df$y)
+  foo <- mapply(function(x,y) ifelse(reward_map[x,y] == 0,q_table[x,y,1],NA),df$x,df$y)
   df$val1 <- as.vector(round(foo, 2))
-  foo <- mapply(function(x,y) ifelse(reward_map[x,y] == -1,q_table[x,y,2],NA),df$x,df$y)
+  foo <- mapply(function(x,y) ifelse(reward_map[x,y] == 0,q_table[x,y,2],NA),df$x,df$y)
   df$val2 <- as.vector(round(foo, 2))
-  foo <- mapply(function(x,y) ifelse(reward_map[x,y] == -1,q_table[x,y,3],NA),df$x,df$y)
+  foo <- mapply(function(x,y) ifelse(reward_map[x,y] == 0,q_table[x,y,3],NA),df$x,df$y)
   df$val3 <- as.vector(round(foo, 2))
-  foo <- mapply(function(x,y) ifelse(reward_map[x,y] == -1,q_table[x,y,4],NA),df$x,df$y)
+  foo <- mapply(function(x,y) ifelse(reward_map[x,y] == 0,q_table[x,y,4],NA),df$x,df$y)
   df$val4 <- as.vector(round(foo, 2))
   foo <- mapply(function(x,y) 
-    ifelse(reward_map[x,y] == -1,arrows[GreedyPolicy(x,y)],reward_map[x,y]),df$x,df$y)
+    ifelse(reward_map[x,y] == 0,arrows[GreedyPolicy(x,y)],reward_map[x,y]),df$x,df$y)
   df$val5 <- as.vector(foo)
-  foo <- mapply(function(x,y) ifelse(reward_map[x,y] == -1,max(q_table[x,y,]),
-                                     ifelse(reward_map[x,y]<-1,NA,reward_map[x,y])),df$x,df$y)
+  foo <- mapply(function(x,y) ifelse(reward_map[x,y] == 0,max(q_table[x,y,]),
+                                     ifelse(reward_map[x,y]<0,NA,reward_map[x,y])),df$x,df$y)
   df$val6 <- as.vector(foo)
   
   print(ggplot(df,aes(x = y,y = x)) +
@@ -271,6 +276,48 @@ q_learning <- function(start_state, epsilon = 0.5, alpha = 0.1, gamma = 0.95,
   
 }
 
+#SARSARSA
+SARSA2 <- function(start_state, epsilon = 0.5, alpha = 0.1, gamma = 0.95, 
+                       beta = 0, tr = 1){
+
+  cur_pos <- start_state
+  cur_action <- EpsilonGreedyPolicy(cur_pos[1], cur_pos[2], epsilon*tr)
+  
+  new_pos <- transition_model(cur_pos[1], cur_pos[2], cur_action, beta)
+  new_action <- EpsilonGreedyPolicy(new_pos[1], new_pos[2], epsilon*tr)
+  reward <- reward_map[new_pos[1], new_pos[2]]
+
+  episode_correction <- 0
+  
+  repeat{
+    # Follow policy, execute action, get reward.
+    new2_pos <- transition_model(new_pos[1], new_pos[2], new_action, beta)
+    new2_action <- EpsilonGreedyPolicy(new2_pos[1], new2_pos[2], epsilon*tr)
+    new_reward <- reward_map[new2_pos[1], new2_pos[2]]
+    
+    # Q-table update.
+    old_q <- q_table[cur_pos[1], cur_pos[2], cur_action]
+    correction <- ifelse(reward==0, -1, reward) + gamma*new_reward + gamma**2*q_table[new2_pos[1], new2_pos[2], new2_action] - old_q
+    
+    q_table[cur_pos[1], cur_pos[2], cur_action] <<- old_q + alpha*correction*tr
+    
+    if(reward!=0)
+      # End episode.
+      return (c(reward,episode_correction))
+    
+    cur_pos <- new_pos
+    cur_action <- new_action
+    new_pos <- new2_pos
+    new_action <- new2_action
+    reward <- new_reward
+    
+    episode_correction <- episode_correction + correction*tr
+    
+  }
+  
+}
+
+
 ```
 
 ```{r}
@@ -278,24 +325,23 @@ q_learning <- function(start_state, epsilon = 0.5, alpha = 0.1, gamma = 0.95,
 set.seed(1234)
 H <- 3
 W <- 6
-reward_map <- matrix(-1, nrow = H, ncol = W)
+reward_map <- matrix(0, nrow = H, ncol = W)
 reward_map[1, 2:5] <- -10
 reward_map[1, 6] <- 10
 q_table <- array(0, dim = c(H, W, 4))
-vis_environment()
 
 
-for (j in c(0, 0.2, 0.4, 0.66)) {
-  q_table <- array(0, dim = c(H, W, 4))
-  for (i in 1:10000)
-    foo <- q_learning(gamma = 0.6,
-                      beta = j,
-                      start_state = c(1, 1))
-  vis_environment(i, gamma = 0.6, beta = j)
+q_table <- array(0, dim = c(H, W, 4))
+for (i in 1:5000) {
+  foo <- SARSA2(epsilon = 0.5,
+                gamma = 1,
+                beta = 0,
+                alpha = 0.1,
+                start_state = c(1, 1))
 }
-```
-
-### 4
-```{r}
-
+vis_environment(iterations = 5000, 
+                epsilon = 0.5,
+                gamma = 1,
+                beta = 0,
+                alpha = 0.1)
 ```
