@@ -88,7 +88,6 @@ for (i in 1:1000) {
     monotoneC = FALSE
   }
   
-  
       monotoneD = FALSE
    if(Y1_A1D1 >= Y1_A1D0 && Y1_A0D1 >= Y1_A0D0){
      monotoneD = TRUE
