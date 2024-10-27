@@ -369,64 +369,6 @@ q_learning <- function(start_state, epsilon = 0.5, alpha = 0.1, gamma = 0.95,
 
 ```{r fig.height = 7}
 
-# Environment B from lab
-
-H <- 7
-W <- 8
-
-reward_map <- matrix(0, nrow = H, ncol = W)
-reward_map[1,] <- -1
-reward_map[7,] <- -1
-reward_map[4,5] <- 5
-reward_map[4,8] <- 10
-
-q_table <- array(0,dim = c(H,W,4))
-
-vis_environment()
-
-MovingAverage <- function(x, n){
-  
-  cx <- c(0,cumsum(x))
-  rsum <- (cx[(n+1):length(cx)] - cx[1:(length(cx) - n)]) / n
-  
-  return (rsum)
-}
-
-for(j in c(0.5,0.75,0.95)){
-  q_table <- array(0,dim = c(H,W,4))
-  reward <- NULL
-  correction <- NULL
-  
-  for(i in 1:30000){
-    foo <- q_learning(gamma = j, start_state = c(4,1))
-    reward <- c(reward,foo[1])
-    correction <- c(correction,foo[2])
-  }
-  
-  vis_environment(i, gamma = j)
-  plot(MovingAverage(reward,100),type = "l")
-  plot(MovingAverage(correction,100),type = "l")
-}
-
-for(j in c(0.5,0.75,0.95)){
-  q_table <- array(0,dim = c(H,W,4))
-  reward <- NULL
-  correction <- NULL
-  
-  for(i in 1:30000){
-    foo <- q_learning(epsilon = 0.1, gamma = j, start_state = c(4,1))
-    reward <- c(reward,foo[1])
-    correction <- c(correction,foo[2])
-  }
-  
-  vis_environment(i, epsilon = 0.1, gamma = j)
-  plot(MovingAverage(reward,100),type = "l")
-  plot(MovingAverage(correction,100),type = "l")
-}
-```
-
-```{r fig.height = 7}
-
 #####################################################################################################
 # Q-Learning Environments
 #####################################################################################################
@@ -469,7 +411,6 @@ X<-seq(0,10,.1)
 Yfun<-function(x){
   return (x*(sin(x)+sin(3*x))+rnorm(length(x),0,2))
   }
-plot(X,Yfun(X),xlim=c(0,10),ylim=c(-15,15))
 
 #nested Square Exponetial Kernel
 nestedSEK <- function(sigmaF=1,l=3) {
@@ -488,26 +429,94 @@ nestedSEK <- function(sigmaF=1,l=3) {
 
 sigmaNoise <- 2
 
-#Chosing an ell
-ell <- 0.01
-
+### Chosing any ell and sigmaF after visual inspection
 #setting hyperparameters in kernel function
-SEK <- nestedSEK(sigmaF = 0.5, l = ell)
+SEK <- nestedSEK(sigmaF = 1.5, l = 0.5)
 
 modelGP <- gausspr(X, Yfun(X), scaled = FALSE,kernel = SEK, var = sigmaNoise^2, variance.model = TRUE)
 
 
 posteriorMean <- predict(modelGP, X)
-sd <- predict(modelGP, X, type="sdeviation")
+variance <- predict(modelGP, X, type="sdeviation")
 
-upper <- posteriorMean + 1.96 * sd
-lower <- posteriorMean - 1.96 * sd
+upperY <- posteriorMean + 1.96 * (variance + sigmaN^2)^(1/2)
+lowerY <- posteriorMean - 1.96 * (variance + sigmaN^2)^(1/2)
+
+upper <- posteriorMean + 1.96 * variance^(1/2)
+lower <- posteriorMean - 1.96 * variance^(1/2)
 
 plot(x= X, y = Yfun(X),
-     xlab = "time", ylab = "temp", main = "Temperature predictions", lwd = 1.5)
+     xlab = "time", ylab = "temp", main = "sigmaF= 2, ell = 0.5", lwd = 1.5)
 lines(x=X, y = posteriorMean, col = "red", lwd = 3)
 lines(X, upper, col = "blue", lwd = 1)
 lines(X, lower, col = "blue", lwd = 1)
-legend("bottomright", legend=c("Data", "Predictions", "Confidence Interval"), 
-       pch=c(1, NA, NA), lty=c(NA, 1, 1), lwd=c(NA, 2, 2), col=c("black", "red", "blue"))
+lines(X, upperY, col = "blue", lwd = .5)
+lines(X, lowerY, col = "blue", lwd = .5)
+#legend("bottomright", legend=c("Data", "Predictions", "Confidence Interval"), 
+#        pch=c(1, NA, NA), lty=c(NA, 1, 1), lwd=c(NA, 2, 2), col=c("black", "red", "blue"))
+```
+
+## 4.2
+
+```{r}
+posteriorGP <- function(X, y, XStar, sigmaNoise, k, ...){
+  n <- length(X)
+  K <- k(X, X, ...)
+  kStar <- k(X,XStar, ...)
+  
+  #Cholesky 
+  L <- t(chol(K + sigmaNoise^2*diag(n)))
+
+  #alpha
+  alpha <- solve(t(L),solve(L,y))
+  
+  #Posterior mean = fStar
+  kStar <- k(X, XStar, ...)
+  fStar <- t(kStar)%*%alpha
+
+  #Posterior variance
+  v <- solve(L,kStar)
+  variance <- k(XStar, XStar, ...) - t(v)%*%v
+  
+  #Marginal log-likelihood log p(y|X)
+  log_marg_likelihood <- -0.5*(t(y)%*%alpha)-sum(log(diag(L)))-(n/2)*log(2*pi)
+  
+  return(list(mean =fStar, variance =variance, mll = log_marg_likelihood))
+}
+```
+
+```{r}
+X<-seq(0,10,2)
+Yfun<-function(x){
+  return (x*(sin(x)+sin(3*x))+rnorm(length(x),0,.2))
+}
+plot(X,Yfun(X),xlim=c(0,10),ylim=c(-15,15))
+points(9, Yfun(9))
+
+SEK <- nestedSEK(sigmaF = 1.5, l = 0.5)
+
+Xgrid <- seq(0,10,0.1)
+
+for (i in 1:4){
+  posterior <- posteriorGP(X, Yfun(X), Xgrid, sigmaNoise = 0.2, SEK)
+
+  # mean and posterior
+  posteriorMean <- posterior$mean
+  variance <- diag(posterior$variance)
+  
+  upper <- posteriorMean + 1.96 * variance^(1/2)
+  lower <- posteriorMean - 1.96 * variance^(1/2)
+  
+  plot(x= X, y = Yfun(X),
+       xlab = "time", ylab = "temp", main = "Temperature predictions sigmaF= 2, ell = 0.5", lwd = 1.5, ylim = c(-15, 15))
+  lines(Xgrid, y = posteriorMean, col = "red", lwd = 3)
+  lines(Xgrid, upper, col = "blue", lwd = 1)
+  lines(Xgrid, lower, col = "blue", lwd = 1)
+  
+  upper <- posteriorMean + 1.96 * variance^(1/2)
+  lower <- posteriorMean - 1.96 * variance^(1/2)
+  
+  foo <- Xgrid[which.max(upper-lower)]
+  X <- c(X, foo)
+}
 ```
