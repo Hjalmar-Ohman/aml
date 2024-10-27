@@ -77,24 +77,45 @@ dimnames(cptZ0) = list(states)
 
 cptZ1 = transitionProb
 dim(cptZ1) = c(10,10)
-dimnames(cptZ1) = list("Z1" = states, "Z0" = states)
-cptZ1
+dimnames(cptZ1) = list("z1" = states, "z0" = states)
+
 
 cptZ2 = transitionProb
 dim(cptZ2) = c(10,10)
-dimnames(cptZ2) = list("Z2" = states, "Z1" = states)
-cptZ2
+dimnames(cptZ2) = list("z2" = states, "z1" = states)
 
 cptZ3 = transitionProb
 dim(cptZ3) = c(10,10)
-dimnames(cptZ3) = list("Z3" = states, "Z2" = states)
-cptZ3
+dimnames(cptZ3) = list("z3" = states, "z2" = states)
+#############################
 
 ###### observed states ######
-cptX0 = 
+cptX0 = emissionProb
+dim(cptX0) = c(10,10)
+dimnames(cptX0) = list("x0" = symbols, "z0" = states)
+
+cptX1 = emissionProb
+dim(cptX1) = c(10,10)
+dimnames(cptX1) = list("x1" = symbols, "z1" = states)
+
+cptX2 = emissionProb
+dim(cptX2) = c(10,10)
+dimnames(cptX2) = list("x2" = symbols, "z2" = states)
+
+cptX3 = emissionProb
+dim(cptX3) = c(10,10)
+dimnames(cptX3) = list("x3" = symbols, "z3" = states)
+#############################
+
+nodes = c("z0", "z1", "z2", "z3", "x0", "x1", "x2", "x3")
+hmmfit = custom.fit(hmm, list(z0=cptZ0, z1=cptZ1, z2=cptZ2, z3=cptZ3, x0=cptX0, x1=cptX1, x2=cptX2, x3=cptX3))
+compiledgrain = compile(as.grain(hmmfit))
 
 
-
+querygrain(setEvidence(compiledgrain,nodes = c("x0", "x2"), states = c("1","3")), nodes = "z0")$z0
+querygrain(setEvidence(compiledgrain,nodes = c("x0", "x2"), states = c("1","3")), nodes = "z1")$z1
+querygrain(setEvidence(compiledgrain,nodes = c("x0", "x2"), states = c("1","3")), nodes = "z2")$z2
+querygrain(setEvidence(compiledgrain,nodes = c("x0", "x2"), states = c("1","3")), nodes = "z3")$z3
 
 ```
 
