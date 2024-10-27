@@ -46,6 +46,8 @@ for (i in 1:1000) {
   dim(cptY) = c(2,2,2)
   cptY = prop.table(cptY, 2:3) # normalize
   dimnames(cptY) = list("Y" = c("1", "0"), "C" = c("1", "0"), "A" = c("1", "0"))
+  cptY
+  
   
   customfit = custom.fit(temp_dag, list(A = cptA, D = cptD, C = cptC, Y = cptY))
   grain_fit = as.grain(customfit)
@@ -82,14 +84,18 @@ for (i in 1:1000) {
   # p(y|a, d) is non-increasing
   nonincD = (pos_pad11 <= pos_pad10 & pos_pad01 <= pos_pad00)
 
-  if((nondecC == 1 | nonincC == 1) & (nondecD == 0 & nonincD == 0)) {
+  if((nondecC == TRUE | nonincC == TRUE)){
+    if((nondecD == FALSE & nonincD == FALSE)) {
     resC = resC + 1
-  }
+  }}
   
-  if((nondecD == 1 | nonincD == 1) & (nondecC == 0 & nonincC == 0)) {
+  if((nondecD == TRUE | nonincD == TRUE) & (nondecC == FALSE & nonincC == FALSE)) {
     resD = resD + 1
   }
-  
+  if (i %% 50 == 0) {  # Print every 100th iteration
+    print("Monotonicity flags:")
+    print(nondecC[1])
+  }
   results[i,] = c(nondecC, nonincC, nondecD, nonincD)
 }
 
