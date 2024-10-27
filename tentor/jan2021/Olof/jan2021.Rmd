@@ -268,54 +268,104 @@ SARSA <- function(start_state, epsilon = 0.5, alpha = 0.1, gamma = 0.95, beta = 
 }
 
 
+# SARSASA <- function(start_state, epsilon = 0.5, alpha = 0.1, gamma = 0.95, beta = 0){
+#   s = start_state
+#   episode_correction = 0
+#   ite = 0
+#   repeat{
+#     # S A R S A
+#     # Follow policy, execute action, get reward.
+#     a = EpsilonGreedyPolicy(s[1],s[2],epsilon) # find best action a
+#     sP = transition_model(s[1],s[2],a,beta) # get next state s'
+#     r = reward_map[sP[1],sP[2]] # get reward r
+#     aP = EpsilonGreedyPolicy(sP[1],sP[2],epsilon)   # find action a'
+# 
+#     if (r!=0) { # Break
+#       correction = ifelse(r==0,-1,r) - q_table[s[1],s[2],a]
+#       q_table[s[1],s[2],a] <<- q_table[s[1],s[2],a] + alpha * (correction)
+#       break
+#     } else { # Do next action, reward
+#       sPP = transition_model(sP[1],sP[2],aP,beta)     # get state s''
+#       rP = reward_map[sPP[1],sPP[2]]                  # get reward r'
+#       if (rP!=0) { # Break
+#         correction = ifelse(r==0,-1,r) + gamma * (q_table[sP[1],sP[2],aP]) - q_table[s[1], s[2], a]
+#         q_table[s[1], s[2], a] <<- q_table[s[1], s[2], a] + alpha * correction
+#       } else { # Do next action, reward
+#         aPP = EpsilonGreedyPolicy(sPP[1],sPP[2],epsilon)  # find action a''
+#         # Update Q table
+#         correction = ifelse(r==0,-1,r) + gamma*ifelse(rP==0,-1,rP) + (gamma**2) * (q_table[sPP[1],sPP[2],aPP])-q_table[s[1],s[2],a]
+#         q_table[s[1],s[2],a] <<- q_table[s[1],s[2],a] + alpha * (correction)
+#       }
+#     }
+# 
+#     s[1] = sP[1]
+#     s[2] = sP[2]
+# 
+#     if(r!=0) {
+#       # End episode.
+#       return (c(r - ite, 0))
+#     }
+#     if(rP!=0)
+#       return (c(rP-ite,0))
+#     else {
+#       ite = ite + 1
+#     }
+#   }
+# 
+# }
 
 SARSASA <- function(start_state, epsilon = 0.5, alpha = 0.1, gamma = 0.95, beta = 0){
-  Q = start_state
-  x = Q[1]
-  y = Q[2]
-  episode_correction = 0
+  # Initialize first state-action pair
+  s = start_state
+  a = EpsilonGreedyPolicy(s[1], s[2], epsilon)
   ite = 0
-  #next_action = EpsilonGreedyPolicy(x,y,epsilon) # follow policy
+
+  # Get next state, reward, and action
+  sP = transition_model(s[1], s[2], a, beta)
+  r = reward_map[sP[1], sP[2]]
+  aP = EpsilonGreedyPolicy(sP[1], sP[2], epsilon)
+
   repeat{
-
-    # S A R S A
-    # Follow policy, execute action, get reward.
-    action = EpsilonGreedyPolicy(x,y,epsilon)
-    next_state = transition_model(x,y,action,beta) # excecute action
-    reward = reward_map[next_state[1],next_state[2]] # get reward
-    next_action = EpsilonGreedyPolicy(next_state[1],next_state[2],epsilon) # follow policy
-    
-    # S A
-    if (reward!=0) {
-      next_next_state = transition_model(next_state[1],next_state[2],next_action,beta) # excecute action
-      next_reward = reward_map[next_next_state[1],next_next_state[2]] # get reward
-      next_next_action = EpsilonGreedyPolicy(next_next_state[1],next_next_state[2],epsilon)
-    
-      correction = ifelse(next_reward==0,-1,next_reward) + gamma * (q_table[next_next_state[1],next_next_state[2], next_next_action])-q_table[next_state[1],next_state[2],next_action]
-      q_table[x,y,action] <<- q_table[x,y,action] + alpha * (correction)
-      episode_correction = episode_correction + correction      
-    } 
-
-    # Q-table update.
-    correction = ifelse(reward==0,-1,reward) + gamma * (q_table[next_state[1],next_state[2],next_action])-q_table[x,y,action]
-    q_table[x,y,action] <<- q_table[x,y,action] + alpha * (correction)
-    episode_correction = episode_correction + correction
-
-    x = next_state[1]
-    y = next_state[2]
-
-    if(reward!=0) {
-      # End episode.
-      return (c(reward - ite, episode_correction))
+    if(r != 0){
+      # Terminal state - update current state-action only
+      old_q = q_table[s[1], s[2], a]
+      q_table[s[1], s[2], a] <<- old_q + alpha*(r - old_q)
+      return(c(r - ite, 0))
     }
-    else {
-      ite = ite + 1
+    else{
+      # Get next state-action pair and reward
+      sPP = transition_model(sP[1], sP[2], aP, beta)
+      rP = reward_map[sPP[1], sPP[2]]
+      aPP = EpsilonGreedyPolicy(sPP[1], sPP[2], epsilon)
+
+      if(rP != 0){
+        # Next state is terminal - update both current and next state Q-values
+        old_q = q_table[s[1], s[2], a]
+        q_table[s[1], s[2], a] <<- old_q + alpha*(ifelse(r==0,-1,r) + gamma*rP - old_q)
+
+        old_q = q_table[sP[1], sP[2], aP]
+        q_table[sP[1], sP[2], aP] <<- old_q + alpha*(rP - old_q)
+        return(c(rP - ite - 1, 0))
+      }
+      else{
+        # Update Q-value and move to next state
+        old_q = q_table[s[1], s[2], a]
+        q_table[s[1], s[2], a] <<- old_q +
+          alpha*(ifelse(r==0,-1,r) + gamma*ifelse(rP==0,-1,rP) + gamma*gamma*q_table[sPP[1], sPP[2], aPP] - old_q)
+
+        # Move to next state
+        s = sP
+        a = aP
+        sP = sPP
+        r = rP
+        aP = aPP
+        ite = ite + 1
+      }
     }
   }
-
 }
 
-SARSA2 <- function(start_state, epsilon = 0.5, alpha = 0.1, gamma = 0.95, beta = 0){
+SARSA2 <- function(start_state, epsilon = 0.5, alpha = 0.1, gamma = 0.95, beta = 0){ # JOSES code just to check
   
   cur_pos <- start_state
   cur_action <- EpsilonGreedyPolicy(cur_pos[1], cur_pos[2], epsilon)
@@ -399,14 +449,18 @@ vis_environment(i, epsilon = 0.5, gamma = 1, beta = 0, alpha = 0.1)
 
 ### SARSASA ###
 q_table <- array(0,dim = c(H,W,4))
+set.seed(123)
 rewardSA = NULL
 for(i in 1:5000) {
   foo <- SARSASA(epsilon = 0.5, gamma = 1, beta = 0, alpha = 0.1, start_state = c(1,1))
   rewardSA = c(rewardSA,foo[1])
 }
+vis_environment(i, epsilon = 0.5, gamma = 1, beta = 0, alpha = 0.1)
+
 
 ### SARSASAJ ###
 q_table <- array(0,dim = c(H,W,4))
+set.seed(123)
 for(i in 1:5000) {
   foo <- SARSA2(epsilon = 0.5, gamma = 1, beta = 0, alpha = 0.1, start_state = c(1,1))
 }
