@@ -1,0 +1,100 @@
+---
+title: "jan2021"
+output:
+  pdf_document: default
+  html_document: default
+date: "2024-10-27"
+---
+
+# 1. Graphical Models (6 p) - Using the IC Algorithn
+
+## Overview of the IC Algorithm
+
+#### The IC algorithm consists of three main steps:
+
+1.  *Skeleton Discovery*: Construct an undirected graph that represents dependencies between variables.
+2.  *Edge Orientation with V-Structures*: Identify causal directions by finding V-structures (patterns where A--\> B \<-- C with no edge between A and C).
+3.  *Propagation of Orientation*: Further orient edges using rules to avoid cycles and preserve conditional independencies.
+
+```{r}
+library(bnlearn)
+
+data("lizards")
+
+lizardsnet<-model2network("[Species][Diameter|Species][Height|Species]") # True DAG
+plot(lizardsnet)
+plot(cpdag(lizardsnet)) # Plot the true pattern
+
+# Independence if p-value is > 0.05
+
+# Skeleton discovery
+ci.test(x = "Diameter", y = "Species", data = lizards)  # Keep edge D-S. (Not independent given empty set)
+ci.test(x = "Diameter", y = "Height", data = lizards)   # Remove edge D-H. (Independent given empty set)
+ci.test(x = "Height", y = "Species", data = lizards)    # Keep edge H-S. (Not independent given empty set)
+
+# The skeleton now looks like this:
+currmod = model2network("[Species][Diameter|Species][Height|Species]")
+plot(cpdag(currmod))
+
+# Edge Orientation with V-Structures
+# Investigate non adjacent vairables
+ci.test(x = "Diameter", y = "Height", z = "Species", data = lizards) # D and H are independent given S
+
+# Since this test showed that D and H are conditionally independent, 
+# we choose S as an unsheilded collider: D --> S <-- H
+
+
+plot(model2network("[Diameter][Height][Species|Diameter:Height]"))
+```
+
+# 2. Hidden Markov Models (7 p)
+
+```{r}
+library(bnlearn)
+library(gRain)
+hmm <- model2network("[z0][x0|z0][z1|z0][x1|z1][z2|z1][x2|z2][z3|z2][x3|z3]") # True DAG
+
+states = c("1","2","3","4","5","6","7","8","9","10")
+symbols = c("1","2","3","4","5","6","7","8","9","10")
+
+transitionProb = matrix(0,nrow = 10, ncol = 10)
+for (j in 1:10) {
+  transitionProb[j,j] = 0.5
+  transitionProb[j,j%%10 +1 ] = 0.5
+}
+
+emissionProb = matrix(0,nrow = 10, ncol = 10)
+for (j in 1:10) {
+  for (i in 1:5) {
+    emissionProb[(j+i-4)%%10+1,j] = 0.2
+  }
+}
+
+###### Hidden states ######
+cptZ0 = rep(0.1,10)
+dim(cptZ0) = c(10)
+dimnames(cptZ0) = list(states)
+
+cptZ1 = transitionProb
+dim(cptZ1) = c(10,10)
+dimnames(cptZ1) = list("Z1" = states, "Z0" = states)
+cptZ1
+
+cptZ2 = transitionProb
+dim(cptZ2) = c(10,10)
+dimnames(cptZ2) = list("Z2" = states, "Z1" = states)
+cptZ2
+
+cptZ3 = transitionProb
+dim(cptZ3) = c(10,10)
+dimnames(cptZ3) = list("Z3" = states, "Z2" = states)
+cptZ3
+
+###### observed states ######
+cptX0 = 
+
+
+
+
+```
+
