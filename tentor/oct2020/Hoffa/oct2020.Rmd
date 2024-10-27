@@ -77,21 +77,31 @@ for (i in 1:1000) {
   Y1_A0D0 <- querygrain(setEvidence(object = model, nodes = c("A", "D"), states = c("A0", "D0")),nodes = "Y")$Y[1]
  
   if(Y1_A1C1 >= Y1_A1C0 && Y1_A0C1 >= Y1_A0C0){
-    if(Y1_A1C1 <= Y1_A1C0 && Y1_A0C1 <= Y1_A0C0){
-      monotoneC = TRUE
-    }
+     monotoneC = TRUE
     } else {
     monotoneC = FALSE
   }
  
+  if(Y1_A1C1 <= Y1_A1C0 && Y1_A0C1 <= Y1_A0C0){
+      monotoneC = TRUE
+  }else {
+    monotoneC = FALSE
+  }
+  
+  
       monotoneD = FALSE
    if(Y1_A1D1 >= Y1_A1D0 && Y1_A0D1 >= Y1_A0D0){
-    if(Y1_A1D1 <= Y1_A1D0 && Y1_A0D1 <= Y1_A0D0){
-      monotoneD = TRUE
-    }
+     monotoneD = TRUE
+  
     } else {
     monotoneD = FALSE
-  }
+    }
+      
+        if(Y1_A1D1 <= Y1_A1D0 && Y1_A0D1 <= Y1_A0D0){
+      monotoneD = TRUE
+        }else {
+    monotoneD = FALSE
+    }
  
  
   if(monotoneC && !monotoneD){
@@ -388,5 +398,67 @@ A: Because it is constrain by the fact that it has to be zero at the training po
 
 foo <- SquaredExpKernel(XStar,0)
 plot(XStar,foo)
+```
+
+```{r}
+# Preparing the data
+data = read.csv("https://github.com/STIMALiU/AdvMLCourse/raw/master/GaussianProcess/Code/TempTullinge.csv", header=TRUE, sep=";")
+
+time = seq(1,2190, 5)
+day = seq(1,365, 5)
+data_sampled = data[time,]
+temps = data_sampled$temp
+temps = scale(temps)
+time = scale(time)
+```
+
+```{r}
+# Squared Exponential Kernel Function class
+SEKernel = function(ell, sigmaF) {
+  calc_K = function (X, XStar) {
+    K = matrix(NA, length(X), length(XStar))
+    for (i in 1:length(X)) {
+      K[, i] = sigmaF ^ 2 * exp(-0.5 * ((X - XStar[i]) / ell) ^ 2)
+    }
+    return(K)
+  }
+  class(calc_K) = 'kernel' # Return as class kernel
+  return (calc_K)
+}
+
+```
+
+```{r}
+# new plot function
+GP_plot_new = function(time_mean_pred, upper, lower, title){
+plot(time, temps, pch = 1, cex = 0.5, col = "red", main = title)
+lines(time, time_mean_pred, lwd = 2)
+lines(time, upper,lty = 2)
+lines(time, lower ,lty = 2)
+}
+```
+
+```{r}
+lm = c()
+sig = c()
+for (i in seq(0.1, 10, 0.1)) {
+  res = posteriorGP(time, temps, time, sigmaNoise = i, k = SEKernel(ell = 0.2, sigmaF = 20))
+  lm = c(lm, res$log_likelihood)
+  sig = c(sig, i)
+}
+
+ plot(sig, lm)
+ which.max(lm)
+ sig[4]
+```
+
+```{r}
+res = posteriorGP(time, temps, time, sigmaNoise = 0.4, k = SEKernel(ell = 0.2, sigmaF = 20))
+ upper = res$mean + 1.96 * sqrt(diag(res$variance))
+  lower = res$mean - 1.96 * sqrt(diag(res$variance))
+  
+#Plot 
+GP_plot_new(res$mean, upper, lower, "GP model with posteriorGP")
+
 ```
 

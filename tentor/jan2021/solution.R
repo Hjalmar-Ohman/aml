@@ -272,7 +272,6 @@ SARSA <- function(start_state, epsilon = 0.5, alpha = 0.1, gamma = 0.95, beta = 
       }
     }
   }
-  
 }
 
 H <- 3
