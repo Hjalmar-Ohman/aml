@@ -48,9 +48,7 @@ for(i in 1:trials){
 }
 
 colSums(results[which(results[,1]==FALSE & results[,2]==FALSE),])
-colSums(results[which(results[,1]==FALSE & results[,2]==TRUE),])
-colSums(results[which(results[,1]==TRUE & results[,2]==FALSE),])
-
+colSums(results[which(results[,3]==FALSE & results[,4]==FALSE),])
 ##############################################################################
 # Question 2: RL.
 

@@ -1,0 +1,131 @@
+## Probabalistic models 
+
+the algorithm returns the markov blanket of Z. The markov blanket is the smallest set of nodes that makes Z conditionally interdependent of all other nodes in the graph. This means that given the markov blanket Z has no dependencies outside of the set. 
+
+set out to empty set
+
+loop while Out doesn't change
+  If there is a node Y such that Y is not Z and is not in out and Y is conditionally dependent on Z given out, add Y to Out.
+  
+loop2
+  if there is a Y in out such that Y is conditionally independent of Z given Out except Y
+  remove Y from Out
+  
+
+## Hidden Markov models
+
+```{r}
+
+
+
+library(HMM)
+
+states <- c("FD", "LD")
+symbols <- c("1", "2", "3", "4", "5", "6")
+
+start_probs <- rep(1/2, 2) 
+trans_probs = matrix(c(.5, .5,
+                        .5, .5
+  
+), nrow=length(states), ncol=length(states), byrow = TRUE)
+colnames(trans_probs) = states
+rownames(trans_probs) = states
+
+TP = 1/6 
+FP = 1/2
+L = 1/10
+emission_probs <- matrix(c(TP,TP,TP,TP,TP,TP,
+                           L,L,L,L,L,FP
+), nrow=length(states), ncol=length(symbols), byrow = TRUE)
+
+colnames(emission_probs) = symbols
+rownames(emission_probs) = states
+
+
+# Initialize the Hidden Markov Model
+hmm_model <- initHMM(
+  States = states,           # vector of states
+  Symbols = symbols,         # vector of observation symbols
+  startProbs = start_probs,  # Initial state probabilities
+  transProbs = trans_probs,  # Transition probabilities matrix
+  emissionProbs = emission_probs  # Emission probabilities matrix
+)
+
+set.seed(12345)
+sim = simHMM(hmm_model, length = 10000)
+
+countLD = 0
+countFD = 0
+for (i in 1:10000) {
+  if(sim$observation[i] == 6 && sim$states[i] == "LD"){
+    countLD = countLD +1
+  }else if(sim$observation[i] == 6 && sim$states[i] == "FD")
+    countFD = countFD+1
+}
+
+countLD
+countFD
+
+```
+Seems reasonable since loaded die get 6 more often
+
+```{r}
+
+
+library(HMM)
+
+states <- c("FD1", "FD2", "FD3", "LD1", "LD2", "LD3")
+symbols <- c("1", "2", "3", "4", "5", "6")
+
+start_probs <- rep(1/6, 6) 
+trans_probs = matrix(c(.5,.5,0,0,0,0,
+                       0,.5,.5,0,0,0,
+                       0,0,.5,.5,0,0,
+                       0,0,0,.5,.5,0,
+                       0,0,0,0,.5,.5,
+                       .5,0,0,0,0,.5
+), nrow=length(states), ncol=length(states), byrow = TRUE)
+colnames(trans_probs) = states
+rownames(trans_probs) = states
+
+TP = 1/6 
+FP = 1/2
+LN = 1/10
+emission_probs <- matrix(c(TP,TP,TP,TP,TP,TP,
+                           TP,TP,TP,TP,TP,TP,
+                           TP,TP,TP,TP,TP,TP,
+                           LN,LN,LN,LN,LN,FP,
+                           LN,LN,LN,LN,LN,FP,
+                           LN,LN,LN,LN,LN,FP
+), nrow=length(states), ncol=length(symbols), byrow = TRUE)
+
+colnames(emission_probs) = symbols
+rownames(emission_probs) = states
+
+
+# Initialize the Hidden Markov Model
+hmm_model <- initHMM(
+  States = states,           # vector of states
+  Symbols = symbols,         # vector of observation symbols
+  startProbs = start_probs,  # Initial state probabilities
+  transProbs = trans_probs,  # Transition probabilities matrix
+  emissionProbs = emission_probs  # Emission probabilities matrix
+)
+
+set.seed(12345)
+sim = simHMM(hmm_model, length = 10000)
+
+countLD = 0
+countFD = 0
+for (i in 1:10000) {
+  if(sim$observation[i] == 6 && (sim$states[i] == "LD1" || sim$states[i] == "LD2" || sim$states[i] == "LD3")){
+    countLD = countLD +1
+  }else if(sim$observation[i] == 6 && (sim$states[i] == "FD1" || sim$states[i] == "FD2" || sim$states[i] == "FD3"))
+    countFD = countFD+1
+}
+
+countLD
+countFD
+
+```
+

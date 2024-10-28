@@ -1,0 +1,103 @@
+
+## FB algo
+
+```{r}
+
+states = c("R", "S")
+observations = c("inside", "outside")
+
+trans_probs = matrix(c(.6,.4,
+                       .3,.7
+                       ),nrow=2, byrow=TRUE)
+
+colnames(trans_probs) = states
+rownames(trans_probs) = states
+
+emission_probs = matrix(c(.8,.2,
+                          .3,.7
+                          ),nrow=2, byrow=TRUE)
+  
+colnames(emission_probs) = observations
+rownames(emission_probs) = states
+
+initial_prob = c(.6, .4)
+
+hmm_model <- initHMM(
+  States = states,           # vector of states
+  Symbols = observations,         # vector of observation symbols
+  startProbs = initial_prob,  # Initial state probabilities
+  transProbs = trans_probs,  # Transition probabilities matrix
+  emissionProbs = emission_probs  # Emission probabilities matrix
+)
+
+set.seed(12345)
+simHMM(hmm_model, length = 10)
+
+
+
+```
+
+```{r}
+
+# FB
+
+obs_seq = c("inside", "outside", "inside")
+
+# Number of states and observations
+num_states <- length(states)
+num_obs <- length(obs_seq)
+
+# Initialize alpha and beta matrices
+alpha <- matrix(0, nrow = num_states, ncol = num_obs)
+beta <- matrix(0, nrow = num_states, ncol = num_obs)
+
+
+# Initialization
+alpha[,1] <- initial_prob * emission_probs[, obs_seq[1]]
+beta[,3] = 1
+
+#forward
+for (t in 2:3) {
+  #states
+  for (i in 1:2) {
+    alpha[i,t] = sum(alpha[,t-1]*trans_probs[,i]*emission_probs[i, obs_seq[t]])
+  }
+}
+
+# Normalize to prevent underflow (optional but recommended)
+alpha <- alpha / rowSums(alpha)
+
+#Backward
+for (t in 2:1) {
+  #states
+  for (i in 1:2) {
+    beta[i,t] = sum(beta[,t+1]*trans_probs[i,]*emission_probs[, obs_seq[t+1]])
+  }
+}
+
+# Normalize to prevent underflow (optional but recommended)
+beta <- beta / rowSums(beta)
+
+# smooth
+s = (alpha * beta)/rowSums(alpha * beta)
+
+most_probable_states <- apply(s, 2, function(col) states[which.max(col)])
+
+
+
+# True hidden states (for testing accuracy)
+true_states <- c("Sunny", "Rainy", "Rainy", "Sunny", "Sunny", "Rainy")
+
+# Compute accuracy for filtered estimates (using alpha)
+filtered_states <- apply(alpha, 2, function(col) states[which.max(col)])
+filtered_accuracy <- sum(filtered_states == true_states) / num_obs
+
+# Compute accuracy for smoothed estimates (using gamma)
+smoothed_accuracy <- sum(most_probable_states == true_states) / num_obs
+
+cat("Filtered Accuracy:", filtered_accuracy, "\n")
+cat("Smoothed Accuracy:", smoothed_accuracy, "\n")
+
+
+```
+

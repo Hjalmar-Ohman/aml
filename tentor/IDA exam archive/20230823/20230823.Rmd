@@ -20,6 +20,7 @@ net <- model2network("[H1][H2|H1][T1|H1][H3|H2][T2|H2][T3|H3]")
 graphviz.plot(net)
 
 ```
+
 ```{r}
 
 cptH1 = c(0.5, 0.5)
@@ -30,7 +31,7 @@ cptH2 = matrix(c(.9,.1,
                  .2,.8))
 dim(cptH2) = c(2,2)
 dimnames(cptH2) = list("H2" = c("H","S"), "H1"= c("H","S"))
-
+cptH2
 cptH3 = matrix(c(.9,.1,
                  .2,.8))
 dim(cptH3) = c(2,2)
@@ -70,4 +71,350 @@ querygrain(setEvidence(netcom,nodes=c("T2","T3"),states=c("N", "N")),"H3")
 
 ```
 
+## 2. Hidden markov models
+
+Modeling trans probs
+
+|     | SS  | SR  | RR  | RS  |
+|-----|-----|-----|-----|-----|
+| SS  | .75 | .25 | 0   | 0   |
+| SR  | 0   | 0   | .5  | .5  |
+| RR  | 0   | 0   | .75 | .25 |
+| RS  | .5  | .5  | 0   | 0   |
+
+```{r}
+
+library(HMM)
+
+states <- c("SS", "SR", "RR", "RS")
+symbols <- c("S", "R")
+
+start_probs <- c(.5, .5) 
+
+trans_probs = matrix(c(.75,.25,0,0,
+                       0,0,.5,.5,
+                       0,0,.75,.25,
+                       .5,.5,0,0
+                       ), nrow=length(states), ncol=length(states), byrow = TRUE)
+
+colnames(trans_probs) = states
+rownames(trans_probs) = states
+
+emission_probs <- matrix(c(.9,.1,
+                           .1,.9,
+                           .1,.9,
+                           .9,.1
+                           ), nrow=length(states), ncol=length(symbols), byrow = TRUE)
+
+hmm_model <- initHMM(
+  States = states,           # vector of states
+  Symbols = symbols,         # vector of observation symbols
+  startProbs = start_probs,  # Initial state probabilities
+  transProbs = trans_probs,  # Transition probabilities matrix
+  emissionProbs = emission_probs  # Emission probabilities matrix
+)
+
+
+```
+
+```{r}
+set.seed(12345)
+simHMM(hmm_model, length = 10)
+```
+
+## 3. Reinforcement learning
+
+
+```{r}
+
+set.seed(1234)
+library(ggplot2)
+
+arrows <- c("^", ">", "v", "<")
+action_deltas <- list(c(1,0), # up
+                      c(0,1), # right
+                      c(-1,0), # down
+                      c(0,-1)) # left
+
+vis_environment <- function(iterations=0, epsilon = 0.5, alpha = 0.1, gamma = 0.95, beta = 0){
+
+  df <- expand.grid(x=1:H,y=1:W)
+  foo <- mapply(function(x,y) ifelse(reward_map[x,y] == 0,q_table[x,y,1],NA),df$x,df$y)
+  df$val1 <- as.vector(round(foo, 2))
+  foo <- mapply(function(x,y) ifelse(reward_map[x,y] == 0,q_table[x,y,2],NA),df$x,df$y)
+  df$val2 <- as.vector(round(foo, 2))
+  foo <- mapply(function(x,y) ifelse(reward_map[x,y] == 0,q_table[x,y,3],NA),df$x,df$y)
+  df$val3 <- as.vector(round(foo, 2))
+  foo <- mapply(function(x,y) ifelse(reward_map[x,y] == 0,q_table[x,y,4],NA),df$x,df$y)
+  df$val4 <- as.vector(round(foo, 2))
+  foo <- mapply(function(x,y) 
+    ifelse(reward_map[x,y] == 0,arrows[GreedyPolicy(x,y)],reward_map[x,y]),df$x,df$y)
+  df$val5 <- as.vector(foo)
+  foo <- mapply(function(x,y) ifelse(reward_map[x,y] == 0,max(q_table[x,y,]),
+                                     ifelse(reward_map[x,y]<0,NA,reward_map[x,y])),df$x,df$y)
+  df$val6 <- as.vector(foo)
+  
+  print(ggplot(df,aes(x = y,y = x)) +
+          scale_fill_gradient(low = "white", high = "green", na.value = "red", name = "") +
+          geom_tile(aes(fill=val6)) +
+          geom_text(aes(label = val1),size = 4,nudge_y = .35,na.rm = TRUE) +
+          geom_text(aes(label = val2),size = 4,nudge_x = .35,na.rm = TRUE) +
+          geom_text(aes(label = val3),size = 4,nudge_y = -.35,na.rm = TRUE) +
+          geom_text(aes(label = val4),size = 4,nudge_x = -.35,na.rm = TRUE) +
+          geom_text(aes(label = val5),size = 10) +
+          geom_tile(fill = 'transparent', colour = 'black') + 
+          ggtitle(paste("Q-table after ",iterations," iterations\n",
+                        "(epsilon = ",epsilon,", alpha = ",alpha,"gamma = ",gamma,", beta = ",beta,")")) +
+          theme(plot.title = element_text(hjust = 0.5)) +
+          scale_x_continuous(breaks = c(1:W),labels = c(1:W)) +
+          scale_y_continuous(breaks = c(1:H),labels = c(1:H)))
+}
+
+GreedyPolicy <- function(x, y){
+  # Get the Q-values for all actions at state (x, y)
+  q_values <- q_table[x, y, ]
+  
+  # Find the max Q-value
+  max_q <- max(q_values)
+  
+  # Identify all actions with maximum Q-value
+  max_actions <- which(q_values == max_q)
+  
+  # Check and resolve ties
+  if (length(max_actions) > 1) {
+    action <- sample(max_actions, 1)
+  } else {
+    action <- max_actions
+  }
+  return(action)
+}
+
+EpsilonGreedyPolicy <- function(x, y, epsilon){
+  # Generate a random numb
+  rand_num <- runif(1)
+  if (rand_num < epsilon){
+   #select a random action
+    action <- sample(1:4, 1)
+  } else {
+  # use the greedy policy
+    action <- GreedyPolicy(x, y)
+  }
+  return(action)
+}
+
+transition_model <- function(x, y, action, beta){
+  delta <- sample(-1:1, size = 1, prob = c(0.5*beta,1-beta,0.5*beta))
+  final_action <- ((action + delta + 3) %% 4) + 1
+  foo <- c(x,y) + unlist(action_deltas[final_action])
+  foo <- pmax(c(1,1),pmin(foo,c(H,W)))
+  return (foo)
+}
+
+q_learning <- function(start_state, epsilon = 0.5, alpha = 0.1, gamma = 0.95, beta = 0, train = 1){
+  x <- start_state[1]
+  y <- start_state[2]
+  episode_reward <- 0
+  episode_correction <- 0
+  
+  repeat{
+    # Choose an action A with epsilon-greedy policy
+    action <- EpsilonGreedyPolicy(x, y, epsilon*train)
+    
+    # Observe next state S' & reward R after taking action A
+    next_state <- transition_model(x, y, action, beta)
+    x_new <- next_state[1]
+    y_new <- next_state[2]
+    R <- reward_map[x_new, y_new]
+    
+    # Get current Q-value Q(S, A)
+    Q_SA <- q_table[x, y, action]
+    max_QSAprime <- max(q_table[x_new, y_new, ])
+    TD_correction <- R + gamma * max_QSAprime - Q_SA
+    episode_correction <- episode_correction + TD_correction
+    q_table[x, y, action] <<- Q_SA + alpha * TD_correction*train
+    episode_reward <- episode_reward + R
+    
+    # Next state
+    x <- x_new
+    y <- y_new
+    
+    # Check if the episode has ended (terminal state)
+    if (R != 0){
+      return (c(episode_reward, episode_correction))
+    }
+  }
+}
+
+
+```
+
+```{r}
+H <- 7
+W <- 8
+
+reward_map <- matrix(0, nrow = H, ncol = W)
+reward_map[1,] <- -1
+reward_map[7,] <- -1
+reward_map[4,5] <- 5
+reward_map[4,8] <- 10
+
+q_table <- array(0,dim = c(H,W,4))
+
+vis_environment()
+
+MovingAverage <- function(x, n){
+  
+  cx <- c(0,cumsum(x))
+  rsum <- (cx[(n+1):length(cx)] - cx[1:(length(cx) - n)]) / n
+  
+  return (rsum)
+}
+# epsilon loop
+for (i in c(0.1, 0.25, 0.5)) {
+  # gamma loop
+for(j in c(0.5,0.75,0.95)){
+  q_table <- array(0,dim = c(H,W,4))
+  
+  #training
+  for(k in 1:30000){
+    foo <- q_learning(epsilon = i, gamma = j, start_state = c(4,1), train = 1)
+  }
+  
+  reward <- NULL
+  # validation
+  for(k in 1:1000){
+    foo <- q_learning(epsilon = 0, gamma = j, start_state = c(4,1), train = 1)
+      reward <- c(reward,foo[1])
+  }
+  vis_environment(k, epsilon = i, gamma = j)
+  plot(MovingAverage(reward,100),type = "l")
+}
+}
+
+
+```
+
+## 4. Gaussian processes
+
+```{r}
+
+# Matern32  kernel
+k <- function(sigmaf = 1, ell = 1)  
+{   
+	rval <- function(x, y = NULL) 
+	{	r = sqrt(crossprod(x-y))
+		 return(sigmaf*(1+sqrt(3)*r/ell)*exp(-sqrt(3)*r/ell))   
+	}   
+	class(rval) <- "kernel"   
+	return(rval) 
+} 
+
+```
+
+```{r}
+
+
+```
+
+
+
+```{r}
+
+#(1)
+sigmaF1 = 1
+sigmaF2 = 2
+ell = 0.5
+ell2 = 1
+zGrid = seq(0,4,by=0.01)
+
+m1 = kernelMatrix(k(sigmaF1,ell), 0, zGrid) 
+m2 = kernelMatrix(k(sigmaF1,ell2), 0, zGrid) 
+m4 = kernelMatrix(k(sigmaF2,ell), 0, zGrid) 
+
+plot(zGrid, m1, ylim = c(0,3), type ="l")
+lines(zGrid, m2, col ="blue")
+
+
+lines(zGrid, m4, col = "green")
+
+```
+
+```{r}
+
+# Preparing the data
+data = read.csv("https://github.com/STIMALiU/AdvMLCourse/raw/master/GaussianProcess/Code/TempTullinge.csv", header=TRUE, sep=";")
+
+time = seq(1,2190, 5)
+day = seq(1,365, 5)
+#days = rep(day, 6)
+data_sampled = data[time,]
+temps = data_sampled$temp
+
+
+```
+
+```{r}
+
+# 2)
+
+library(kernlab)
+
+
+# Squared Exponential Kernel Function
+SEKernel = function(ell, sigmaF) {
+  calc_K = function (X, XStar) {
+    K = matrix(NA, length(X), length(XStar))
+    for (i in 1:length(X)) {
+      K[, i] = sigmaF ^ 2 * exp(-0.5 * ((X - XStar[i]) / ell) ^ 2)
+    }
+    return(K)
+  }
+  class(calc_K) = 'kernel' # Return as class kernel
+  return (calc_K)
+}
+
+
+# Posterior GP Function
+posteriorGP <- function(X, y, XStar, sigmaNoise, k, ...) {
+  n = length(X)
+  K <- k(X, X, ...)  # Compute the covariance matrix
+  kStar <- k(X, XStar, ...) # Compute covariance
+  K_y <- K + sigmaNoise^2 * diag(length(X)) 
+  L <- t(chol(K_y))  
+  alpha <- solve(t(L), solve(L, y))   # Solve for alpha
+  fStar_mean <- t(kStar) %*% alpha   # Compute posterior mean
+  v <- solve(L, kStar)   # Compute v = solve(L, kStar)
+  V_fStar <- k(XStar, XStar, ...) - t(v) %*% v 
+log_marg_likelihood = -(1/2)*t(y)%*%alpha - sum(log(diag(L))) - (n/2)*log(2*pi)
+  return(list(mean = fStar_mean, variance = V_fStar, log_likelihood = log_marg_likelihood))
+}
+
+
+quad_model = lm(temps~time + I(time^2), data = data_sampled)
+
+sigmaNoise = sqrt(var(quad_model$residuals))
+lm = c()
+sigmas = c()
+ells = c()
+for (ell in seq(0.1, 2, length.out = 10)) {
+  for (sigmaF in seq(1,100, length.out = 10)) {
+  res = posteriorGP(time, temps, time, sigmaNoise, k = SEKernel(ell = ell, sigmaF = sigmaF))
+  lm = c(lm, res$log_likelihood)
+  sigmas = c(sigmas, sigmaF)
+  ells = c(ells, ell)
+}
+}
+
+which.max(lm)
+lm[91]
+length(lm)
+sigmas[91]
+ells[91]
+res$log_likelihood
+```
+
+The best hyperparameters to choose are sigmaF = 1 and ell=2 as it yields the highest log marginal likelihood
+
+
+(3) It makes sense because maximizing the log marginal likelihood is equivalent to minimizing the residuals between datapoints and the GP, in other words fitting the data as well as possible
 

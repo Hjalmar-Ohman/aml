@@ -76,32 +76,19 @@ for (i in 1:1000) {
   Y1_A0D1 <- querygrain(setEvidence(object = model, nodes = c("A", "D"), states = c("A0", "D1")),nodes = "Y")$Y[1]
   Y1_A0D0 <- querygrain(setEvidence(object = model, nodes = c("A", "D"), states = c("A0", "D0")),nodes = "Y")$Y[1]
  
-  if(Y1_A1C1 >= Y1_A1C0 && Y1_A0C1 >= Y1_A0C0){
+  if((Y1_A1C1 >= Y1_A1C0 && Y1_A0C1 >= Y1_A0C0) | (Y1_A1C1 <= Y1_A1C0 && Y1_A0C1 <= Y1_A0C0)){
      monotoneC = TRUE
     } else {
     monotoneC = FALSE
   }
  
-  if(Y1_A1C1 <= Y1_A1C0 && Y1_A0C1 <= Y1_A0C0){
-      monotoneC = TRUE
-  }else {
-    monotoneC = FALSE
-  }
-  
-      monotoneD = FALSE
-   if(Y1_A1D1 >= Y1_A1D0 && Y1_A0D1 >= Y1_A0D0){
+   if((Y1_A1D1 >= Y1_A1D0 && Y1_A0D1 >= Y1_A0D0) | (Y1_A1D1 <= Y1_A1D0 && Y1_A0D1 <= Y1_A0D0)){
      monotoneD = TRUE
   
     } else {
     monotoneD = FALSE
     }
       
-        if(Y1_A1D1 <= Y1_A1D0 && Y1_A0D1 <= Y1_A0D0){
-      monotoneD = TRUE
-        }else {
-    monotoneD = FALSE
-    }
- 
  
   if(monotoneC && !monotoneD){
     countC_ND = countC_ND +1
