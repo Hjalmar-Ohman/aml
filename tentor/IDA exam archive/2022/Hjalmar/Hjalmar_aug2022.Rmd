@@ -1,0 +1,449 @@
+### 1
+
+```{r}
+library(bnlearn)
+library(gRain)
+
+net = model2network("[Ha][Hb|Ha][Hc|Hb][Ta|Ha][Tb|Hb][Tc|Hc]")
+graphviz.plot(net)
+
+
+cptHa = c(0.5, 0.5)
+dim(cptHa) = c(2)
+dimnames(cptHa) = list(c("Ha0", "Ha1"))
+
+cptHb = matrix(c(
+  0.8, 0.2,
+  0.1, 0.9
+),nrow = 2, ncol = 2)
+dim(cptHb) = c(2, 2)
+dimnames(cptHb) = list(Hb = c("Hb0", "Hb1"), Ha = c("Ha0", "Ha1"))
+
+cptHc = matrix(c(
+  0.8, 0.2,
+  0.1, 0.9
+),nrow = 2, ncol = 2)
+dim(cptHc) = c(2, 2)
+dimnames(cptHc) = list(Hc = c("Hc0", "Hc1"), Hb = c("Hb0", "Hb1"))
+
+# 1 if testing positive
+T1 <- matrix(c(0.4, 0.6,
+               0.7, 0.3), nrow = 2, ncol = 2)
+dim(T1) <- c(2,2)
+dimnames(T1) <- list("T1" = c("0", "1"), "H1" = c("0", "1"))
+
+
+cptTa = matrix(c(
+  0.6, 0.4,
+  0.3, 0.7
+),nrow = 2, ncol = 2)
+dim(cptTa) = c(2, 2)
+dimnames(cptTa) = list(Ta = c("TaP", "TaN"), Ha = c("Ha0", "Ha1"))
+
+
+cptTb = matrix(c(
+  0.6, 0.4,
+  0.3, 0.7
+),nrow = 2, ncol = 2)
+dim(cptTb) = c(2, 2)
+dimnames(cptTb) = list(Tb = c("TbP", "TbN"), Hb = c("Hb0", "Hb1"))
+
+cptTc = matrix(c(
+  0.6, 0.4,
+  0.3, 0.7
+),nrow = 2, ncol = 2)
+dim(cptTc) = c(2, 2)
+dimnames(cptTc) = list(Tc = c("TcP", "TcN"), Hc = c("Hc0", "Hc1"))
+
+net = model2network("[Ha][Hb|Ha][Hc|Hb][Ta|Ha][Tb|Hb][Tc|Hc]")
+net = custom.fit(net, list(Ha = cptHa, Hb = cptHb, Hc = cptHc, Ta = cptTa, Tb = cptTb, Tc = cptTc))
+netcom = compile(as.grain(net))
+
+# For a person that is healthy today with probability 0.5, what is the probability that she is healthy in three days ?
+querygrain(netcom, "Hc")$Hc
+
+# What is the probability that she is healthy in three days given that she received a negative test on the second day?
+evidence = setEvidence(netcom, nodes = c("Tb"), states = c("TbN"))
+querygrain(evidence, "Hc")$Hc
+
+# And if she also got a negative test on the third day ?
+evidence = setEvidence(netcom, nodes = c("Tb", "Tc"), states = c("TbN", "TcN"))
+querygrain(evidence, "Hc")$Hc
+```
+
+
+### 2
+```{r}
+set.seed(1)
+library(HMM)
+states = 1:4
+symbols = 1:2
+start_probs = rep(1 / length(states), length(states))
+
+# Define the transition probabilities
+trans_probs = matrix(c(
+  ##  SS  RS  SR  RR
+      0.75,0, 0.25,0,  #SS
+      0.5, 0, 0.5, 0,  #RS
+      0, 0.5, 0, 0.5,  #SR
+      0, 0.25, 0, 0.75 #RR
+), nrow = length(states), ncol = length(states))
+
+
+# Define the emission probabilities
+emission_probs = matrix(c(
+  # S  R
+  0.9, 0.1, # SS
+  0.9, 0.1, # RS
+  0.1, 0.9, # SR
+  0.1, 0.9  # RR
+), nrow = length(states), ncol = length(symbols))
+
+
+hmm_model = initHMM(
+  States = states,
+  Symbols = symbols,
+  startProbs = start_probs,
+  transProbs = trans_probs,
+  emissionProbs = emission_probs
+)
+print(hmm_model)
+```
+
+### 3
+```{r}
+rm(list = ls())
+# By Jose M. Peña and Joel Oskarsson.
+# For teaching purposes.
+# jose.m.pena@liu.se.
+#####################################################################################################
+# Q-learning
+#####################################################################################################
+# install.packages("ggplot2")
+# install.packages("vctrs")
+library(ggplot2)
+set.seed(1234)
+arrows <- c("ˆ", ">", "v", "<")
+action_deltas <- list(c(1, 0), # up
+                      c(0, 1), # right
+                      c(-1, 0), # down
+                      c(0, -1)) # left
+vis_environment <- function(iterations = 0,
+                            epsilon = 0.5,
+                            alpha = 0.1,
+                            gamma = 0.95,
+                            beta = 0) {
+  # Visualize an environment with rewards.
+  # Q-values for all actions are displayed on the edges of each tile.
+  # The (greedy) policy for each state is also displayed.
+  #
+  # Args:
+  # iterations, epsilon, alpha, gamma, beta (optional): for the figure title.
+  # reward_map (global variable): a HxW array containing the reward given at each state.
+  # q_table (global variable): a HxWx4 array containing Q-values for each state-action pair.
+  # H, W (global variables): environment dimensions.
+  df <- expand.grid(x = 1:H, y = 1:W)
+  foo <- mapply(function(x, y)
+    ifelse(reward_map[x, y] == 0, q_table[x, y, 1], NA), df$x, df$y)
+  df$val1 <- as.vector(round(foo, 2))
+  foo <- mapply(function(x, y)
+    ifelse(reward_map[x, y] == 0, q_table[x, y, 2], NA), df$x, df$y)
+  df$val2 <- as.vector(round(foo, 2))
+  foo <- mapply(function(x, y)
+    ifelse(reward_map[x, y] == 0, q_table[x, y, 3], NA), df$x, df$y)
+  df$val3 <- as.vector(round(foo, 2))
+  foo <- mapply(function(x, y)
+    ifelse(reward_map[x, y] == 0, q_table[x, y, 4], NA), df$x, df$y)
+  df$val4 <- as.vector(round(foo, 2))
+  foo <- mapply(function(x, y)
+    ifelse(reward_map[x, y] == 0, arrows[GreedyPolicy(x, y)], reward_map[x, y]),
+    df$x,
+    df$y)
+  df$val5 <- as.vector(foo)
+  foo <- mapply(function(x, y)
+    ifelse(
+      reward_map[x, y] == 0,
+      max(q_table[x, y, ]),
+      ifelse(reward_map[x, y] < 0, NA, reward_map[x, y])
+    ), df$x, df$y)
+  df$val6 <- as.vector(foo)
+  print(
+    ggplot(df, aes(x = y, y = x)) +
+      scale_fill_gradient(
+        low = "white",
+        high = "green",
+        na.value = "red",
+        name = ""
+      ) +
+      geom_tile(aes(fill = val6)) +
+      geom_text(
+        aes(label = val1),
+        size = 4,
+        nudge_y = .35,
+        na.rm = TRUE
+      ) +
+      geom_text(
+        aes(label = val2),
+        size = 4,
+        nudge_x = .35,
+        na.rm = TRUE
+      ) +
+      geom_text(
+        aes(label = val3),
+        size = 4,
+        nudge_y = -.35,
+        na.rm = TRUE
+      ) +
+      geom_text(
+        aes(label = val4),
+        size = 4,
+        nudge_x = -.35,
+        na.rm = TRUE
+      ) +
+      geom_text(aes(label = val5), size = 10) +
+      geom_tile(fill = 'transparent', colour = 'black') +
+      ggtitle(
+        paste(
+          "Q-table after ",
+          iterations,
+          " iterations\n",
+          "(epsilon = ",
+          epsilon,
+          ", alpha = ",
+          alpha,
+          "gamma = ",
+          gamma,
+          ", beta = ",
+          beta,
+          ")"
+        )
+      ) +
+      theme(plot.title = element_text(hjust = 0.5)) +
+      scale_x_continuous(breaks = c(1:W), labels = c(1:W)) +
+      scale_y_continuous(breaks = c(1:H), labels = c(1:H))
+  )
+}
+GreedyPolicy <- function(x, y) {
+  # Get a greedy action for state (x,y) from q_table.
+  #
+  # Args:
+  # x, y: state coordinates.
+  # q_table (global variable): a HxWx4 array containing Q-values for each state-action pair.
+  #
+  # Returns:
+  # An action, i.e. integer in {1,2,3,4}.
+  # Your code here.
+  q_values = q_table[x, y, ]
+  best_actions = which(q_values == max(q_values))
+  if (length(best_actions) > 1) {
+    action = sample(best_actions, 1)
+  } else {
+    action = best_actions
+  }
+  return (action)
+}
+EpsilonGreedyPolicy <- function(x, y, epsilon) {
+  # Get an epsilon-greedy action for state (x,y) from q_table.
+  #
+  # Args:
+  # x, y: state coordinates.
+  # epsilon: probability of acting randomly.
+  #
+  # Returns:
+  # An action, i.e. integer in {1,2,3,4}.
+  # Your code here.
+  if (epsilon >= runif(1)) {
+    action = sample(1:4, 1)
+  } else {
+    action = GreedyPolicy(x, y)
+  }
+  return (action)
+}
+transition_model <- function(x, y, action, beta) {
+  # Computes the new state after given action is taken. The agent will follow the action
+  # with probability (1-beta) and slip to the right or left with probability beta/2 each.
+  #
+  # Args:
+  # x, y: state coordinates.
+  # action: which action the agent takes (in {1,2,3,4}).
+  # beta: probability of the agent slipping to the side when trying to move.
+  # H, W (global variables): environment dimensions.
+  #
+  # Returns:
+  # The new state after the action has been taken.
+  delta <- sample(-1:1,
+                  size = 1,
+                  prob = c(0.5 * beta, 1 - beta, 0.5 * beta))
+  final_action <- ((action + delta + 3) %% 4) + 1
+  foo <- c(x, y) + unlist(action_deltas[final_action])
+  foo <- pmax(c(1, 1), pmin(foo, c(H, W)))
+  return (foo)
+}
+
+q_learning <- function(start_state,
+                       epsilon = 0.5,
+                       alpha = 0.1,
+                       gamma = 0.95,
+                       beta = 0,
+                       tr = 1) {
+  #Initialize
+  current_state = start_state
+  episode_correction = 0
+  reward = 0
+  repeat {
+    # Current state
+    x = current_state[1]
+    y = current_state[2]
+    # Action
+    action = EpsilonGreedyPolicy(x, y, epsilon*tr)
+    
+    # Update state
+    next_state = transition_model(x, y, action, beta)
+    next_x = next_state[1]
+    next_y = next_state[2]
+    
+    # Reward
+    reward = reward_map[next_x, next_y]
+    # New max Q value
+    max_q_next = max(q_table[next_x, next_y, ])
+    
+    # Correction
+    correction = reward + gamma * max_q_next - q_table[x, y, action]
+    # Update q_table based on correction
+    q_table[x, y, action] <<- q_table[x, y, action] + alpha * correction * tr
+    
+    # Accumulate corrections
+    episode_correction = episode_correction + correction*tr
+    # Update state
+    current_state = next_state
+    # End the episode if a terminal state (non-zero reward) is reached
+    if (reward != 0) {
+      break
+    }
+  }
+  return (c(reward, episode_correction))
+}
+```
+
+```{r}
+# Environment B (the effect of epsilon and gamma)
+set.seed(1234)
+H <- 7
+W <- 8
+reward_map <- matrix(0, nrow = H, ncol = W)
+reward_map[1, ] <- -1
+reward_map[7, ] <- -1
+reward_map[4, 5] <- 5
+
+reward_map[4, 8] <- 10
+q_table <- array(0, dim = c(H, W, 4))
+
+for (beta in c(0.1, 0.25, 0.5)) {
+  for (j in c(0.5, 0.75, 0.95)) {
+    q_table <- array(0, dim = c(H, W, 4))
+    reward <- NULL
+
+    # Training
+    for (i in 1:30000) {
+      foo <- q_learning(gamma = j, beta = beta, start_state = c(4, 1))
+    }
+    
+    # Validation
+    for (i in 1:1000) {
+      foo <- q_learning(gamma = j, beta = beta, start_state = c(4, 1), tr = 0)
+      reward <- c(reward,foo[1])
+    }
+    
+    mean(reward)
+  }
+}
+```
+
+```{r}
+library(kernlab)
+# Matern32  kernel
+k <- function(sigmaf = 1, ell = 1)  
+{   
+	rval <- function(x, y = NULL) 
+	{	r = sqrt(crossprod(x-y))
+		 return(sigmaf^2*(1+sqrt(3)*r/ell)*exp(-sqrt(3)*r/ell))   
+	}   
+	class(rval) <- "kernel"   
+	return(rval) 
+} 
+
+sigmaF = sqrt(1)
+ell = 0.5
+zGrid = seq(0.01, 1, by = 0.01)
+
+kernel_values = kernelMatrix(kernel = k(sigmaF, ell), x = 0, y = zGrid)
+plot(kernel_values[1, ])
+
+sigmaF = sqrt(0.5)
+kernel_values = kernelMatrix(kernel = k(sigmaF, ell), x = 0, y = zGrid)
+lines(kernel_values[1, ], type = "l")
+```
+
+```{r}
+rm(list = ls())
+data = read.csv(
+  "https://github.com/STIMALiU/AdvMLCourse/raw/master/GaussianProcess/Code/TempTullinge.csv",
+  header = TRUE,
+  sep = ";"
+)
+data$time = 1:nrow(data)
+data$day = ((data$time - 1) %% 365) + 1
+data = data[seq(1, nrow(data), by = 5), ]
+
+SquareExponential <- function(sigmaf, ell)
+{
+  rval <- function(x, y = NULL) {
+    n1 <- length(x)
+    n2 <- length(y)
+    k <- matrix(NA, n1, n2)
+    for (i in 1:n2) {
+      k[, i] <- sigmaf ** 2 * exp(-0.5 * ((x - y[i]) / ell) ** 2)
+    }
+    return(k)
+  }
+  class(rval) <- "kernel"
+  return(rval)
+}
+
+posteriorGP = function(x, y, XStar, sigmaNoise, k, ...) {
+  K = k(x, x, ...)
+  L = t(chol(K + diag(sigmaNoise ** 2, length(x))))
+  alpha = solve(t(L), solve(L, y))
+  kStar = k(x, XStar, ...)
+  predictive_mean = t(kStar) %*% alpha
+  v = solve(L, kStar)
+  predictive_variance = k(XStar, XStar, ...) - t(v) %*% v
+  logmar = -0.5*t(y)%*%alpha - sum(log(diag(L))) - log(2*pi)*length(x)/2
+
+  return(list(mean = predictive_mean, variance = predictive_variance, logmar = logmar))
+}
+
+temp = data$temp
+time = data$time
+polyFit = lm(temp~I(time) + I(time**2))
+sigmaNoise = sd(polyFit$residuals)
+
+logmar = c()
+sigmaFs = c()
+ells = c()
+
+for (sigmaF in seq(0.1, 10, length.out=10)) {
+  for (ell in seq(0.1, 10, length.out=10)) {
+    predictions = posteriorGP(x = time, y = temp, XStar = time, sigmaNoise = sigmaNoise,
+    k = SquareExponential(sigmaf = sigmaF, ell = ell))
+
+    logmar = c(logmar, predictions$logmar)
+    sigmaFs = c(sigmaFs, sigmaF)
+    ells = c(ells, ell)
+  }  
+}
+
+print(paste("logmar: ", logmar[which.max(logmar)]))
+print(paste("SigmaF: ", sigmaFs[which.max(logmar)]))
+print(paste("ell: ", ells[which.max(logmar)]))
+```
