@@ -1,0 +1,297 @@
+---
+title: "TDDE15- Exam Oct 2023"
+author: "Fredrik Ramberg"
+output:
+  pdf_document: default
+---
+
+# 1
+
+```{r}
+library(bnlearn)
+library(gRain)
+
+dag <- model2network("[U][C|U][A|C][B|C][D|A:B][Ch|U][Ah|Ch][Bh|Ch][Dh|Ah:Bh]")
+graphviz.plot(dag)
+
+cptU <- c(.5,.5)
+dim(cptU) <- c(2)
+dimnames(cptU) <- list(c("0", "1"))
+
+#### C
+## U
+cptC <- matrix(c(.9,.1,
+                 .1,.9), nrow=2, ncol=2)
+dim(cptC) <- c(2,2)
+dimnames(cptC) <- list("C" = c("0", "1"), "U" =  c("0", "1"))
+
+cptA <- matrix(c(1,0,
+                 .2,.8), nrow=2, ncol=2)
+dim(cptA) <- c(2,2)
+dimnames(cptA) <- list("A" = c("0", "1"), "C" =  c("0", "1"))
+
+cptB <- matrix(c(1,0,
+                 .2,.8), nrow=2, ncol=2)
+dim(cptB) <- c(2,2)
+dimnames(cptB) <- list("B" = c("0", "1"), "C" =  c("0", "1"))
+
+#### D    #B = 0
+## A
+
+#### D    #B = 1
+## A
+
+cptD <- matrix(c(.9,.1
+                 ,0,1,
+                 0,1,
+                 0,1), nrow=2, ncol=4)
+dim(cptD) <- c(2,2,2)
+dimnames(cptD) <- list("D" = c("0", "1"), "A" =  c("0", "1"), "B" =  c("0", "1"))
+
+cptCh <- matrix(c(.9,.1,
+                 .1,.9), nrow=2, ncol=2)
+dim(cptCh) <- c(2,2)
+dimnames(cptCh) <- list("Ch" = c("0", "1"), "U" =  c("0", "1"))
+
+cptAh <- matrix(c(1,0,
+                 .2,.8), nrow=2, ncol=2)
+dim(cptAh) <- c(2,2)
+dimnames(cptAh) <- list("Ah" = c("0", "1"), "Ch" =  c("0", "1"))
+
+cptBh <- matrix(c(1,0,
+                 .2,.8), nrow=2, ncol=2)
+dim(cptBh) <- c(2,2)
+dimnames(cptBh) <- list("Bh" = c("0", "1"), "Ch" =  c("0", "1"))
+
+#### D    #B = 0
+## A
+
+#### D    #B = 1
+## A
+
+cptDh <- matrix(c(.9,.1
+                 ,0,1,
+                 0,1,
+                 0,1), nrow=2, ncol=4)
+dim(cptDh) <- c(2,2,2)
+dimnames(cptDh) <- list("Dh" = c("0", "1"), "Ah" =  c("0", "1"), "Bh" =  c("0", "1"))
+
+bn <- custom.fit(dag, list(U=cptU,C=cptC,A=cptA,B=cptB,D=cptD,
+                                  Ch=cptCh,Ah=cptAh,Bh=cptBh,Dh=cptDh))
+bn <- compile(as.grain(bn))
+
+
+posterior <- querygrain(setEvidence(bn, nodes = c("D", "Ah"), states = c("1", "0")), nodes = "Dh")
+posterior$Dh[2]
+```
+
+# 2
+
+```{r}
+#install.packages("HMM")
+library(HMM)
+#states = hidden states
+states <- c("1a", "1b", "2a", "2b", "2c", "3a", "3b", "4a", "5a", "5b")
+
+#symbols = observations
+symbols <- c(1:5)
+
+emissionProbs <- c(1/3,1/3,  0,  0,1/3,
+                   1/3,1/3,  0,  0,1/3,
+                   1/3,1/3,1/3,  0,  0,
+                   1/3,1/3,1/3,  0,  0,
+                   1/3,1/3,1/3,  0,  0,
+                     0,1/3,1/3,1/3,  0,
+                     0,1/3,1/3,1/3,  0,
+                     0,  0,1/3,1/3,1/3,
+                   1/3,  0,  0,1/3,1/3,
+                   1/3,  0,  0,1/3,1/3)
+######## Symbols
+# States
+emissionProbs <- matrix(emissionProbs, ncol = 5, byrow = TRUE)
+
+transProbs <- c(0.5,0.5,  0,  0,  0,  0,  0,  0,  0,  0,
+                  0,0.5,0.5,  0,  0,  0,  0,  0,  0,  0,
+                  0,  0,0.5,0.5,  0,  0,  0,  0,  0,  0,
+                  0,  0,  0,0.5,0.5,  0,  0,  0,  0,  0,
+                  0,  0,  0,  0,0.5,0.5,  0,  0,  0,  0,
+                  0,  0,  0,  0,  0,0.5,0.5,  0,  0,  0,
+                  0,  0,  0,  0,  0,  0,0.5,0.5,  0,  0,
+                  0,  0,  0,  0,  0,  0,  0,0.5,0.5,  0,
+                  0,  0,  0,  0,  0,  0,  0,  0,0.5,0.5,
+                  0.5,  0,  0,  0,  0,  0,  0,  0,  0,0.5)  
+##### Old
+# New
+transProbs <- matrix(transProbs,nrow = 10, ncol = 10, byrow = TRUE)
+
+hmm <- initHMM(states,symbols, transProbs = transProbs, emissionProbs = emissionProbs)
+
+transProbs
+emissionProbs
+
+set.seed(12345)
+simulation100 <- simHMM(hmm, 100)
+simulation100
+
+table(simulation100$states, simulation100$observation)
+```
+
+# 3
+
+```{r}
+statesPlus <- c(1:10)
+states <- statesPlus[-10]
+
+# actions = c("stay", "next")
+
+reward <- rep(0,10)
+reward[10] <- 1
+
+theta <- 0.1
+gamma <- 0.95
+
+V <- rep(0,10)
+
+```
+
+```{r}
+
+repeat{
+  
+  delta <- 0
+  for(s in states){
+    v <- V[s]
+    V[s] <- max(reward[s] + gamma*V[s], reward[s+1] + gamma*V[s+1])
+    delta <- max(delta, abs(v - V[s]))
+  }
+  
+  if (delta <theta)
+    break
+}
+
+policy <- rep(0,9)
+
+for(s in states){
+  policy[s] <- as.numeric(reward[s] + gamma*V[s] <= reward[s+1] + gamma*V[s+1])
+}
+
+print("Values")
+V
+print("optimal policy")
+policy
+```
+
+The optimal policy is to move to the next state for every state. This is because of that the values increase for each state
+
+# 4
+
+## 4.1
+
+Functions from lab
+
+```{r}
+library(kernlab)
+#nested Square Exponetial Kernel
+nestedSEK <- function(sigmaF=10,l=100) {
+  fixedSEK <- function(x1,x2){
+    n1 <- length(x1)
+    n2 <- length(x2)
+    K <- matrix(NA,n1,n2)
+    for (i in 1:n2){
+      K[,i] <- sigmaF^2*exp(-0.5*( (x1-x2[i])/l)^2 )
+    }
+    return(K)
+  }
+  class(fixedSEK) <- 'kernel'
+  return(fixedSEK)
+}
+
+SEK <- nestedSEK()
+
+nestedPeriodic <- function(sigmaF = 20,l1 =1, l2 = 100, d=365) {
+  periodicKernel <- function(x, xstar){
+    n1 <- length(x)
+    n2 <- length(xstar)
+    K <- matrix(NA,n1,n2)
+
+    for (i in 1:n2){
+      absDiff <- absDiff <- abs(x-xstar[i])
+      K[,i] <- sigmaF^2*exp(-2*sin(pi*absDiff/d)^2/l1^2)*exp(-0.5*absDiff^2/l2^2)
+    }
+    return(K)
+  }
+  class(periodicKernel) <- 'kernel'
+  return(periodicKernel)
+}
+
+periodic <- nestedPeriodic()
+```
+
+```{r}
+
+X <- c(1, 182, 365)
+
+# kernel matrix where x = X, y = Xstar
+kernelMatrix(kernel = SEK, x = X, y = X)
+kernelMatrix(kernel = periodic, x = X, y = X)
+```
+
+## 4.2
+
+Algorithm 2.1
+
+```{r}
+
+posteriorGP <- function(X, y, XStar, sigmaNoise, k, ...){
+  n <- length(X)
+  K <- k(X, X, ...)
+  kStar <- k(X,XStar)
+  
+  #Cholesky 
+  L <- t(chol(K + sigmaNoise^2*diag(n)))
+
+  #alpha
+  alpha <- solve(t(L),solve(L,y))
+  
+  #Posterior mean = fStar
+  kStar <- k(X, XStar)
+  fStar <- t(kStar)%*%alpha
+
+  #Posterior variance
+  v <- solve(L,kStar)
+  variance <- k(XStar, XStar) - t(v)%*%v
+  
+  #Marginal log-likelihood log p(y|X)
+  log_marg_likelihood <- -0.5*(t(y)%*%alpha)-sum(log(diag(L)))-(n/2)*log(2*pi)
+  
+  return(list(mean =fStar, variance =variance, mll = log_marg_likelihood))
+}
+
+```
+
+```{r}
+tempData <- read.csv("https://github.com/STIMALiU/AdvMLCourse/raw/master/GaussianProcess/Code/TempTullinge.csv", header=TRUE, sep=";")
+tempData <- cbind(tempData, time = 1:nrow(tempData))
+tempData <- cbind(tempData, day = ((tempData$time-1)%%365)+1)
+
+#trainData <- subset(tempData, (time - 1)%%5 == 0)
+
+
+
+X <- tempData$time
+
+Y <- tempData$temp
+
+polyFit <- lm(Y ~  X + I(X^2))
+sigmaNoise <- sd(polyFit$residuals)
+
+lmlSEK <- posteriorGP(X, Y, X, sigmaNoise, SEK)
+lmlPeridic <- posteriorGP(X, Y, X, sigmaNoise, periodic)
+
+print("Square exponential")
+lmlSEK$mll
+print("Periodic kernel")
+lmlPeridic$mll
+```
+
+I would select the square exponential kernel

@@ -1,0 +1,73 @@
+---
+title: "TDDE15 exam 20230823"
+author: "Oscar Hoffmann"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  pdf_document: default
+  latex_engine: lualatex
+---
+
+## **Q1** Graphical models
+
+```{r}
+
+library(bnlearn)
+library(gRain)
+
+net <- model2network("[H1][H2|H1][T1|H1][H3|H2][T2|H2][T3|H3]")
+
+
+graphviz.plot(net)
+
+```
+```{r}
+
+cptH1 = c(0.5, 0.5)
+dim(cptH1) = c(2)
+dimnames(cptH1) = list(c("H","S"))
+
+cptH2 = matrix(c(.9,.1,
+                 .2,.8))
+dim(cptH2) = c(2,2)
+dimnames(cptH2) = list("H2" = c("H","S"), "H1"= c("H","S"))
+
+cptH3 = matrix(c(.9,.1,
+                 .2,.8))
+dim(cptH3) = c(2,2)
+dimnames(cptH3) = list("H3" = c("H","S"), "H2"= c("H","S"))
+
+# Test
+cptT1 = matrix(c(.7,.3,
+                 .4,.6))
+dim(cptT1) = c(2,2)
+dimnames(cptT1) = list("T1" = c("N","P"), "H1"= c("H","S"))
+
+cptT2 = matrix(c(.7,.3,
+                 .4,.6))
+dim(cptT2) = c(2,2)
+dimnames(cptT2) = list("T2" = c("N","P"), "H2"= c("H","S"))
+
+cptT3 = matrix(c(.7,.3,
+                 .4,.6))
+dim(cptT3) = c(2,2)
+dimnames(cptT3) = list("T3" = c("N","P"), "H3"= c("H","S"))
+
+
+
+netfit <- custom.fit(net,list(H1=cptH1, 
+                              H2=cptH2, 
+                              H3=cptH3, 
+                              T1=cptT1, 
+                              T2=cptT2, 
+                              T3=cptT3))
+netcom <- compile(as.grain(netfit))
+
+querygrain(netcom, "H3")
+querygrain(setEvidence(netcom,nodes=c("T2"),states=c("N")),"H3")
+querygrain(setEvidence(netcom,nodes=c("T2","T3"),states=c("N", "N")),"H3")
+
+
+
+```
+
+

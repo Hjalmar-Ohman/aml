@@ -1,0 +1,487 @@
+---
+title: "oct2020"
+output:
+  pdf_document: default
+  html_document: default
+date: "2024-10-26"
+---
+
+
+# 1. Graphical Models (6 p)
+```{r}
+set.seed(123)
+library("bnlearn")
+library("gRain")
+
+dag = model2network("[C][D|C][A|C][Y|A:C]") # Construct dag
+graphviz.plot(dag)
+
+results = matrix(NA, 1000, 4)
+resC = 0
+resD = 0
+
+for (i in 1:1000) {
+  temp_dag = dag
+  
+  ### Sample C
+  cptC = runif(2)
+  cptC = cptC/sum(cptC) # normalize
+  dim(cptC) = c(2)
+  dimnames(cptC) = list(c("1", "0"))
+  
+  ### Sample A
+  cptA = runif(4)
+  dim(cptA) = c(2,2)
+  cptA = prop.table(cptA, 2) # normalize
+  dimnames(cptA) = list("A" = c("1", "0"), "C" = c("1", "0"))
+  
+  ### Sample D
+  cptD = runif(4)
+  dim(cptD) = c(2,2)
+  cptD = prop.table(cptD, 2)# normalize
+  dimnames(cptD) = list("D" = c("1", "0"), "C" = c("1", "0"))
+  
+  ### Sample Y
+  cptY = runif(8)
+  dim(cptY) = c(2,2,2)
+  cptY = prop.table(cptY, 2:3) # normalize
+  dimnames(cptY) = list("Y" = c("1", "0"), "C" = c("1", "0"), "A" = c("1", "0"))
+  cptY
+  
+  
+  customfit = custom.fit(temp_dag, list(A = cptA, D = cptD, C = cptC, Y = cptY))
+  grain_fit = as.grain(customfit)
+  grain = compile(grain_fit)
+  grain
+  
+  # convert to grain objects and set evidence
+  pac11 = setEvidence(grain, nodes = c("A", "C"), states = c("1","1"))
+  pos_pac11 = querygrain(pac11, nodes = "Y")$Y[1]
+  pac10 = setEvidence(grain, nodes = c("A", "C"), states = c("1","0"))
+  pos_pac10 = querygrain(pac10, nodes = "Y")$Y[1]
+  pac01 = setEvidence(grain, nodes = c("A", "C"), states = c("0","1"))
+  pos_pac01 = querygrain(pac01, nodes = "Y")$Y[1]
+  pac00 = setEvidence(grain, nodes = c("A", "C"), states = c("0","0"))
+  pos_pac00 = querygrain(pac00, nodes = "Y")$Y[1]
+  
+  pad11 = setEvidence(grain, nodes = c("A", "D"), states = c("1","1"))
+  pos_pad11 = querygrain(pad11, nodes = "Y")$Y[1]
+  pad10 = setEvidence(grain, nodes = c("A", "D"), states = c("1","0"))
+  pos_pad10 = querygrain(pad10, nodes = "Y")$Y[1]
+  pad01 = setEvidence(grain, nodes = c("A", "D"), states = c("0","1"))
+  pos_pad01 = querygrain(pad01, nodes = "Y")$Y[1]
+  pad00 = setEvidence(grain, nodes = c("A", "D"), states = c("0","0"))
+  pos_pad00 = querygrain(pad00, nodes = "Y")$Y[1]
+  
+  
+  # p(y|a, c) is non-decreasing
+  nondecC = ( (pos_pac11 >= pos_pac10) & (pos_pac01 >= pos_pac00)) 
+  # p(y|a, c) is non-increasing
+  nonincC = (pos_pac11 <= pos_pac10 & pos_pac01 <= pos_pac00)
+  
+  # p(y|a, d) is non-decreasing
+  nondecD = (pos_pad11 >= pos_pad10 & pos_pad01 >= pos_pad00) 
+  # p(y|a, d) is non-increasing
+  nonincD = (pos_pad11 <= pos_pad10 & pos_pad01 <= pos_pad00)
+
+  if((nondecC == TRUE | nonincC == TRUE)){
+    if((nondecD == FALSE & nonincD == FALSE)) {
+    resC = resC + 1
+  }}
+  
+  if((nondecD == TRUE | nonincD == TRUE) & (nondecC == FALSE & nonincC == FALSE)) {
+    resD = resD + 1
+  }
+  if (i %% 50 == 0) {  # Print every 100th iteration
+    print("Monotonicity flags:")
+    print(nondecC[1])
+  }
+  results[i,] = c(nondecC, nonincC, nondecD, nonincD)
+}
+
+resC
+resD
+
+# monotone in C but not D
+colSums(results[which(results[,1]==TRUE & results[,2]==FALSE & results[,3]==FALSE & results[,4]==FALSE),])
+colSums(results[which(results[,1]==FALSE & results[,2]==TRUE & results[,3]==FALSE & results[,4]==FALSE),])
+
+# monotone in D but not C
+colSums(results[which(results[,1]==FALSE & results[,2]==FALSE & results[,3]==TRUE & results[,4]==FALSE),])
+colSums(results[which(results[,1]==FALSE & results[,2]==FALSE & results[,3]==FALSE & results[,4]==TRUE),])
+
+
+```
+# 2. Reinforcement Learning (7 p)
+```{r}
+set.seed(1234)
+library(ggplot2)
+
+arrows <- c("^", ">", "v", "<")
+action_deltas <- list(c(1,0), # up
+                      c(0,1), # right
+                      c(-1,0), # down
+                      c(0,-1)) # left
+
+vis_environment <- function(iterations=0, epsilon = 0.5, alpha = 0.1, gamma = 0.95, beta = 0){
+  
+  # Visualize an environment with rewards. 
+  # Q-values for all actions are displayed on the edges of each tile.
+  # The (greedy) policy for each state is also displayed.
+  # 
+  # Args:
+  #   iterations, epsilon, alpha, gamma, beta (optional): for the figure title.
+  #   reward_map (global variable): a HxW array containing the reward given at each state.
+  #   q_table (global variable): a HxWx4 array containing Q-values for each state-action pair.
+  #   H, W (global variables): environment dimensions.
+  
+  df <- expand.grid(x=1:H,y=1:W)
+  foo <- mapply(function(x,y) ifelse(reward_map[x,y] == 0,q_table[x,y,1],NA),df$x,df$y)
+  df$val1 <- as.vector(round(foo, 2))
+  foo <- mapply(function(x,y) ifelse(reward_map[x,y] == 0,q_table[x,y,2],NA),df$x,df$y)
+  df$val2 <- as.vector(round(foo, 2))
+  foo <- mapply(function(x,y) ifelse(reward_map[x,y] == 0,q_table[x,y,3],NA),df$x,df$y)
+  df$val3 <- as.vector(round(foo, 2))
+  foo <- mapply(function(x,y) ifelse(reward_map[x,y] == 0,q_table[x,y,4],NA),df$x,df$y)
+  df$val4 <- as.vector(round(foo, 2))
+  foo <- mapply(function(x,y) 
+    ifelse(reward_map[x,y] == 0,arrows[GreedyPolicy(x,y)],reward_map[x,y]),df$x,df$y)
+  df$val5 <- as.vector(foo)
+  foo <- mapply(function(x,y) ifelse(reward_map[x,y] == 0,max(q_table[x,y,]),
+                                     ifelse(reward_map[x,y]<0,NA,reward_map[x,y])),df$x,df$y)
+  df$val6 <- as.vector(foo)
+  
+  print(ggplot(df,aes(x = y,y = x)) +
+          scale_fill_gradient(low = "white", high = "green", na.value = "red", name = "") +
+          geom_tile(aes(fill=val6)) +
+          geom_text(aes(label = val1),size = 4,nudge_y = .35,na.rm = TRUE) +
+          geom_text(aes(label = val2),size = 4,nudge_x = .35,na.rm = TRUE) +
+          geom_text(aes(label = val3),size = 4,nudge_y = -.35,na.rm = TRUE) +
+          geom_text(aes(label = val4),size = 4,nudge_x = -.35,na.rm = TRUE) +
+          geom_text(aes(label = val5),size = 10) +
+          geom_tile(fill = 'transparent', colour = 'black') + 
+          ggtitle(paste("Q-table after ",iterations," iterations\n",
+                        "(epsilon = ",epsilon,", alpha = ",alpha,"gamma = ",
+                        gamma,", beta = ",beta,")")) +
+          theme(plot.title = element_text(hjust = 0.5)) +
+          scale_x_continuous(breaks = c(1:W),labels = c(1:W)) +
+          scale_y_continuous(breaks = c(1:H),labels = c(1:H)))
+  
+}
+GreedyPolicy <- function(x, y){
+  
+  q_values = q_table[x, y, ]
+  
+  # Find all actions with the maximum Q-value
+  max_actions = which(q_values == max(q_values))
+  if (length(max_actions) == 1) {
+    return(max_actions)
+  } else {
+    return(sample(max_actions, 1))
+  }
+  
+}
+
+EpsilonGreedyPolicy <- function(x, y, epsilon){
+
+  # Your code here.
+  if (runif(1) < epsilon) {
+    return (sample(1:4,1))
+  } else {
+    return (GreedyPolicy(x,y))
+  }
+}
+
+transition_model <- function(x, y, action, beta){
+  
+  delta <- sample(-1:1, size = 1, prob = c(0.5*beta,1-beta,0.5*beta))
+  final_action <- ((action + delta + 3) %% 4) + 1
+  foo <- c(x,y) + unlist(action_deltas[final_action])
+  foo <- pmax(c(1,1),pmin(foo,c(H,W)))
+  
+  return (foo)
+}
+
+
+q_learning <- function(start_state, epsilon = 0.5, alpha = 0.1, gamma = 0.95, 
+                       beta = 0, tr = 1){
+
+  Q = start_state
+  x = Q[1]
+  y = Q[2]
+  episode_correction = 0
+  ite = 0
+  repeat{
+    
+    # Follow policy, execute action, get reward.
+    action = EpsilonGreedyPolicy(x,y,epsilon*tr) # follow policy
+    next_state = transition_model(x,y,action,beta) # excecute action
+    reward = reward_map[next_state[1],next_state[2]] # get reward
+    
+    # Q-table update.
+    correction = ifelse(reward == 0,-1,reward) + gamma * max(q_table[next_state[1],next_state[2],])-q_table[x,y,action]
+    q_table[x,y,action] <<- q_table[x,y,action] + alpha * (correction*tr)
+    episode_correction = episode_correction + correction*tr
+    
+    x = next_state[1]
+    y = next_state[2]
+    
+    if(reward!=0)
+      # End episode.
+      return (c(reward-ite, episode_correction))
+    else 
+      ite = ite +1
+  }
+  
+}
+
+SARSA <- function(start_state, epsilon = 0.5, alpha = 0.1, gamma = 0.95, 
+                       beta = 0, tr = 1){
+  # initialize Q
+  Q = start_state
+  x = Q[1]
+  y = Q[2]
+  episode_correction = 0
+  new_action = EpsilonGreedyPolicy(x,y,epsilon*tr) # follow policy
+  ite = 0
+  repeat{
+    # Follow policy, execute action, get reward.
+    action = new_action # follow policy
+    next_state = transition_model(x,y,action,beta) # excecute action
+    reward = reward_map[next_state[1],next_state[2]] # get reward
+    
+    # Find next action
+    new_action = EpsilonGreedyPolicy(next_state[1],next_state[2],epsilon*tr)
+    
+    # Q-table update.
+    correction = ifelse(reward==0,-1,reward) + gamma * (q_table[next_state[1],next_state[2],new_action])-q_table[x,y,action]
+    q_table[x,y,action] <<- q_table[x,y,action] + alpha * (correction*tr)
+    episode_correction = episode_correction + correction*tr
+    
+    x = next_state[1]
+    y = next_state[2]
+    
+    if(reward!=0)
+      # End episode.
+      return (c(reward -ite ,episode_correction))
+    else
+      ite = ite +1
+  }
+  
+}
+
+
+MovingAverage <- function(x, n){
+  
+  cx <- c(0,cumsum(x))
+  rsum <- (cx[(n+1):length(cx)] - cx[1:(length(cx) - n)]) / n
+  
+  return (rsum)
+}
+
+# ENV C
+H <- 3
+W <- 6
+
+reward_map <- matrix(0, nrow = H, ncol = W)
+reward_map[1,2:5] <- -10
+reward_map[1,6] <- 10
+
+q_table <- array(0,dim = c(H,W,4))
+
+epsilon = 0.5
+gamma = 1
+beta = 0
+alpha = 0.1 
+
+
+
+rewardST = NULL
+rewardQT = NULL
+rewardSV = NULL
+rewardQV = NULL
+
+q_table <- array(0,dim = c(H,W,4))
+for(i in 1:5000) {
+  foo <- SARSA(epsilon = epsilon, gamma = gamma, beta = beta, alpha = alpha, start_state = c(1,1))
+  rewardST = c(rewardST,foo[1])
+}
+vis_environment(i, epsilon = epsilon, gamma = gamma, beta = beta, alpha = alpha)
+
+for(i in 1:5000) {
+  foo <- SARSA(epsilon = epsilon, gamma = gamma, beta = beta, alpha = alpha, start_state = c(1,1), tr=0)
+  rewardSV = c(rewardSV,foo[1])
+}
+
+q_table <- array(0,dim = c(H,W,4))
+for(i in 1:5000) {
+  foo <- q_learning(epsilon = epsilon, gamma = gamma, beta = beta, alpha = alpha, start_state = c(1,1))
+  rewardQT <- c(rewardQT,foo[1])
+}
+vis_environment(i, epsilon = epsilon, gamma = gamma, beta = beta, alpha = alpha)
+
+for(i in 1:5000) {
+  foo <- q_learning(epsilon = 0, gamma = gamma, beta = beta, alpha = alpha, start_state = c(1,1), tr = 0)
+  rewardQV = c(rewardQV,foo[1])
+}
+
+
+plot(MovingAverage(rewardST,100), main = "reward avg, blue = SARSA, dotted = testing", 
+     col = "blue", type = "l", ylim = c(-15,5))
+lines(MovingAverage(rewardQT,100), col = "green")
+lines(MovingAverage(rewardSV,100), col = "blue", type = "l", lty = 2)
+lines(MovingAverage(rewardQV,100), col = "green", type = "l", lty = 2)
+
+
+```
+# 3. Gaussian Processes (7 p)
+```{r}
+posteriorGP = function(X, y, sigmaNoise, XStar, k, ...) {
+
+  # Line 2
+  n = length(X) # No of training points
+  K = k(X,X,...)    # Covariance for training points
+  kStar = k(X,XStar,...) # Covariance for training and test points
+  # Cholesky decomposition, Lower triangular matrix
+  L = t(chol(K + sigmaNoise**2 * diag(n))) 
+  alpha = solve(t(L), solve(L, y))
+  
+  # Line 4
+  fStar = t(kStar)%*%alpha #posterior mean
+  v = solve(L, kStar)
+  
+  # Line 6 :  Posterior variance 
+  V_fStar = k(XStar, XStar,...) - t(v)%*%v
+  log_marg_likelihood = -(1/2)*t(y)%*%alpha - sum(log(diag(L))) - (n/2)*log(2*pi)
+  
+  return(list(mean = fStar, variance = V_fStar, log_likelihood = log_marg_likelihood))
+}
+
+
+library("mvtnorm")
+
+# Covariance function
+SquaredExpKernel <- function(x1,x2,sigmaF=1,ell=0.3){
+  n1 <- length(x1)
+  n2 <- length(x2)
+  K <- matrix(NA,n1,n2)
+  for (i in 1:n2){
+    K[,i] <- sigmaF^2*exp(-0.5*( (x1-x2[i])/ell)^2 )
+  }
+  return(K)
+}
+
+########################################
+########################################
+
+# Initialize parameters
+sigmaF = 1
+ell = 0.3
+sigmaN = 0
+xGrid = seq(-1,1,length = 100)
+x = c(-1, -0.6, -0.2, 0.4, 0.8)
+y = c(0.768, -0.044, -0.94, 0.719, -0.664)
+posterior = posteriorGP(X=x, y=y, sigmaNoise=sigmaN, XStar=xGrid, 
+                        k = SquaredExpKernel, sigmaF, ell)
+
+# Posterior Covariance with x' = 0
+plot(x = xGrid, y = diag(posterior$variance), type = "l", xlim = c(-1,1), ylim = c(-0.5,0.5), col = "green")
+for (i in 1:5)
+  abline(v=x[i])
+abline(h=0)
+
+# Why is the posterior covariance zero at the training points ?
+#   The posterior covariance is zero at the training points because the functions must
+#   go through them, i.e. there is no uncertainty due to this being a noisy-free problem.
+
+# Why does the posterior covariance not decrease as a function of the distance
+# between x and x' ?
+#   The posterior covariance is not monotone decreasing with the distance because it is
+#   constrained by the fact of being zero in the training points.
+
+# Draw or plot the prior covariance of f
+cov = SquaredExpKernel(xGrid,0)
+plot(xGrid, cov)
+
+```
+
+
+```{r}
+####### P2 ######
+
+data = read.csv("https://github.com/STIMALiU/AdvMLCourse/raw/master/GaussianProcess/Code/TempTullinge.csv",
+                header=TRUE, sep=";")
+
+data$time = 1:nrow(data)
+data$day = rep(1:365, 6)
+
+# Subsample every 5th observation
+subsample_idx = seq(1, nrow(data), by = 5)
+data_sub = data[subsample_idx, ]
+
+SquaredExpKernel <- function(sigmaF=1,ell=3){
+  rval <- function(x1, x2) {
+    n1 <- length(x1)
+    n2 <- length(x2)
+    K <- matrix(NA,n1,n2)
+    for (i in 1:n2){
+      K[,i] <- sigmaF^2*exp(-0.5*( (x1-x2[i])/ell)^2 )
+    }
+    return(K)
+  }
+  class(rval) <- "kernel"
+  return(rval)
+}
+
+
+temp = data_sub$temp
+time = data_sub$time
+day = data_sub$day
+
+polyFit = lm(temp ~  time + I(time^2))
+sigmaNoise = var(polyFit$residuals)
+
+GPfit = gausspr(time,temp, kernel = SquaredExpKernel(sigmaF = 20, ell = 100),
+                var = sigmaNoise, scaled = FALSE, variance.model = TRUE)
+meanPred = predict(GPfit, time)
+
+model2conf = predict(GPfit, time, type = "sdeviation")
+
+plot(time,temp, main = "Posterior mean and confidence interval", ylim = c(-20,30))
+lines(time, meanPred, col="red", lwd = 3)
+lines(time, meanPred+1.96*model2conf ,col="blue")
+lines(time, meanPred-1.96*model2conf,col="blue")
+
+
+LM = function(X, y, sigmaNoise, k, ...) {
+  n = length(X) # No of training points
+  K = k(X,X,...)    # Covariance for training points
+  # Cholesky decomposition, Lower triangular matrix
+  L = t(chol(K + sigmaNoise**2 * diag(n))) 
+  alpha = solve(t(L), solve(L, y))
+  log_marg_likelihood = -(1/2)*t(y)%*%alpha - sum(log(diag(L))) - (n/2)*log(2*pi)
+  return(log_marg_likelihood)
+}
+
+
+foo<-optim(par = 0.1, fn = LM, X=scale(time),y=scale(temp),
+           k = SquaredExpKernel(sigmaF = 20, ell = 0.2), method="L-BFGS-B",
+           control=list(fnscale=-1))
+foo$value
+foo$par
+
+# why are these negative? Cant use them
+
+
+# GPfit = gausspr(time,temp, kernel = SquaredExpKernel(sigmaF = 20, ell = 100),
+#                 var = foo$value, scaled = FALSE, variance.model = TRUE)
+# meanPred = predict(GPfit, time)
+# 
+# model2conf = predict(GPfit, time, type = "sdeviation")
+# 
+# plot(time,temp, main = "Posterior mean and confidence interval", ylim = c(-20,30))
+# lines(time, meanPred, col="red", lwd = 3)
+# lines(time, meanPred+1.96*model2conf ,col="blue")
+# lines(time, meanPred-1.96*model2conf,col="blue")
+
+```
