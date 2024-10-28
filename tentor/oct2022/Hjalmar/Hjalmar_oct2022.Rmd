@@ -30,6 +30,7 @@ miss_data[, "E"] = NULL
 
 for (i in 1:nrow(miss_data)) {
   evidence = setEvidence(full_compile, colnames(miss_data), as.vector(as.matrix(miss_data[i, ])))
+  
   query = querygrain(evidence, c("B"))$B
   miss_data[i,"B"] = sample(c("no","yes"),size=1,prob=query)
   

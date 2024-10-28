@@ -325,7 +325,7 @@ xData <- c(-1,-0.6,-0.2,0.4,0.8)
 yData <- c(0.768,-0.044,-0.94,0.719,-0.664)
 xGrid <- seq(-1,1,0.01)
 res<-posteriorGP(X=xData,y=yData,k=SEKernel,sigmaNoise=0,xStar=xGrid)
-plot(xData,yData,xlim=c(-1,1),ylim=c(-0.5,0.5))
+plot(xData,yData,xlim=c(-1,1),ylim=c(-1,1))
 xGrid[101]
 lines(xGrid, res$var[101,], col = "green")
 abline(h=0)

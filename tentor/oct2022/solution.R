@@ -112,17 +112,19 @@ posteriorGP <- function(X,y,k,sigmaNoise,xStar){
 
 sigmaF <- 1.5
 l <- .5 # These hyperparameter values work well as the y probability bands cover around 95% of the y values in the dataset.
+
 xData <- X
 yData <- Yfun(X)
 sigmaN <- 2
 xGrid <- seq(0,10,.1)
 res<-posteriorGP(X=xData,y=yData,k=SEKernel,sigmaNoise=sigmaN,xStar=xGrid)
-plot(xData,yData,xlim=c(0,10),ylim=c(-15,15))
+plot(xData,yData,xlim=c(0,10),ylim=c(-15,15), main = paste("l = ", l, " sigmaF = ", sigmaF))
 lines(xGrid, res$mu, col="blue", lwd = 2)
 lines(xGrid, res$mu - 1.96*sqrt(diag(res$var)), col = "red")
 lines(xGrid, res$mu + 1.96*sqrt(diag(res$var)), col = "red")
 lines(xGrid, res$mu - 1.96*sqrt(diag(res$var)+sigmaN^2), col = "red", lwd=2)
 lines(xGrid, res$mu + 1.96*sqrt(diag(res$var)+sigmaN^2), col = "red", lwd=2)
+
 
 # GPs (II)
 
